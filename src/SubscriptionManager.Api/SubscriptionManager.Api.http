@@ -1,3 +1,29 @@
-@SubscriptionManager.Api_HostAddress = https://localhost:7221
+@SubscriptionManager.Api_HostAddress = http://localhost:5159
+
+### Create subscription
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/subscriptions
+Content-Type: application/json
+
+{
+  "name": "Netflix",
+  "amount": 49.00,
+  "currency": "PLN",
+  "billingPeriod": "Monthly",
+  "startDate": "2026-07-18"
+}
 
 ###
+
+### Create invalid subscription
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/subscriptions
+Content-Type: application/json
+
+{
+  "name": "",
+  "amount": 49.00,
+  "currency": "PLN",
+  "billingPeriod": "Monthly",
+  "startDate": "2026-07-18"
+}
