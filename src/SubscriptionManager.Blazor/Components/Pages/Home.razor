@@ -1,0 +1,68 @@
+@page "/"
+@inject SubscriptionsApiClient ApiClient
+@inject Localizer T
+
+<PageTitle>Subscription Manager — @T["Navigation.Overview"]</PageTitle>
+
+<section class="page subscriptions-page">
+    <div class="page-heading">
+        <div><p class="eyebrow">@T["Overview.Eyebrow"]</p><h1>@T["Overview.Title"]</h1><p>@T["Overview.Description"]</p></div>
+        <a class="primary-action" href="/subscriptions"><AppIcon Name="subscriptions" /> @T["Navigation.Subscriptions"]</a>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="panel loading-panel">@T["Status.Loading"]</div>
+    }
+    else if (_error)
+    {
+        <div class="panel error-panel">@T["Error.Load"]</div>
+    }
+    else
+    {
+        <div class="metrics-grid">
+            <article class="metric-tile"><span>@T["Subscriptions.Active"]</span><strong>@Active.Count</strong><small>@T["Subscriptions.OfAll", _subscriptions.Count]</small></article>
+            <article class="metric-tile"><span>@T["Subscriptions.Monthly"]</span><strong>@Money(Active.Sum(x => x.MonthlyEquivalentAmount))</strong><small>@T["Subscriptions.AverageMonthly", Money(Active.Count == 0 ? 0 : Active.Average(x => x.MonthlyEquivalentAmount))]</small></article>
+            <article class="metric-tile"><span>@T["Subscriptions.Yearly"]</span><strong>@Money(Active.Sum(x => x.YearlyEquivalentAmount))</strong><small>@T["Subscriptions.AverageYearly", Money(Active.Count == 0 ? 0 : Active.Average(x => x.YearlyEquivalentAmount))]</small></article>
+            <article class="metric-tile"><span>@T["Subscriptions.MostExpensive"]</span><strong>@Money(MostExpensive?.MonthlyEquivalentAmount ?? 0)</strong><small>@(MostExpensive?.Name ?? "—")</small></article>
+        </div>
+
+        <div class="overview-grid">
+            <section class="panel overview-list">
+                <div class="panel-heading"><div><h2>@T["Subscriptions.ListTitle"]</h2><p>@T["Subscriptions.ListDescription"]</p></div><a href="/subscriptions">@T["Filter.All"]</a></div>
+                @foreach (var subscription in Active.OrderByDescending(x => x.MonthlyEquivalentAmount).Take(5))
+                {
+                    <div class="compact-subscription-row">
+                        <span class="service-avatar">@Initials(subscription.Name)</span>
+                        <div><strong>@subscription.Name</strong><small>@Billing(subscription.BillingPeriod)</small></div>
+                        <b>@Money(subscription.MonthlyEquivalentAmount)</b>
+                    </div>
+                }
+                @if (Active.Count == 0) { <div class="empty-inline">@T["Empty.Description"]</div> }
+            </section>
+            <section class="panel overview-summary">
+                <div class="panel-heading"><div><h2>@T["Subscriptions.Monthly"]</h2><p>@T["Subscriptions.Description"]</p></div></div>
+                <div class="summary-ring"><strong>@Money(Active.Sum(x => x.MonthlyEquivalentAmount))</strong><span>@T["PerMonth"]</span></div>
+            </section>
+        </div>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<SubscriptionResponse> _subscriptions = [];
+    private bool _loading = true;
+    private bool _error;
+    private List<SubscriptionResponse> Active => _subscriptions.Where(x => x.IsActive).ToList();
+    private SubscriptionResponse? MostExpensive => Active.MaxBy(x => x.MonthlyEquivalentAmount);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _subscriptions = await ApiClient.GetAllAsync(); }
+        catch { _error = true; }
+        finally { _loading = false; }
+    }
+
+    private string Money(decimal value) => string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:N2} {1}", value, Active.FirstOrDefault()?.Currency ?? "PLN");
+    private string Initials(string name) => string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    private string Billing(BillingPeriod period) => T[$"Billing.{period}"];
+}

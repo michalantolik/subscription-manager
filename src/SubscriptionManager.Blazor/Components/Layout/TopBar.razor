@@ -1,0 +1,42 @@
+@using System.Globalization
+@inject AppState State
+@inject Localizer T
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<header class="topbar">
+    <button class="icon-button mobile-menu-button" type="button" @onclick="State.ToggleMobileMenu"><AppIcon Name="menu" /></button>
+    <div class="topbar-actions">
+        <div class="language-switch" aria-label="Language">
+            @foreach (var language in Languages)
+            {
+                <button class="language-button @(CurrentLanguage == language.Code ? "active" : null)" type="button" @onclick="() => ChangeLanguage(language.Code)">@language.Label</button>
+            }
+        </div>
+        <button class="icon-button" type="button" @onclick="ToggleThemeAsync"><AppIcon Name="@(State.Theme == AppState.LightTheme ? "moon" : "sun")" /></button>
+        <button class="icon-button notification-button" type="button"><AppIcon Name="bell" /><span></span></button>
+        <div class="user-menu static-user">
+            <span class="user-copy"><strong>Michał</strong><small>@T["User.Role"]</small></span>
+            <span class="avatar">M</span>
+        </div>
+    </div>
+</header>
+
+@code {
+    private static readonly (string Code, string Label)[] Languages = [("pl", "PL"), ("en", "EN"), ("de", "DE")];
+    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    private async Task ToggleThemeAsync()
+    {
+        State.ToggleTheme();
+        await JS.InvokeVoidAsync("subscriptionManagerTheme.set", State.Theme, AppState.ThemeCookieName);
+    }
+
+    private void ChangeLanguage(string languageCode)
+    {
+        var culture = SupportedCultures.ByLanguageCode.TryGetValue(languageCode, out var selected) ? selected : SupportedCultures.DefaultCulture;
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var redirectUri = string.IsNullOrWhiteSpace(currentPath) ? "/" : $"/{currentPath}";
+        Navigation.NavigateTo($"/culture/set?culture={Uri.EscapeDataString(culture)}&redirectUri={Uri.EscapeDataString(redirectUri)}", forceLoad: true);
+    }
+}

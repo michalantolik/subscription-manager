@@ -1,0 +1,96 @@
+.ui-form, .ds-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-5);
+}
+
+.ui-form-section, .ds-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-4);
+}
+
+.ui-form-section + .ui-form-section,
+.ds-form-section + .ds-form-section {
+    padding-top: var(--ui-space-5);
+    border-top: 1px solid var(--border);
+}
+
+.ui-form-section-header { display: flex; flex-direction: column; gap: var(--ui-space-2); }
+.ui-form-section-title, .ds-form-section-title { margin: 0; color: var(--text); font-size: 13px; font-weight: 800; line-height: 1.35; }
+.ui-form-section-description, .ds-form-section-description { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+.ui-form-grid, .ds-form-grid, .subscription-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--ui-space-4);
+    row-gap: var(--ui-space-5);
+}
+
+.ui-form-grid-single { grid-template-columns: minmax(0, 1fr); }
+.ui-form-grid-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.ui-field, .ds-field, .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-2);
+    min-width: 0;
+}
+
+.ui-field-wide, .ds-field-wide, .form-field-wide { grid-column: 1 / -1; }
+.ui-field-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ui-space-2); }
+.ui-label, .ds-label, .form-field > span { color: var(--text); font-size: 12px; font-weight: 780; line-height: 1.35; }
+.ui-required { color: var(--red); }
+.ui-field-disabled .ui-field-heading { opacity: .55; }
+.ui-help, .ds-help { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.ui-error, .ds-error { margin: 0; color: var(--red); font-size: 11px; line-height: 1.45; }
+
+.ui-control, .ds-control, .form-control {
+    width: 100%;
+    min-height: var(--ui-control-height);
+    padding: 0 14px;
+    color: var(--text);
+    background: var(--ui-control-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-md);
+    outline: none;
+    transition: background var(--ui-transition-fast), border-color var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+}
+
+.ui-control:hover:not(:disabled), .ds-control:hover:not(:disabled), .form-control:hover:not(:disabled) { border-color: var(--border-strong); }
+.ui-control:focus, .ds-control:focus, .form-control:focus { background: var(--surface); border-color: var(--brand); box-shadow: var(--ui-focus-ring); }
+.ui-control::placeholder, .ds-control::placeholder, .form-control::placeholder { color: var(--muted-2); }
+.ui-control:disabled, .ds-control:disabled, .form-control:disabled { color: var(--muted); cursor: not-allowed; background: color-mix(in srgb, var(--surface-soft) 82%, var(--border)); opacity: .82; }
+.ui-control.invalid, .ds-control.invalid, .form-control.invalid { border-color: var(--red); }
+.ui-control.invalid:focus, .ds-control.invalid:focus, .form-control.invalid:focus { box-shadow: var(--ui-danger-focus-ring); }
+
+select.ui-control, select.ds-control, select.form-control {
+    padding-right: 40px;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 19px) 19px, calc(100% - 14px) 19px;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.ui-form-actions, .ds-form-actions, .form-actions, .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ui-space-3);
+    margin-top: var(--ui-space-5);
+    padding-top: var(--ui-space-4);
+    border-top: 1px solid var(--border);
+}
+
+.ui-form-actions > button, .ds-form-actions > button, .form-actions > button, .dialog-actions > button { min-width: 112px; }
+
+@media (max-width: 720px) {
+    .ui-form-grid-three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+    .ui-form-grid, .ds-form-grid, .subscription-form-grid, .ui-form-grid-three { grid-template-columns: 1fr; }
+    .ui-field-wide, .ds-field-wide, .form-field-wide { grid-column: auto; }
+    .ui-form-actions, .ds-form-actions, .form-actions, .dialog-actions { flex-direction: column-reverse; }
+    .ui-form-actions > button, .ds-form-actions > button, .form-actions > button, .dialog-actions > button { width: 100%; }
+}

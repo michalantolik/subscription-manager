@@ -1,0 +1,8 @@
+.ui-card, .ds-card, .card, .metric-card { min-width: 0; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--ui-radius-lg); box-shadow: var(--shadow); }
+.ui-card, .ds-card { padding: var(--ui-space-5); }
+.ui-card-interactive, .ds-card-interactive { transition: transform var(--ui-transition-fast), border-color var(--ui-transition-fast), box-shadow var(--ui-transition-fast); }
+.ui-card-interactive:hover, .ds-card-interactive:hover { transform: translateY(-1px); border-color: var(--border-strong); }
+.ui-card-header, .ds-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ui-space-4); }
+.ui-card-title, .ds-card-title { margin: 0; font-size: 15px; letter-spacing: -.2px; }
+.ui-card-description, .ds-card-description { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.ui-card-footer, .ds-card-footer { margin-top: var(--ui-space-5); padding-top: var(--ui-space-4); border-top: 1px solid var(--border); }

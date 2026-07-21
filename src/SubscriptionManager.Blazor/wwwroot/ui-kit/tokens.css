@@ -1,0 +1,58 @@
+/* Flow55 UI Kit — design tokens.
+   Component styles consume only these tokens and the application theme colors
+   from app.css. Keep the canonical spacing scale at 8 / 12 / 16 / 24 / 32. */
+.app-shell {
+    --ui-space-0: 0;
+    --ui-space-1: 4px;
+    --ui-space-2: 8px;
+    --ui-space-3: 12px;
+    --ui-space-4: 16px;
+    --ui-space-5: 24px;
+    --ui-space-6: 32px;
+    --ui-space-7: 40px;
+    --ui-space-8: 48px;
+
+    --ui-radius-sm: 8px;
+    --ui-radius-md: 12px;
+    --ui-radius-lg: 16px;
+    --ui-radius-xl: 20px;
+
+    --ui-control-height-sm: 36px;
+    --ui-control-height: 44px;
+    --ui-control-height-lg: 48px;
+
+    --ui-dialog-width-sm: 440px;
+    --ui-dialog-width-md: 680px;
+    --ui-dialog-width-lg: 920px;
+    --ui-dialog-width-xl: 1200px;
+    --ui-dialog-viewport-gap: 24px;
+    --ui-dialog-padding-x: var(--ui-space-5);
+    --ui-dialog-padding-y: var(--ui-space-5);
+    --ui-dialog-footer-padding-bottom: var(--ui-space-5);
+
+    --ui-control-bg: var(--surface-soft);
+    --ui-focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+    --ui-danger-focus-ring: 0 0 0 3px color-mix(in srgb, var(--red) 18%, transparent);
+    --ui-dialog-header-shadow: 0 10px 24px -22px color-mix(in srgb, #000 70%, transparent);
+    --ui-dialog-footer-shadow: 0 -12px 28px -24px color-mix(in srgb, #000 78%, transparent);
+    --ui-transition-fast: 150ms ease;
+    --ui-transition: 200ms ease;
+
+    /* Compatibility aliases for the previous Design System 1.0 names. */
+    --ds-space-1: var(--ui-space-1);
+    --ds-space-2: var(--ui-space-2);
+    --ds-space-3: var(--ui-space-3);
+    --ds-space-4: var(--ui-space-4);
+    --ds-space-5: var(--ui-space-5);
+    --ds-space-6: var(--ui-space-6);
+    --ds-space-7: var(--ui-space-7);
+    --ds-radius-sm: var(--ui-radius-sm);
+    --ds-radius-md: var(--ui-radius-md);
+    --ds-radius-lg: var(--ui-radius-lg);
+    --ds-radius-xl: var(--ui-radius-xl);
+    --ds-control-height: var(--ui-control-height);
+    --ds-control-bg: var(--ui-control-bg);
+    --ds-focus-ring: var(--ui-focus-ring);
+    --ds-danger-focus-ring: var(--ui-danger-focus-ring);
+    --ds-transition: var(--ui-transition-fast);
+}

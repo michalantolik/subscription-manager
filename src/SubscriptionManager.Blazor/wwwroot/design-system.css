@@ -1,0 +1,3 @@
+/* Compatibility entry point retained for existing bookmarks and references.
+   New code should import/use Flow55 UI Kit from ui-kit/index.css. */
+@import url("ui-kit/index.css");

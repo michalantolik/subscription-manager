@@ -1,0 +1,8 @@
+.ui-search, .ds-search, .search-box, .subscription-search, .catalog-search { min-height: 46px; display: flex; align-items: center; gap: 12px; padding: 0 15px; color: var(--muted); background: var(--ui-control-bg); border: 1px solid var(--border); border-radius: 14px; transition: background var(--ui-transition-fast), border-color var(--ui-transition-fast), box-shadow var(--ui-transition-fast); }
+.ui-search:hover, .ds-search:hover, .search-box:hover, .subscription-search:hover, .catalog-search:hover { border-color: var(--border-strong); }
+.ui-search:focus-within, .ds-search:focus-within, .search-box:focus-within, .subscription-search:focus-within, .catalog-search:focus-within { color: var(--brand); background: var(--surface); border-color: var(--brand); box-shadow: var(--ui-focus-ring); }
+.ui-search .app-icon, .ds-search .app-icon, .search-box .app-icon, .subscription-search .app-icon, .catalog-search .app-icon { width: 19px; height: 19px; flex: 0 0 19px; }
+.ui-search input, .ds-search input, .search-box input, .subscription-search input, .catalog-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--text); background: transparent; }
+.ui-search input::placeholder, .ds-search input::placeholder, .search-box input::placeholder, .subscription-search input::placeholder, .catalog-search input::placeholder { color: var(--muted-2); }
+.ui-search-clear, .ds-search-clear { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; padding: 0; color: var(--muted); background: transparent; border: 0; border-radius: 8px; }
+.ui-search-clear:hover, .ds-search-clear:hover { color: var(--text); background: var(--surface-hover); }

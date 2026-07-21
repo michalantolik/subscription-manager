@@ -1,0 +1,653 @@
+@page "/subscriptions"
+@inject SubscriptionsApiClient ApiClient
+@inject Localizer T
+
+<PageTitle>Subscription Manager — @T["Navigation.Subscriptions"]</PageTitle>
+
+<section class="page subscriptions-page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">@T["Subscriptions.Eyebrow"]</p>
+            <h1>@T["Subscriptions.Title"]</h1>
+            <p>@T["Subscriptions.Description"]</p>
+        </div>
+
+        <button class="primary-action"
+                type="button"
+                @onclick="OpenCreate">
+            <AppIcon Name="plus" />
+            @T["Subscriptions.Add"]
+        </button>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="panel loading-panel">
+            @T["Status.Loading"]
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(_pageError))
+    {
+        <div class="panel error-panel">
+            @_pageError
+        </div>
+    }
+    else
+    {
+        <div class="metrics-grid">
+            <article class="metric-tile">
+                <span>@T["Subscriptions.Active"]</span>
+                <strong>@Active.Count</strong>
+                <small>@T["Subscriptions.OfAll", _subscriptions.Count]</small>
+            </article>
+
+            <article class="metric-tile">
+                <span>@T["Subscriptions.Monthly"]</span>
+                <strong>@Money(Active.Sum(x => x.MonthlyEquivalentAmount))</strong>
+                <small>
+                    @T[
+                        "Subscriptions.AverageMonthly",
+                        Money(
+                            Active.Count == 0
+                                ? 0
+                                : Active.Average(x => x.MonthlyEquivalentAmount))]
+                </small>
+            </article>
+
+            <article class="metric-tile">
+                <span>@T["Subscriptions.Yearly"]</span>
+                <strong>@Money(Active.Sum(x => x.YearlyEquivalentAmount))</strong>
+                <small>
+                    @T[
+                        "Subscriptions.AverageYearly",
+                        Money(
+                            Active.Count == 0
+                                ? 0
+                                : Active.Average(x => x.YearlyEquivalentAmount))]
+                </small>
+            </article>
+
+            <article class="metric-tile">
+                <span>@T["Subscriptions.MostExpensive"]</span>
+                <strong>@Money(MostExpensive?.MonthlyEquivalentAmount ?? 0)</strong>
+                <small>@(MostExpensive?.Name ?? "—")</small>
+            </article>
+        </div>
+
+        <section class="panel subscription-list-panel">
+            <div class="list-toolbar">
+                <div>
+                    <h2>@T["Subscriptions.ListTitle"]</h2>
+                    <p>@T["Subscriptions.ListDescription"]</p>
+                </div>
+
+                <div class="list-search">
+                    <AppIcon Name="search" />
+
+                    <input @bind="_search"
+                           @bind:event="oninput"
+                           placeholder="@T["Subscriptions.Search"]" />
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <button class="filter-chip @(_status == StatusFilter.Active ? "active" : null)"
+                        @onclick="() => _status = StatusFilter.Active">
+                    @T["Filter.Active"]
+                </button>
+
+                <button class="filter-chip @(_status == StatusFilter.All ? "active" : null)"
+                        @onclick="() => _status = StatusFilter.All">
+                    @T["Filter.All"]
+                </button>
+
+                <button class="filter-chip @(_status == StatusFilter.Ended ? "active" : null)"
+                        @onclick="() => _status = StatusFilter.Ended">
+                    @T["Filter.Ended"]
+                </button>
+            </div>
+
+            @if (!Filtered.Any())
+            {
+                <div class="empty-state">
+                    <span class="service-avatar large">
+                        <AppIcon Name="subscriptions" />
+                    </span>
+
+                    <h3>@T["Empty.Title"]</h3>
+                    <p>@T["Empty.Description"]</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var subscription in Filtered)
+                {
+                    <article class="subscription-row">
+                        <span class="service-avatar">
+                            @Initials(subscription.Name)
+                        </span>
+
+                        <div class="subscription-main">
+                            <strong>@subscription.Name</strong>
+                            <small>@Billing(subscription.BillingPeriod)</small>
+                        </div>
+
+                        <div class="subscription-date">
+                            <small>@T["Date.Start"]</small>
+                            <strong>
+                                @subscription.StartDate.ToString(
+                                    "d",
+                                    System.Globalization.CultureInfo.CurrentCulture)
+                            </strong>
+                        </div>
+
+                        <div class="subscription-price">
+                            <strong>
+                                @Money(
+                                    subscription.MonthlyEquivalentAmount,
+                                    subscription.Currency)
+                            </strong>
+                            <small>@T["PerMonth"]</small>
+                        </div>
+
+                        <div class="row-actions">
+                            <button class="action-icon"
+                                    type="button"
+                                    title="@T["Action.Edit"]"
+                                    @onclick="() => OpenEdit(subscription)">
+                                <AppIcon Name="edit" />
+                            </button>
+
+                            @if (subscription.IsActive)
+                            {
+                                <button class="action-icon"
+                                        type="button"
+                                        title="@T["Action.End"]"
+                                        @onclick="() => OpenEnd(subscription)">
+                                    <AppIcon Name="end" />
+                                </button>
+                            }
+
+                            <button class="action-icon danger"
+                                    type="button"
+                                    title="@T["Action.Delete"]"
+                                    @onclick="() => OpenDelete(subscription)">
+                                <AppIcon Name="trash" />
+                            </button>
+                        </div>
+                    </article>
+                }
+            }
+        </section>
+    }
+</section>
+
+@if (_dialog != DialogKind.None)
+{
+    <div class="dialog-backdrop">
+        <div class="app-modal"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="subscription-dialog-title">
+            <header class="modal-header">
+                <div class="modal-title-icon">
+                    <AppIcon Name="subscriptions" />
+                </div>
+
+                <div>
+                    <h2 id="subscription-dialog-title">@DialogTitle</h2>
+                    <p>@DialogDescription</p>
+                </div>
+
+                <button class="modal-close"
+                        type="button"
+                        title="@T["Action.Cancel"]"
+                        @onclick="CloseDialog">
+                    <AppIcon Name="close" />
+                </button>
+            </header>
+
+            @if (_dialog is DialogKind.Create or DialogKind.Edit)
+            {
+                <EditForm Model="_form"
+                          OnValidSubmit="SaveAsync"
+                          class="modal-form">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-content form-grid">
+                        <label class="form-field wide">
+                            <span>@T["Field.Name"]</span>
+
+                            <InputText class="form-control"
+                                       @bind-Value="_form.Name" />
+
+                            <ValidationMessage For="() => _form.Name" />
+                        </label>
+
+                        <label class="form-field">
+                            <span>@T["Field.Amount"]</span>
+
+                            <InputNumber class="form-control"
+                                         @bind-Value="_form.Amount" />
+
+                            <ValidationMessage For="() => _form.Amount" />
+                        </label>
+
+                        <label class="form-field">
+                            <span>@T["Field.Currency"]</span>
+
+                            <InputText class="form-control"
+                                       maxlength="3"
+                                       @bind-Value="_form.Currency" />
+
+                            <ValidationMessage For="() => _form.Currency" />
+                        </label>
+
+                        <label class="form-field wide">
+                            <span>@T["Field.BillingPeriod"]</span>
+
+                            <InputSelect class="form-control"
+                                         @bind-Value="_form.BillingPeriod">
+                                <option value="@BillingPeriod.Monthly">
+                                    @T["Billing.Monthly"]
+                                </option>
+
+                                <option value="@BillingPeriod.Quarterly">
+                                    @T["Billing.Quarterly"]
+                                </option>
+
+                                <option value="@BillingPeriod.SemiAnnual">
+                                    @T["Billing.SemiAnnual"]
+                                </option>
+
+                                <option value="@BillingPeriod.Yearly">
+                                    @T["Billing.Yearly"]
+                                </option>
+                            </InputSelect>
+                        </label>
+
+                        @if (_dialog == DialogKind.Create)
+                        {
+                            <label class="form-field wide">
+                                <span>@T["Field.StartDate"]</span>
+
+                                <InputDate class="form-control"
+                                           @bind-Value="_form.StartDate" />
+                            </label>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(_dialogError))
+                        {
+                            <div class="dialog-error wide">
+                                @_dialogError
+                            </div>
+                        }
+                    </div>
+
+                    <footer class="modal-footer">
+                        <button class="secondary-button"
+                                type="button"
+                                @onclick="CloseDialog">
+                            @T["Action.Cancel"]
+                        </button>
+
+                        <button class="primary-action"
+                                type="submit"
+                                disabled="@_saving">
+                            @(_dialog == DialogKind.Create
+                                ? T["Action.Create"]
+                                : T["Action.Save"])
+                        </button>
+                    </footer>
+                </EditForm>
+            }
+            else if (_dialog == DialogKind.End)
+            {
+                <div class="modal-content">
+                    <label class="form-field">
+                        <span>@T["Field.EndDate"]</span>
+
+                        <InputDate class="form-control"
+                                   @bind-Value="_endModel.EndDate" />
+                    </label>
+
+                    @if (!string.IsNullOrWhiteSpace(_dialogError))
+                    {
+                        <div class="dialog-error">
+                            @_dialogError
+                        </div>
+                    }
+                </div>
+
+                <footer class="modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDialog">
+                        @T["Action.Cancel"]
+                    </button>
+
+                    <button class="primary-action"
+                            type="button"
+                            disabled="@_saving"
+                            @onclick="EndAsync">
+                        @T["Action.End"]
+                    </button>
+                </footer>
+            }
+            else if (_dialog == DialogKind.Delete)
+            {
+                <div class="modal-content confirm-copy">
+                    <p>
+                        <strong>@_selected?.Name</strong>
+                    </p>
+
+                    <p>@T["Dialog.DeleteDescription"]</p>
+
+                    @if (!string.IsNullOrWhiteSpace(_dialogError))
+                    {
+                        <div class="dialog-error">
+                            @_dialogError
+                        </div>
+                    }
+                </div>
+
+                <footer class="modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDialog">
+                        @T["Action.Cancel"]
+                    </button>
+
+                    <button class="danger-button"
+                            type="button"
+                            disabled="@_saving"
+                            @onclick="DeleteAsync">
+                        @T["Action.Delete"]
+                    </button>
+                </footer>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<SubscriptionResponse> _subscriptions = [];
+
+    private bool _loading = true;
+    private bool _saving;
+
+    private string? _pageError;
+    private string? _dialogError;
+    private string? _search;
+
+    private StatusFilter _status = StatusFilter.Active;
+    private DialogKind _dialog;
+
+    private SubscriptionResponse? _selected;
+    private SubscriptionFormModel _form = new();
+    private EndSubscriptionModel _endModel = new();
+
+    private List<SubscriptionResponse> Active =>
+        _subscriptions
+            .Where(subscription => subscription.IsActive)
+            .ToList();
+
+    private SubscriptionResponse? MostExpensive =>
+        Active.MaxBy(subscription => subscription.MonthlyEquivalentAmount);
+
+    private IEnumerable<SubscriptionResponse> Filtered =>
+        _subscriptions
+            .Where(subscription =>
+                _status == StatusFilter.All
+                || (_status == StatusFilter.Active
+                    ? subscription.IsActive
+                    : !subscription.IsActive))
+            .Where(subscription =>
+                string.IsNullOrWhiteSpace(_search)
+                || subscription.Name.Contains(
+                    _search,
+                    StringComparison.CurrentCultureIgnoreCase))
+            .OrderByDescending(subscription => subscription.IsActive)
+            .ThenBy(subscription => subscription.Name);
+
+    private string DialogTitle =>
+        _dialog switch
+        {
+            DialogKind.Create => T["Dialog.CreateTitle"],
+            DialogKind.Edit => T["Dialog.EditTitle"],
+            DialogKind.End => T["Dialog.EndTitle"],
+            DialogKind.Delete => T["Dialog.DeleteTitle"],
+            _ => string.Empty
+        };
+
+    private string DialogDescription =>
+        _dialog switch
+        {
+            DialogKind.Create => T["Dialog.CreateDescription"],
+            DialogKind.Edit => T["Dialog.EditDescription"],
+            DialogKind.End => T["Dialog.EndDescription"],
+            DialogKind.Delete => T["Dialog.DeleteDescription"],
+            _ => string.Empty
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _pageError = null;
+
+        try
+        {
+            _subscriptions = await ApiClient.GetAllAsync();
+        }
+        catch
+        {
+            _pageError = T["Error.Load"];
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OpenCreate()
+    {
+        _selected = null;
+        _form = new SubscriptionFormModel();
+        _dialogError = null;
+        _dialog = DialogKind.Create;
+    }
+
+    private void OpenEdit(SubscriptionResponse subscription)
+    {
+        _selected = subscription;
+
+        _form = new SubscriptionFormModel
+        {
+            Name = subscription.Name,
+            Amount = subscription.Amount,
+            Currency = subscription.Currency,
+            BillingPeriod = subscription.BillingPeriod,
+            StartDate = subscription.StartDate
+        };
+
+        _dialogError = null;
+        _dialog = DialogKind.Edit;
+    }
+
+    private void OpenEnd(SubscriptionResponse subscription)
+    {
+        _selected = subscription;
+
+        _endModel = new EndSubscriptionModel
+        {
+            EndDate = DateOnly.FromDateTime(DateTime.Today)
+        };
+
+        _dialogError = null;
+        _dialog = DialogKind.End;
+    }
+
+    private void OpenDelete(SubscriptionResponse subscription)
+    {
+        _selected = subscription;
+        _dialogError = null;
+        _dialog = DialogKind.Delete;
+    }
+
+    private void CloseDialog()
+    {
+        if (_saving)
+        {
+            return;
+        }
+
+        _dialog = DialogKind.None;
+        _selected = null;
+        _dialogError = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _dialogError = null;
+
+        try
+        {
+            if (_dialog == DialogKind.Create)
+            {
+                await ApiClient.CreateAsync(_form);
+            }
+            else if (_selected is not null)
+            {
+                await ApiClient.UpdateAsync(_selected.Id, _form);
+            }
+
+            CloseDialogAfterSave();
+            await LoadAsync();
+        }
+        catch
+        {
+            _dialogError = T["Error.Save"];
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task EndAsync()
+    {
+        if (_selected is null)
+        {
+            return;
+        }
+
+        _saving = true;
+        _dialogError = null;
+
+        try
+        {
+            await ApiClient.EndAsync(
+                _selected.Id,
+                _endModel.EndDate);
+
+            CloseDialogAfterSave();
+            await LoadAsync();
+        }
+        catch
+        {
+            _dialogError = T["Error.Save"];
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_selected is null)
+        {
+            return;
+        }
+
+        _saving = true;
+        _dialogError = null;
+
+        try
+        {
+            await ApiClient.DeleteAsync(_selected.Id);
+
+            CloseDialogAfterSave();
+            await LoadAsync();
+        }
+        catch
+        {
+            _dialogError = T["Error.Delete"];
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void CloseDialogAfterSave()
+    {
+        _dialog = DialogKind.None;
+        _selected = null;
+        _dialogError = null;
+    }
+
+    private string Money(
+        decimal value,
+        string? currency = null)
+    {
+        var displayedCurrency =
+            currency
+            ?? Active.FirstOrDefault()?.Currency
+            ?? "PLN";
+
+        return string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            "{0:N2} {1}",
+            value,
+            displayedCurrency);
+    }
+
+    private string Initials(string name)
+    {
+        return string.Concat(
+            name
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries)
+                .Take(2)
+                .Select(part => char.ToUpperInvariant(part[0])));
+    }
+
+    private string Billing(BillingPeriod period)
+    {
+        return T[$"Billing.{period}"];
+    }
+
+    private enum StatusFilter
+    {
+        Active,
+        All,
+        Ended
+    }
+
+    private enum DialogKind
+    {
+        None,
+        Create,
+        Edit,
+        End,
+        Delete
+    }
+}

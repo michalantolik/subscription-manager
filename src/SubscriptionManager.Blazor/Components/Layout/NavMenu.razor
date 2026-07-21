@@ -1,0 +1,18 @@
+@inject AppState State
+@inject Localizer T
+
+<nav class="side-nav" aria-label="Main navigation">
+    <NavLink href="/" Match="NavLinkMatch.All" class="nav-item" @onclick="State.CloseMobileMenu">
+        <span class="nav-icon"><AppIcon Name="home" /></span>
+        <span class="nav-label">@T["Navigation.Overview"]</span>
+    </NavLink>
+    <NavLink href="/subscriptions" Match="NavLinkMatch.Prefix" class="nav-item" @onclick="State.CloseMobileMenu">
+        <span class="nav-icon"><AppIcon Name="subscriptions" /></span>
+        <span class="nav-label">@T["Navigation.Subscriptions"]</span>
+    </NavLink>
+</nav>
+
+<button class="sidebar-collapse" type="button" @onclick="State.ToggleSidebar">
+    <span class="collapse-icon @(State.IsSidebarCollapsed ? "is-collapsed" : null)"><AppIcon Name="chevron" /></span>
+    <span>@(State.IsSidebarCollapsed ? T["Layout.Expand"] : T["Layout.Collapse"])</span>
+</button>
