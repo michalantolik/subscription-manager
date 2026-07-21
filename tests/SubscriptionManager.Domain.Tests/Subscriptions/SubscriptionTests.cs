@@ -66,6 +66,17 @@ public class SubscriptionTests
             CreateSubscription(name: name));
     }
 
+    [Fact]
+    public void Constructor_ShouldThrowArgumentException_WhenNameExceedsMaximumLength()
+    {
+        var name = new string(
+            'a',
+            Subscription.MaxNameLength + 1);
+
+        Assert.Throws<ArgumentException>(() =>
+            CreateSubscription(name: name));
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -82,6 +93,8 @@ public class SubscriptionTests
     [InlineData(" ")]
     [InlineData("PL")]
     [InlineData("PLNN")]
+    [InlineData("P1N")]
+    [InlineData("12!")]
     public void Constructor_ShouldThrowArgumentException_WhenCurrencyIsInvalid(
         string currency)
     {
@@ -111,6 +124,37 @@ public class SubscriptionTests
         Assert.Equal(65m, subscription.Amount);
         Assert.Equal("EUR", subscription.Currency);
         Assert.Equal(BillingPeriod.Yearly, subscription.BillingPeriod);
+    }
+
+    [Fact]
+    public void Update_ShouldNormalizeArguments_WhenArgumentsAreValid()
+    {
+        var subscription = CreateSubscription();
+
+        subscription.Update(
+            "  Spotify  ",
+            65m,
+            "eur",
+            BillingPeriod.Yearly);
+
+        Assert.Equal("Spotify", subscription.Name);
+        Assert.Equal("EUR", subscription.Currency);
+    }
+
+    [Fact]
+    public void Update_ShouldThrowArgumentException_WhenNameExceedsMaximumLength()
+    {
+        var subscription = CreateSubscription();
+        var name = new string(
+            'a',
+            Subscription.MaxNameLength + 1);
+
+        Assert.Throws<ArgumentException>(() =>
+            subscription.Update(
+                name,
+                65m,
+                "EUR",
+                BillingPeriod.Yearly));
     }
 
     [Fact]
@@ -159,7 +203,9 @@ public class SubscriptionTests
             amount: amount,
             billingPeriod: billingPeriod);
 
-        Assert.Equal(expectedMonthlyAmount, subscription.MonthlyEquivalentAmount);
+        Assert.Equal(
+            expectedMonthlyAmount,
+            subscription.MonthlyEquivalentAmount);
     }
 
     [Theory]
@@ -176,7 +222,9 @@ public class SubscriptionTests
             amount: amount,
             billingPeriod: billingPeriod);
 
-        Assert.Equal(expectedYearlyAmount, subscription.YearlyEquivalentAmount);
+        Assert.Equal(
+            expectedYearlyAmount,
+            subscription.YearlyEquivalentAmount);
     }
 
     private static Subscription CreateSubscription(

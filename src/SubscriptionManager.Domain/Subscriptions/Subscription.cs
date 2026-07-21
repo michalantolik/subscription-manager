@@ -2,6 +2,8 @@
 
 public sealed class Subscription
 {
+    public const int MaxNameLength = 200;
+
     private Subscription()
     {
     }
@@ -98,7 +100,16 @@ public sealed class Subscription
                 nameof(name));
         }
 
-        Name = name.Trim();
+        var normalizedName = name.Trim();
+
+        if (normalizedName.Length > MaxNameLength)
+        {
+            throw new ArgumentException(
+                $"Subscription name cannot exceed {MaxNameLength} characters.",
+                nameof(name));
+        }
+
+        Name = normalizedName;
     }
 
     private void SetAmount(decimal amount)
@@ -115,15 +126,24 @@ public sealed class Subscription
 
     private void SetCurrency(string currency)
     {
-        if (string.IsNullOrWhiteSpace(currency) ||
-            currency.Trim().Length != 3)
+        if (string.IsNullOrWhiteSpace(currency))
+        {
+            throw new ArgumentException(
+                "Currency is required.",
+                nameof(currency));
+        }
+
+        var normalizedCurrency = currency.Trim();
+
+        if (normalizedCurrency.Length != 3 ||
+            !normalizedCurrency.All(char.IsLetter))
         {
             throw new ArgumentException(
                 "Currency must be a three-letter code.",
                 nameof(currency));
         }
 
-        Currency = currency.Trim().ToUpperInvariant();
+        Currency = normalizedCurrency.ToUpperInvariant();
     }
 
     private void SetBillingPeriod(BillingPeriod billingPeriod)
