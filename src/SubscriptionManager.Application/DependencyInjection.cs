@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.DigitalServices.GetDigitalServices;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
 using SubscriptionManager.Application.Subscriptions.EndSubscription;
@@ -13,6 +14,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(
         this IServiceCollection services)
     {
+        services.AddScoped<GetDigitalServicesHandler>();
+
         services.AddScoped<CreateSubscriptionHandler>();
         services.AddScoped<GetSubscriptionsHandler>();
         services.AddScoped<GetSubscriptionByIdHandler>();

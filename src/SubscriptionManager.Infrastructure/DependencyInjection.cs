@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Infrastructure.Persistence;
 using SubscriptionManager.Infrastructure.Persistence.Repositories;
@@ -19,7 +20,13 @@ public static class DependencyInjection
         services.AddDbContext<SubscriptionManagerDbContext>(options =>
             options.UseSqlServer(connectionString));
 
-        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<
+            IDigitalServiceRepository,
+            DigitalServiceRepository>();
+
+        services.AddScoped<
+            ISubscriptionRepository,
+            SubscriptionRepository>();
 
         return services;
     }

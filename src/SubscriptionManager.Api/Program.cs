@@ -1,17 +1,24 @@
 using System.Text.Json.Serialization;
 using SubscriptionManager.Application;
 using SubscriptionManager.Infrastructure;
+using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Api;
 
 public partial class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
+
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(
+                new JsonStringEnumConverter());
+        });
 
         builder.Services
             .AddControllers()
@@ -25,6 +32,8 @@ public partial class Program
 
         var app = builder.Build();
 
+        await app.Services.InitializeDatabaseAsync();
+
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
@@ -35,6 +44,6 @@ public partial class Program
 
         app.MapControllers();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

@@ -1,0 +1,263 @@
+﻿using Microsoft.EntityFrameworkCore;
+using SubscriptionManager.Domain.DigitalServices;
+
+namespace SubscriptionManager.Infrastructure.Persistence.Seed;
+
+public static class DigitalServiceSeed
+{
+    private static readonly DateTimeOffset CreatedAt =
+        new(2026, 7, 27, 0, 0, 0, TimeSpan.Zero);
+
+    public static async Task SeedAsync(
+        SubscriptionManagerDbContext dbContext,
+        CancellationToken cancellationToken = default)
+    {
+        var existingKeys = await dbContext.DigitalServices
+            .Select(x => x.Key)
+            .ToHashSetAsync(cancellationToken);
+
+        var servicesToAdd = CreateServices()
+            .Where(x => !existingKeys.Contains(x.Key))
+            .ToArray();
+
+        if (servicesToAdd.Length == 0)
+        {
+            return;
+        }
+
+        await dbContext.DigitalServices.AddRangeAsync(
+            servicesToAdd,
+            cancellationToken);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static DigitalService[] CreateServices()
+    {
+        return
+        [
+            // SortOrder is a curated estimate of popularity and relevance in Poland.
+            // 99 services popular in Poland.
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c01", "netflix", "Netflix", DigitalServiceCategory.Video, "netflix", "https://www.netflix.com/account", 10),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c02", "spotify", "Spotify", DigitalServiceCategory.Music, "spotify", "https://www.spotify.com/account", 20),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c03", "youtube-premium", "YouTube Premium", DigitalServiceCategory.Video, "youtube", "https://www.youtube.com/paid_memberships", 30),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c04", "microsoft-365", "Microsoft 365", DigitalServiceCategory.Productivity, "microsoft-365", "https://account.microsoft.com/services", 70),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c05", "chatgpt-plus", "ChatGPT Plus", DigitalServiceCategory.ArtificialIntelligence, "chatgpt", "https://chatgpt.com", 90),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c06", "github-copilot", "GitHub Copilot", DigitalServiceCategory.DeveloperTools, "github-copilot", "https://github.com/settings/copilot", 240),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c07", "google-one", "Google One", DigitalServiceCategory.CloudStorage, "google-one", "https://one.google.com/settings", 110),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c08", "canva-pro", "Canva Pro", DigitalServiceCategory.Design, "canva", "https://www.canva.com/settings/billing-and-plans", 150),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c09", "allegro-smart", "Allegro Smart!", DigitalServiceCategory.Shopping, "allegro", "https://allegro.pl/moje-allegro/zakupy/allegro-smart", 100),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c10", "legimi", "Legimi", DigitalServiceCategory.Books, "legimi", "https://www.legimi.pl/konto", 270),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c11", "tinder", "Tinder", DigitalServiceCategory.Dating, "tinder", "https://tinder.com", 230),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f433c12", "strava", "Strava", DigitalServiceCategory.Fitness, "strava", "https://www.strava.com/account", 250),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43000d", "hbo-max", "HBO Max", DigitalServiceCategory.Video, "hbo-max", "https://auth.max.com/account", 60),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43000e", "disney-plus", "Disney+", DigitalServiceCategory.Video, "disney-plus", "https://www.disneyplus.com/account", 50),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43000f", "amazon-prime", "Amazon Prime", DigitalServiceCategory.Shopping, "amazon-prime", "https://www.amazon.pl/gp/subs/primeclub/account/homepage.html", 40),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430010", "apple-tv-plus", "Apple TV+", DigitalServiceCategory.Video, "apple-tv-plus", "https://tv.apple.com/settings", 80),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430011", "skyshowtime", "SkyShowtime", DigitalServiceCategory.Video, "skyshowtime", "https://www.skyshowtime.com/account", 210),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430012", "canal-plus-online", "CANAL+ online", DigitalServiceCategory.Video, "canal-plus", "https://pl.canalplus.com/moje-konto", 170),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430013", "player", "Player", DigitalServiceCategory.Video, "player", "https://player.pl/moje-konto", 180),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430014", "polsat-box-go", "Polsat Box Go", DigitalServiceCategory.Video, "polsat-box-go", "https://polsatboxgo.pl/moje-konto", 190),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430015", "orange-tv-go", "Orange TV Go", DigitalServiceCategory.Video, "orange-tv-go", "https://tvgo.orange.pl", 1010),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430016", "cda-premium", "CDA Premium", DigitalServiceCategory.Video, "cda", "https://www.cda.pl/premium", 200),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430017", "megogo", "MEGOGO", DigitalServiceCategory.Video, "megogo", "https://megogo.net/pl/profile", 1020),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430018", "pilot-wp", "Pilot WP", DigitalServiceCategory.Video, "pilot-wp", "https://pilot.wp.pl", 1030),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430019", "filmbox-plus", "FilmBox+", DigitalServiceCategory.Video, "filmbox-plus", "https://www.filmbox.com", 1040),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43001a", "tidal", "TIDAL", DigitalServiceCategory.Music, "tidal", "https://account.tidal.com", 160),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43001b", "deezer-premium", "Deezer Premium", DigitalServiceCategory.Music, "deezer", "https://www.deezer.com/account", 360),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43001c", "amazon-music-unlimited", "Amazon Music Unlimited", DigitalServiceCategory.Music, "amazon-music", "https://www.amazon.pl/music/settings", 370),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43001d", "storytel", "Storytel", DigitalServiceCategory.Books, "storytel", "https://www.storytel.com/pl/account", 260),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43001e", "empik-go", "Empik Go", DigitalServiceCategory.Books, "empik-go", "https://www.empik.com/moj-empik/empikgo", 280),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43001f", "audioteka-klub", "Audioteka Klub", DigitalServiceCategory.Books, "audioteka", "https://audioteka.com/pl/account", 290),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430020", "bookbeat", "BookBeat", DigitalServiceCategory.Books, "bookbeat", "https://www.bookbeat.com/pl/account", 1050),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430021", "xbox-game-pass", "Xbox Game Pass", DigitalServiceCategory.Gaming, "xbox", "https://account.microsoft.com/services", 130),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430022", "playstation-plus", "PlayStation Plus", DigitalServiceCategory.Gaming, "playstation", "https://www.playstation.com/account", 140),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430023", "nintendo-switch-online", "Nintendo Switch Online", DigitalServiceCategory.Gaming, "nintendo", "https://accounts.nintendo.com", 390),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430024", "ea-play", "EA Play", DigitalServiceCategory.Gaming, "ea", "https://myaccount.ea.com", 400),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430025", "ubisoft-plus", "Ubisoft+", DigitalServiceCategory.Gaming, "ubisoft", "https://account.ubisoft.com", 1060),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430026", "geforce-now", "GeForce NOW", DigitalServiceCategory.Gaming, "geforce-now", "https://www.nvidia.com/account", 410),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430027", "apple-arcade", "Apple Arcade", DigitalServiceCategory.Gaming, "apple-arcade", "https://account.apple.com", 800),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430028", "google-play-pass", "Google Play Pass", DigitalServiceCategory.Gaming, "google-play", "https://play.google.com/store/account/subscriptions", 1070),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430029", "empik-premium", "Empik Premium", DigitalServiceCategory.Shopping, "empik", "https://www.empik.com/moj-empik", 540),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43002a", "open-fm-premium", "Open FM Premium", DigitalServiceCategory.Music, "open-fm", "https://open.fm/premium", 1080),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43002b", "wolt-plus", "Wolt+", DigitalServiceCategory.Food, "wolt", "https://wolt.com/me", 480),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43002c", "glovo-prime", "Glovo Prime", DigitalServiceCategory.Food, "glovo", "https://glovoapp.com/profile", 490),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43002d", "bolt-plus", "Bolt Plus", DigitalServiceCategory.Travel, "bolt", "https://bolt.eu", 510),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43002e", "uber-one", "Uber One", DigitalServiceCategory.Travel, "uber", "https://account.uber.com", 500),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43002f", "linkedin-premium", "LinkedIn Premium", DigitalServiceCategory.Social, "linkedin", "https://www.linkedin.com/mypreferences/d/premium-subscription", 220),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430030", "discord-nitro", "Discord Nitro", DigitalServiceCategory.Communication, "discord", "https://discord.com/settings/subscriptions", 340),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430031", "telegram-premium", "Telegram Premium", DigitalServiceCategory.Communication, "telegram", "https://telegram.org", 350),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430032", "x-premium", "X Premium", DigitalServiceCategory.Social, "x", "https://x.com/settings/premium", 880),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430033", "snapchat-plus", "Snapchat+", DigitalServiceCategory.Social, "snapchat", "https://accounts.snapchat.com", 890),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430034", "badoo-premium", "Badoo Premium", DigitalServiceCategory.Dating, "badoo", "https://badoo.com/settings", 520),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430035", "bumble-premium", "Bumble Premium", DigitalServiceCategory.Dating, "bumble", "https://bumble.com", 530),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430036", "super-duolingo", "Super Duolingo", DigitalServiceCategory.Education, "duolingo", "https://www.duolingo.com/settings/subscription", 300),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430037", "babbel", "Babbel", DigitalServiceCategory.Education, "babbel", "https://my.babbel.com/profile", 950),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430038", "busuu-premium", "Busuu Premium", DigitalServiceCategory.Education, "busuu", "https://www.busuu.com/dashboard/subscriptions", 960),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430039", "etutor", "eTutor", DigitalServiceCategory.Education, "etutor", "https://www.etutor.pl/profil", 1090),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43003a", "tutlo", "Tutlo", DigitalServiceCategory.Education, "tutlo", "https://tutlo.com", 1100),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43003b", "novakid", "Novakid", DigitalServiceCategory.Kids, "novakid", "https://www.novakid.pl", 1110),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43003c", "brainly-plus", "Brainly Plus", DigitalServiceCategory.Education, "brainly", "https://brainly.com/settings", 1120),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43003d", "coursera-plus", "Coursera Plus", DigitalServiceCategory.Education, "coursera", "https://www.coursera.org/my-purchases", 610),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43003e", "udemy-personal-plan", "Udemy Personal Plan", DigitalServiceCategory.Education, "udemy", "https://www.udemy.com/user/manage-subscriptions", 620),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43003f", "garmin-connect-plus", "Garmin Connect+", DigitalServiceCategory.Fitness, "garmin", "https://connect.garmin.com", 650),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430040", "fitatu-premium", "Fitatu Premium", DigitalServiceCategory.Health, "fitatu", "https://www.fitatu.com", 630),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430041", "myfitnesspal-premium", "MyFitnessPal Premium", DigitalServiceCategory.Health, "myfitnesspal", "https://www.myfitnesspal.com/account", 640),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430042", "yazio-pro", "YAZIO PRO", DigitalServiceCategory.Health, "yazio", "https://www.yazio.com/profile", 1130),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430043", "freeletics", "Freeletics", DigitalServiceCategory.Fitness, "freeletics", "https://www.freeletics.com/profile", 1140),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430044", "adidas-running-premium", "adidas Running Premium", DigitalServiceCategory.Fitness, "adidas-running", "https://www.runtastic.com", 1150),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430045", "trainingpeaks-premium", "TrainingPeaks Premium", DigitalServiceCategory.Sports, "trainingpeaks", "https://www.trainingpeaks.com/account", 1160),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430046", "zwift", "Zwift", DigitalServiceCategory.Fitness, "zwift", "https://www.zwift.com/account", 660),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430047", "google-workspace", "Google Workspace", DigitalServiceCategory.Business, "google-workspace", "https://admin.google.com/ac/billing/subscriptions", 310),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430048", "adobe-creative-cloud", "Adobe Creative Cloud", DigitalServiceCategory.Design, "adobe", "https://account.adobe.com/plans", 320),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430049", "dropbox-plus", "Dropbox Plus", DigitalServiceCategory.CloudStorage, "dropbox", "https://www.dropbox.com/account/plan", 330),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43004a", "icloud-plus", "iCloud+", DigitalServiceCategory.CloudStorage, "icloud", "https://account.apple.com", 120),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43004b", "notion-plus", "Notion Plus", DigitalServiceCategory.Productivity, "notion", "https://www.notion.so/profile/billing", 420),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43004c", "evernote-personal", "Evernote Personal", DigitalServiceCategory.Productivity, "evernote", "https://www.evernote.com/Settings.action", 790),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43004d", "todoist-pro", "Todoist Pro", DigitalServiceCategory.Productivity, "todoist", "https://app.todoist.com/app/settings/subscription", 780),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43004e", "grammarly-pro", "Grammarly Pro", DigitalServiceCategory.Productivity, "grammarly", "https://account.grammarly.com/subscription", 770),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43004f", "nordvpn", "NordVPN", DigitalServiceCategory.Security, "nordvpn", "https://my.nordaccount.com", 430),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430050", "surfshark", "Surfshark", DigitalServiceCategory.Security, "surfshark", "https://my.surfshark.com", 720),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430051", "expressvpn", "ExpressVPN", DigitalServiceCategory.Security, "expressvpn", "https://www.expressvpn.com/subscriptions", 1170),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430052", "proton-unlimited", "Proton Unlimited", DigitalServiceCategory.Security, "proton", "https://account.proton.me", 1180),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430053", "onepassword", "1Password", DigitalServiceCategory.Security, "onepassword", "https://my.1password.com", 730),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430054", "bitdefender-premium-security", "Bitdefender Premium Security", DigitalServiceCategory.Security, "bitdefender", "https://central.bitdefender.com", 700),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430055", "norton-360", "Norton 360", DigitalServiceCategory.Security, "norton", "https://my.norton.com", 1190),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430056", "eset-home-security", "ESET HOME Security", DigitalServiceCategory.Security, "eset", "https://home.eset.com", 710),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430057", "claude-pro", "Claude Pro", DigitalServiceCategory.ArtificialIntelligence, "claude", "https://claude.ai/settings/billing", 440),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430059", "perplexity-pro", "Perplexity Pro", DigitalServiceCategory.ArtificialIntelligence, "perplexity", "https://www.perplexity.ai/account/details", 450),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43005a", "jetbrains-all-products-pack", "JetBrains All Products Pack", DigitalServiceCategory.DeveloperTools, "jetbrains", "https://account.jetbrains.com/licenses", 470),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43005b", "cursor-pro", "Cursor Pro", DigitalServiceCategory.DeveloperTools, "cursor", "https://www.cursor.com/settings", 460),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43005c", "wyborcza-pl", "Wyborcza.pl", DigitalServiceCategory.News, "wyborcza", "https://wyborcza.pl/0,166516.html", 680),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43005d", "onet-premium", "Onet Premium", DigitalServiceCategory.News, "onet", "https://konto.onet.pl", 690),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43005e", "polityka-cyfrowa", "Polityka Cyfrowa", DigitalServiceCategory.News, "polityka", "https://www.polityka.pl/mojekonto", 1200),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43005f", "newsweek-polska", "Newsweek Polska", DigitalServiceCategory.News, "newsweek", "https://konto.onet.pl", 1210),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430060", "puls-biznesu", "Puls Biznesu", DigitalServiceCategory.News, "puls-biznesu", "https://www.pb.pl/konto", 1220),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430061", "rzeczpospolita", "Rzeczpospolita", DigitalServiceCategory.News, "rzeczpospolita", "https://konto.rp.pl", 1230),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430062", "dziennik-gazeta-prawna", "Dziennik Gazeta Prawna", DigitalServiceCategory.News, "dgp", "https://konto.gazetaprawna.pl", 1240),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430063", "yanosik-premium", "Yanosik Premium", DigitalServiceCategory.Automotive, "yanosik", "https://yanosik.pl", 670),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430064", "naviexpert", "NaviExpert", DigitalServiceCategory.Navigation, "naviexpert", "https://www.naviexpert.pl", 1250),
+
+            // 99 additional international services.
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430065", "hulu", "Hulu", DigitalServiceCategory.Video, "hulu", "https://secure.hulu.com/account", 570),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430066", "peacock-premium", "Peacock Premium", DigitalServiceCategory.Video, "peacock", "https://www.peacocktv.com/account", 580),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430067", "paramount-plus", "Paramount+", DigitalServiceCategory.Video, "paramount-plus", "https://www.paramountplus.com/account", 560),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430068", "discovery-plus", "Discovery+", DigitalServiceCategory.Video, "discovery-plus", "https://auth.discoveryplus.com/account", 860),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430069", "espn-plus", "ESPN+", DigitalServiceCategory.Sports, "espn", "https://plus.espn.com", 1260),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43006a", "crunchyroll-premium", "Crunchyroll Premium", DigitalServiceCategory.Video, "crunchyroll", "https://www.crunchyroll.com/account/membership", 550),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43006b", "mubi", "MUBI", DigitalServiceCategory.Video, "mubi", "https://mubi.com/account", 1270),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43006c", "britbox", "BritBox", DigitalServiceCategory.Video, "britbox", "https://www.britbox.com/account", 1280),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43006d", "curiositystream", "CuriosityStream", DigitalServiceCategory.Education, "curiositystream", "https://curiositystream.com/account", 1290),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43006e", "nebula", "Nebula", DigitalServiceCategory.Video, "nebula", "https://nebula.tv/settings", 1300),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43006f", "shudder", "Shudder", DigitalServiceCategory.Video, "shudder", "https://www.shudder.com/member", 1310),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430070", "starz", "STARZ", DigitalServiceCategory.Video, "starz", "https://www.starz.com/settings", 1320),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430071", "amc-plus", "AMC+", DigitalServiceCategory.Video, "amc-plus", "https://www.amcplus.com/account", 1330),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430072", "sling-tv", "Sling TV", DigitalServiceCategory.Video, "sling", "https://www.sling.com/account", 1340),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430073", "youtube-tv", "YouTube TV", DigitalServiceCategory.Video, "youtube-tv", "https://tv.youtube.com/settings", 1350),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430074", "fubo", "Fubo", DigitalServiceCategory.Sports, "fubo", "https://www.fubo.tv/account", 1360),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430075", "dazn", "DAZN", DigitalServiceCategory.Sports, "dazn", "https://www.dazn.com/account", 850),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430076", "kayo-sports", "Kayo Sports", DigitalServiceCategory.Sports, "kayo", "https://kayosports.com.au/my-account", 1370),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430077", "stan", "Stan", DigitalServiceCategory.Video, "stan", "https://www.stan.com.au/account", 1380),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430078", "binge", "Binge", DigitalServiceCategory.Video, "binge", "https://binge.com.au/account", 1390),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430079", "tencent-video-vip", "Tencent Video VIP", DigitalServiceCategory.Video, "tencent-video", "https://v.qq.com", 1400),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43007a", "iqiyi-vip", "iQIYI VIP", DigitalServiceCategory.Video, "iqiyi", "https://www.iq.com", 1410),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43007b", "youku-vip", "Youku VIP", DigitalServiceCategory.Video, "youku", "https://www.youku.tv", 1420),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43007c", "jiohotstar", "JioHotstar", DigitalServiceCategory.Video, "jiohotstar", "https://www.jiohotstar.com", 1430),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43007d", "sonyliv", "SonyLIV", DigitalServiceCategory.Video, "sonyliv", "https://www.sonyliv.com", 1440),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43007e", "zee5", "ZEE5", DigitalServiceCategory.Video, "zee5", "https://www.zee5.com/myaccount", 1450),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43007f", "viki-pass", "Viki Pass", DigitalServiceCategory.Video, "viki", "https://www.viki.com/account", 1460),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430080", "pandora-plus", "Pandora Plus", DigitalServiceCategory.Music, "pandora", "https://www.pandora.com/settings/subscriptions", 1470),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430081", "siriusxm", "SiriusXM", DigitalServiceCategory.Audio, "siriusxm", "https://care.siriusxm.com/account", 1480),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430082", "qobuz-studio", "Qobuz Studio", DigitalServiceCategory.Music, "qobuz", "https://www.qobuz.com/profile", 1490),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430083", "soundcloud-go-plus", "SoundCloud Go+", DigitalServiceCategory.Music, "soundcloud", "https://soundcloud.com/you/subscriptions", 870),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430084", "audible", "Audible", DigitalServiceCategory.Books, "audible", "https://www.audible.com/account", 590),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430085", "kindle-unlimited", "Kindle Unlimited", DigitalServiceCategory.Books, "kindle", "https://www.amazon.com/hz5/yourmembershipsandsubscriptions", 600),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430086", "everand", "Everand", DigitalServiceCategory.Books, "everand", "https://www.everand.com/account-settings", 1500),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430087", "blinkist", "Blinkist", DigitalServiceCategory.Books, "blinkist", "https://www.blinkist.com/account", 1510),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430088", "headway", "Headway", DigitalServiceCategory.Books, "headway", "https://makeheadway.com", 1520),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430089", "calm-premium", "Calm Premium", DigitalServiceCategory.Health, "calm", "https://www.calm.com/profile", 980),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43008a", "headspace", "Headspace", DigitalServiceCategory.Health, "headspace", "https://www.headspace.com/subscription/manage", 970),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43008b", "roblox-premium", "Roblox Premium", DigitalServiceCategory.Gaming, "roblox", "https://www.roblox.com/my/account", 810),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43008c", "fortnite-crew", "Fortnite Crew", DigitalServiceCategory.Gaming, "fortnite", "https://www.epicgames.com/account/subscriptions", 820),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43008d", "minecraft-realms-plus", "Minecraft Realms Plus", DigitalServiceCategory.Gaming, "minecraft", "https://account.microsoft.com/services", 830),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43008e", "humble-choice", "Humble Choice", DigitalServiceCategory.Gaming, "humble", "https://www.humblebundle.com/membership", 1530),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43008f", "blacknut", "Blacknut", DigitalServiceCategory.Gaming, "blacknut", "https://www.blacknut.com/account", 1540),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430090", "shadow-pc", "Shadow PC", DigitalServiceCategory.CloudComputing, "shadow", "https://eu.shadow.tech/account", 1550),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430091", "fallout-first", "Fallout 1st", DigitalServiceCategory.Gaming, "fallout", "https://account.bethesda.net", 1560),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430092", "eso-plus", "ESO Plus", DigitalServiceCategory.Gaming, "eso", "https://account.elderscrollsonline.com", 1570),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430093", "world-of-warcraft", "World of Warcraft", DigitalServiceCategory.Gaming, "world-of-warcraft", "https://account.battle.net/games", 840),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430094", "final-fantasy-xiv", "Final Fantasy XIV", DigitalServiceCategory.Gaming, "final-fantasy", "https://secure.square-enix.com", 1580),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430095", "runescape-membership", "RuneScape Membership", DigitalServiceCategory.Gaming, "runescape", "https://account.jagex.com", 1590),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430096", "reddit-premium", "Reddit Premium", DigitalServiceCategory.Social, "reddit", "https://www.reddit.com/settings/premium", 900),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430097", "grindr-xtra", "Grindr XTRA", DigitalServiceCategory.Dating, "grindr", "https://www.grindr.com", 1600),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430098", "hinge-plus", "Hinge+", DigitalServiceCategory.Dating, "hinge", "https://hinge.co", 1610),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f430099", "match", "Match", DigitalServiceCategory.Dating, "match", "https://www.match.com/account", 1620),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43009a", "eharmony-premium", "eharmony Premium", DigitalServiceCategory.Dating, "eharmony", "https://www.eharmony.com/account", 1630),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43009b", "okcupid-premium", "OkCupid Premium", DigitalServiceCategory.Dating, "okcupid", "https://www.okcupid.com/settings", 1640),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43009c", "walmart-plus", "Walmart+", DigitalServiceCategory.Shopping, "walmart", "https://www.walmart.com/account/plus", 1650),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43009d", "instacart-plus", "Instacart+", DigitalServiceCategory.Food, "instacart", "https://www.instacart.com/store/account", 1660),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43009e", "dashpass", "DashPass", DigitalServiceCategory.Food, "doordash", "https://www.doordash.com/consumer/membership", 1670),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f43009f", "grubhub-plus", "Grubhub+", DigitalServiceCategory.Food, "grubhub", "https://www.grubhub.com/account", 1680),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a0", "deliveroo-plus", "Deliveroo Plus", DigitalServiceCategory.Food, "deliveroo", "https://deliveroo.co.uk/account", 1690),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a1", "zomato-gold", "Zomato Gold", DigitalServiceCategory.Food, "zomato", "https://www.zomato.com", 1700),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a2", "swiggy-one", "Swiggy One", DigitalServiceCategory.Food, "swiggy", "https://www.swiggy.com/my-account", 1710),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a3", "costco-membership", "Costco Membership", DigitalServiceCategory.Shopping, "costco", "https://www.costco.com/AccountHomeView", 1720),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a4", "sams-club-membership", "Sam's Club Membership", DigitalServiceCategory.Shopping, "sams-club", "https://www.samsclub.com/account", 1730),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a5", "lyft-pink", "Lyft Pink", DigitalServiceCategory.Travel, "lyft", "https://account.lyft.com", 1740),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a6", "careem-plus", "Careem Plus", DigitalServiceCategory.Travel, "careem", "https://www.careem.com", 1750),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a7", "grabunlimited", "GrabUnlimited", DigitalServiceCategory.Travel, "grab", "https://www.grab.com", 1760),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a8", "rappi-pro", "Rappi Pro", DigitalServiceCategory.Food, "rappi", "https://www.rappi.com", 1770),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300a9", "revolut-premium", "Revolut Premium", DigitalServiceCategory.Finance, "revolut", "https://app.revolut.com", 380),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300aa", "monzo-extra", "Monzo Extra", DigitalServiceCategory.Finance, "monzo", "https://web.monzo.com", 1780),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300ab", "n26-smart", "N26 Smart", DigitalServiceCategory.Finance, "n26", "https://app.n26.com", 1790),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300ac", "curve-pay-pro", "Curve Pay Pro", DigitalServiceCategory.Finance, "curve", "https://www.curve.com", 1800),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300ad", "rocket-money-premium", "Rocket Money Premium", DigitalServiceCategory.Finance, "rocket-money", "https://app.rocketmoney.com/settings", 1810),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300ae", "copilot-money", "Copilot Money", DigitalServiceCategory.Finance, "copilot-money", "https://copilot.money", 1820),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300af", "ynab", "YNAB", DigitalServiceCategory.Finance, "ynab", "https://app.ynab.com/settings/subscription", 1830),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b0", "quicken-simplifi", "Quicken Simplifi", DigitalServiceCategory.Finance, "quicken", "https://app.simplifimoney.com", 1840),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b1", "peloton-app-plus", "Peloton App+", DigitalServiceCategory.Fitness, "peloton", "https://www.onepeloton.com/mymembership", 1850),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b2", "fitbit-premium", "Fitbit Premium", DigitalServiceCategory.Health, "fitbit", "https://www.fitbit.com/settings", 990),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b3", "apple-fitness-plus", "Apple Fitness+", DigitalServiceCategory.Fitness, "apple-fitness", "https://account.apple.com", 1000),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b4", "whoop", "WHOOP", DigitalServiceCategory.Fitness, "whoop", "https://app.whoop.com/membership", 1860),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b5", "oura-membership", "Oura Membership", DigitalServiceCategory.Health, "oura", "https://cloud.ouraring.com/account", 1870),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b6", "centr", "Centr", DigitalServiceCategory.Fitness, "centr", "https://centr.com/account", 1880),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b7", "alo-moves", "Alo Moves", DigitalServiceCategory.Fitness, "alo-moves", "https://www.alomoves.com/account", 1890),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b8", "classpass", "ClassPass", DigitalServiceCategory.Fitness, "classpass", "https://classpass.com/account", 1900),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300b9", "flo-premium", "Flo Premium", DigitalServiceCategory.Health, "flo", "https://app.flo.health", 1910),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300ba", "clue-plus", "Clue Plus", DigitalServiceCategory.Health, "clue", "https://helloclue.com", 1920),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300bb", "noom", "Noom", DigitalServiceCategory.Health, "noom", "https://account.noom.com", 1930),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300bc", "weightwatchers", "WeightWatchers", DigitalServiceCategory.Health, "weightwatchers", "https://www.weightwatchers.com/account", 1940),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300bd", "masterclass", "MasterClass", DigitalServiceCategory.Education, "masterclass", "https://www.masterclass.com/account", 910),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300bf", "pluralsight", "Pluralsight", DigitalServiceCategory.Education, "pluralsight", "https://app.pluralsight.com/id/account", 930),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c0", "codecademy-plus", "Codecademy Plus", DigitalServiceCategory.Development, "codecademy", "https://www.codecademy.com/account", 920),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c1", "datacamp-premium", "DataCamp Premium", DigitalServiceCategory.Education, "datacamp", "https://app.datacamp.com/account-settings", 940),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c2", "brilliant-premium", "Brilliant Premium", DigitalServiceCategory.Education, "brilliant", "https://brilliant.org/account/settings", 1950),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c3", "rosetta-stone", "Rosetta Stone", DigitalServiceCategory.Education, "rosetta-stone", "https://totale.rosettastone.com", 1960),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c4", "figma-professional", "Figma Professional", DigitalServiceCategory.Design, "figma", "https://www.figma.com/settings", 750),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c5", "miro-starter", "Miro Starter", DigitalServiceCategory.Productivity, "miro", "https://miro.com/app/settings", 1970),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c6", "zoom-pro", "Zoom Pro", DigitalServiceCategory.Communication, "zoom", "https://zoom.us/billing", 740),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c7", "midjourney", "Midjourney", DigitalServiceCategory.ArtificialIntelligence, "midjourney", "https://www.midjourney.com/account", 760),
+            CreateDigitalService("7e25bbaa-130d-4f3a-8829-67592f4300c8", "envato-elements", "Envato Elements", DigitalServiceCategory.Design, "envato", "https://elements.envato.com/account", 1980)
+        ];
+    }
+
+    private static DigitalService CreateDigitalService(
+        string id,
+        string key,
+        string name,
+        DigitalServiceCategory category,
+        string iconKey,
+        string managementUrl,
+        int sortOrder)
+    {
+        return DigitalService.CreatePredefined(
+            Guid.Parse(id),
+            key,
+            name,
+            category,
+            iconKey,
+            managementUrl,
+            sortOrder,
+            CreatedAt);
+    }
+}

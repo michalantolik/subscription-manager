@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SubscriptionManager.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using SubscriptionManager.Infrastructure.Persistence;
 namespace SubscriptionManager.Infrastructure.Migrations
 {
     [DbContext(typeof(SubscriptionManagerDbContext))]
-    partial class SubscriptionManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727124346_AddDigitalServices")]
+    partial class AddDigitalServices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
