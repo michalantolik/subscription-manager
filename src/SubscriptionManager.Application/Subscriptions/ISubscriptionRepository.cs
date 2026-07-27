@@ -14,9 +14,11 @@ public interface ISubscriptionRepository
 
     Task<Subscription?> GetByIdAsync(
         Guid id,
+        Guid ownerId,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<Subscription>> GetAllAsync(
+        Guid ownerId,
         CancellationToken cancellationToken = default);
 
     void Remove(

@@ -1,5 +1,8 @@
 using System.Text.Json.Serialization;
+using SubscriptionManager.Api.Authentication;
+using SubscriptionManager.Api.ExceptionHandling;
 using SubscriptionManager.Application;
+using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Infrastructure;
 using SubscriptionManager.Infrastructure.Persistence;
 
@@ -14,11 +17,14 @@ public partial class Program
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
 
-        builder.Services.ConfigureHttpJsonOptions(options =>
-        {
-            options.SerializerOptions.Converters.Add(
-                new JsonStringEnumConverter());
-        });
+        builder.Services.AddHttpContextAccessor();
+
+        builder.Services.AddScoped<
+            ICurrentUser,
+            DevelopmentCurrentUser>();
+
+        builder.Services.AddProblemDetails();
+        builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
         builder.Services
             .AddControllers()
@@ -28,11 +34,19 @@ public partial class Program
                     new JsonStringEnumConverter());
             });
 
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(
+                new JsonStringEnumConverter());
+        });
+
         builder.Services.AddOpenApi();
 
         var app = builder.Build();
 
         await app.Services.InitializeDatabaseAsync();
+
+        app.UseExceptionHandler();
 
         if (app.Environment.IsDevelopment())
         {

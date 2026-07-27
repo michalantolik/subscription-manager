@@ -1,21 +1,29 @@
-﻿namespace SubscriptionManager.Application.Subscriptions.EndSubscription;
+﻿using SubscriptionManager.Application.Common.Authentication;
+
+namespace SubscriptionManager.Application.Subscriptions.EndSubscription;
 
 public sealed class EndSubscriptionHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;
+    private readonly ICurrentUser _currentUser;
 
     public EndSubscriptionHandler(
-        ISubscriptionRepository subscriptionRepository)
+        ISubscriptionRepository subscriptionRepository,
+        ICurrentUser currentUser)
     {
         _subscriptionRepository = subscriptionRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<bool> HandleAsync(
         EndSubscriptionCommand command,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(command);
+
         var subscription = await _subscriptionRepository.GetByIdAsync(
             command.SubscriptionId,
+            _currentUser.UserId,
             cancellationToken);
 
         if (subscription is null)

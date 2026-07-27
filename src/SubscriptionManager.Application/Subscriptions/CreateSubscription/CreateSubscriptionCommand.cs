@@ -7,4 +7,5 @@ public sealed record CreateSubscriptionCommand(
     decimal Amount,
     string Currency,
     BillingPeriod BillingPeriod,
-    DateOnly StartDate);
+    DateOnly StartDate,
+    Guid? DigitalServiceId = null);

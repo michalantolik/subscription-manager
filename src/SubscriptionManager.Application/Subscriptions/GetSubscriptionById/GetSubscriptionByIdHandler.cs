@@ -1,13 +1,18 @@
-﻿namespace SubscriptionManager.Application.Subscriptions.GetSubscriptionById;
+﻿using SubscriptionManager.Application.Common.Authentication;
+
+namespace SubscriptionManager.Application.Subscriptions.GetSubscriptionById;
 
 public sealed class GetSubscriptionByIdHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;
+    private readonly ICurrentUser _currentUser;
 
     public GetSubscriptionByIdHandler(
-        ISubscriptionRepository subscriptionRepository)
+        ISubscriptionRepository subscriptionRepository,
+        ICurrentUser currentUser)
     {
         _subscriptionRepository = subscriptionRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<SubscriptionDto?> HandleAsync(
@@ -16,6 +21,7 @@ public sealed class GetSubscriptionByIdHandler
     {
         var subscription = await _subscriptionRepository.GetByIdAsync(
             subscriptionId,
+            _currentUser.UserId,
             cancellationToken);
 
         return subscription?.ToDto();

@@ -1,4 +1,6 @@
-﻿namespace SubscriptionManager.Domain.Subscriptions;
+﻿using SubscriptionManager.Domain.DigitalServices;
+
+namespace SubscriptionManager.Domain.Subscriptions;
 
 public sealed class Subscription
 {
@@ -10,6 +12,7 @@ public sealed class Subscription
 
     public Subscription(
         Guid id,
+        Guid ownerId,
         string name,
         decimal amount,
         string currency,
@@ -23,17 +26,39 @@ public sealed class Subscription
                 nameof(id));
         }
 
+        if (ownerId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "Subscription owner identifier cannot be empty.",
+                nameof(ownerId));
+        }
+
         Id = id;
+        OwnerId = ownerId;
+
         SetName(name);
         SetAmount(amount);
         SetCurrency(currency);
         SetBillingPeriod(billingPeriod);
+
         StartDate = startDate;
     }
 
     public Guid Id { get; private set; }
 
+    public Guid OwnerId { get; private set; }
+
+    public Guid? DigitalServiceId { get; private set; }
+
     public string Name { get; private set; } = string.Empty;
+
+    public DigitalServiceCategory? Category { get; private set; }
+
+    public string? CustomCategoryName { get; private set; }
+
+    public string? IconKey { get; private set; }
+
+    public string? ManagementUrl { get; private set; }
 
     public decimal Amount { get; private set; }
 
@@ -60,6 +85,37 @@ public sealed class Subscription
 
     public decimal YearlyEquivalentAmount =>
         MonthlyEquivalentAmount * 12;
+
+    public void AssignDigitalService(
+        Guid digitalServiceId,
+        string name,
+        DigitalServiceCategory category,
+        string? customCategoryName,
+        string? iconKey,
+        string? managementUrl)
+    {
+        if (digitalServiceId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "Digital service identifier cannot be empty.",
+                nameof(digitalServiceId));
+        }
+
+        if (!Enum.IsDefined(category))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                "Digital service category is not supported.");
+        }
+
+        DigitalServiceId = digitalServiceId;
+        Category = category;
+
+        SetName(name);
+        SetCustomCategoryName(customCategoryName);
+        SetIconKey(iconKey);
+        SetManagementUrl(managementUrl);
+    }
 
     public void Update(
         string name,
@@ -110,6 +166,55 @@ public sealed class Subscription
         }
 
         Name = normalizedName;
+    }
+
+    private void SetCustomCategoryName(
+        string? customCategoryName)
+    {
+        if (Category != DigitalServiceCategory.Other &&
+            !string.IsNullOrWhiteSpace(customCategoryName))
+        {
+            throw new ArgumentException(
+                "A custom category name can only be used with the Other category.",
+                nameof(customCategoryName));
+        }
+
+        CustomCategoryName =
+            string.IsNullOrWhiteSpace(customCategoryName)
+                ? null
+                : customCategoryName.Trim();
+    }
+
+    private void SetIconKey(string? iconKey)
+    {
+        IconKey = string.IsNullOrWhiteSpace(iconKey)
+            ? null
+            : iconKey.Trim();
+    }
+
+    private void SetManagementUrl(string? managementUrl)
+    {
+        if (string.IsNullOrWhiteSpace(managementUrl))
+        {
+            ManagementUrl = null;
+            return;
+        }
+
+        var normalizedUrl = managementUrl.Trim();
+
+        if (!Uri.TryCreate(
+                normalizedUrl,
+                UriKind.Absolute,
+                out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttp &&
+             uri.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new ArgumentException(
+                "Management URL must be a valid HTTP or HTTPS URL.",
+                nameof(managementUrl));
+        }
+
+        ManagementUrl = normalizedUrl;
     }
 
     private void SetAmount(decimal amount)

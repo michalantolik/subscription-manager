@@ -1,4 +1,5 @@
-﻿using SubscriptionManager.Domain.Subscriptions;
+﻿using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Domain.Tests.Subscriptions;
 
@@ -7,23 +8,117 @@ public class SubscriptionTests
     [Fact]
     public void Constructor_ShouldCreateSubscription_WhenArgumentsAreValid()
     {
+        var id = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
         var startDate = new DateOnly(2026, 1, 1);
 
         var subscription = new Subscription(
-            Guid.NewGuid(),
+            id,
+            ownerId,
             "Netflix",
             49m,
             "PLN",
             BillingPeriod.Monthly,
             startDate);
 
+        Assert.Equal(id, subscription.Id);
+        Assert.Equal(ownerId, subscription.OwnerId);
+        Assert.Null(subscription.DigitalServiceId);
         Assert.Equal("Netflix", subscription.Name);
+        Assert.Null(subscription.Category);
+        Assert.Null(subscription.CustomCategoryName);
+        Assert.Null(subscription.IconKey);
+        Assert.Null(subscription.ManagementUrl);
         Assert.Equal(49m, subscription.Amount);
         Assert.Equal("PLN", subscription.Currency);
         Assert.Equal(BillingPeriod.Monthly, subscription.BillingPeriod);
         Assert.Equal(startDate, subscription.StartDate);
         Assert.Null(subscription.EndDate);
         Assert.True(subscription.IsActive);
+    }
+
+    [Fact]
+    public void AssignDigitalService_ShouldStoreServiceSnapshot()
+    {
+        var subscription = CreateSubscription(name: "Temporary name");
+        var digitalServiceId = Guid.NewGuid();
+
+        subscription.AssignDigitalService(
+            digitalServiceId,
+            "  Netflix  ",
+            DigitalServiceCategory.Video,
+            null,
+            "  netflix  ",
+            "  https://www.netflix.com/account  ");
+
+        Assert.Equal(
+            digitalServiceId,
+            subscription.DigitalServiceId);
+        Assert.Equal("Netflix", subscription.Name);
+        Assert.Equal(
+            DigitalServiceCategory.Video,
+            subscription.Category);
+        Assert.Null(subscription.CustomCategoryName);
+        Assert.Equal("netflix", subscription.IconKey);
+        Assert.Equal(
+            "https://www.netflix.com/account",
+            subscription.ManagementUrl);
+    }
+
+    [Fact]
+    public void AssignDigitalService_ShouldStoreCustomCategoryName_WhenCategoryIsOther()
+    {
+        var subscription = CreateSubscription();
+        var digitalServiceId = Guid.NewGuid();
+
+        subscription.AssignDigitalService(
+            digitalServiceId,
+            "My Service",
+            DigitalServiceCategory.Other,
+            "  Streaming  ",
+            null,
+            null);
+
+        Assert.Equal(
+            DigitalServiceCategory.Other,
+            subscription.Category);
+        Assert.Equal(
+            "Streaming",
+            subscription.CustomCategoryName);
+    }
+
+    [Fact]
+    public void AssignDigitalService_ShouldThrow_WhenDigitalServiceIdentifierIsEmpty()
+    {
+        var subscription = CreateSubscription();
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            subscription.AssignDigitalService(
+                Guid.Empty,
+                "Netflix",
+                DigitalServiceCategory.Video,
+                null,
+                "netflix",
+                "https://www.netflix.com/account"));
+
+        Assert.Equal("digitalServiceId", exception.ParamName);
+    }
+
+    [Fact]
+    public void AssignDigitalService_ShouldThrow_WhenCustomCategoryIsUsedWithKnownCategory()
+    {
+        var subscription = CreateSubscription();
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            subscription.AssignDigitalService(
+                Guid.NewGuid(),
+                "Netflix",
+                DigitalServiceCategory.Video,
+                "Streaming",
+                "netflix",
+                "https://www.netflix.com/account"));
+
+        Assert.Equal("customCategoryName", exception.ParamName);
     }
 
     [Fact]
@@ -45,14 +140,19 @@ public class SubscriptionTests
     [Fact]
     public void Constructor_ShouldThrowArgumentException_WhenIdentifierIsEmpty()
     {
-        Assert.Throws<ArgumentException>(() =>
-            new Subscription(
-                Guid.Empty,
-                "Netflix",
-                49m,
-                "PLN",
-                BillingPeriod.Monthly,
-                new DateOnly(2026, 1, 1)));
+        var exception = Assert.Throws<ArgumentException>(() =>
+            CreateSubscription(id: Guid.Empty));
+
+        Assert.Equal("id", exception.ParamName);
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrowArgumentException_WhenOwnerIdentifierIsEmpty()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            CreateSubscription(ownerId: Guid.Empty));
+
+        Assert.Equal("ownerId", exception.ParamName);
     }
 
     [Theory]
@@ -228,13 +328,16 @@ public class SubscriptionTests
     }
 
     private static Subscription CreateSubscription(
+        Guid? id = null,
+        Guid? ownerId = null,
         string name = "Netflix",
         decimal amount = 49m,
         string currency = "PLN",
         BillingPeriod billingPeriod = BillingPeriod.Monthly)
     {
         return new Subscription(
-            Guid.NewGuid(),
+            id ?? Guid.NewGuid(),
+            ownerId ?? Guid.NewGuid(),
             name,
             amount,
             currency,

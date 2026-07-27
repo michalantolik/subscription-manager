@@ -8,7 +8,12 @@ internal static class SubscriptionMappings
     {
         return new SubscriptionDto(
             subscription.Id,
+            subscription.DigitalServiceId,
             subscription.Name,
+            subscription.Category,
+            subscription.CustomCategoryName,
+            subscription.IconKey,
+            subscription.ManagementUrl,
             subscription.Amount,
             subscription.Currency,
             subscription.BillingPeriod,

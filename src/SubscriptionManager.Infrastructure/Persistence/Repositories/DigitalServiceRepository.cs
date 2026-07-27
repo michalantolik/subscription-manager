@@ -15,18 +15,38 @@ internal sealed class DigitalServiceRepository
         _dbContext = dbContext;
     }
 
-    public async Task<IReadOnlyCollection<DigitalService>> GetAllAsync(
+    public async Task<IReadOnlyCollection<DigitalService>> GetAvailableAsync(
+        Guid ownerId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.DigitalServices
             .AsNoTracking()
             .Where(digitalService =>
-                digitalService.IsPredefined &&
-                digitalService.IsActive)
-            .OrderBy(digitalService =>
+                digitalService.IsActive &&
+                (digitalService.IsPredefined ||
+                 digitalService.OwnerId == ownerId))
+            .OrderByDescending(digitalService =>
+                digitalService.IsPredefined)
+            .ThenBy(digitalService =>
                 digitalService.SortOrder)
             .ThenBy(digitalService =>
                 digitalService.Name)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<DigitalService?> GetAvailableByIdAsync(
+        Guid id,
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.DigitalServices
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                digitalService =>
+                    digitalService.Id == id &&
+                    digitalService.IsActive &&
+                    (digitalService.IsPredefined ||
+                     digitalService.OwnerId == ownerId),
+                cancellationToken);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Infrastructure.Persistence.Configurations;
@@ -16,9 +17,34 @@ internal sealed class SubscriptionConfiguration
         builder.Property(x => x.Id)
             .ValueGeneratedNever();
 
+        builder.Property(x => x.OwnerId)
+            .IsRequired();
+
+        builder.HasIndex(x => x.OwnerId);
+
+        builder.Property(x => x.DigitalServiceId);
+
+        builder.HasOne<DigitalService>()
+            .WithMany()
+            .HasForeignKey(x => x.DigitalServiceId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(x => x.Name)
             .IsRequired()
+            .HasMaxLength(Subscription.MaxNameLength);
+
+        builder.Property(x => x.Category)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.CustomCategoryName)
             .HasMaxLength(200);
+
+        builder.Property(x => x.IconKey)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.ManagementUrl)
+            .HasMaxLength(500);
 
         builder.Property(x => x.Amount)
             .HasPrecision(18, 2);

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SubscriptionManager.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using SubscriptionManager.Infrastructure.Persistence;
 namespace SubscriptionManager.Infrastructure.Migrations
 {
     [DbContext(typeof(SubscriptionManagerDbContext))]
-    partial class SubscriptionManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727133028_AddSubscriptionOwnership")]
+    partial class AddSubscriptionOwnership
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -98,32 +101,13 @@ namespace SubscriptionManager.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("Category")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
-                    b.Property<string>("CustomCategoryName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<Guid?>("DigitalServiceId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateOnly?>("EndDate")
                         .HasColumnType("date");
-
-                    b.Property<string>("IconKey")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ManagementUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -138,19 +122,9 @@ namespace SubscriptionManager.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DigitalServiceId");
-
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Subscriptions", (string)null);
-                });
-
-            modelBuilder.Entity("SubscriptionManager.Domain.Subscriptions.Subscription", b =>
-                {
-                    b.HasOne("SubscriptionManager.Domain.DigitalServices.DigitalService", null)
-                        .WithMany()
-                        .HasForeignKey("DigitalServiceId")
-                        .OnDelete(DeleteBehavior.SetNull);
                 });
 #pragma warning restore 612, 618
         }

@@ -1,10 +1,16 @@
-﻿using SubscriptionManager.Domain.Subscriptions;
+﻿using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Subscriptions;
 
 public sealed record SubscriptionDto(
     Guid Id,
+    Guid? DigitalServiceId,
     string Name,
+    DigitalServiceCategory? Category,
+    string? CustomCategoryName,
+    string? IconKey,
+    string? ManagementUrl,
     decimal Amount,
     string Currency,
     BillingPeriod BillingPeriod,

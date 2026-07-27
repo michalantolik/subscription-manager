@@ -1,4 +1,5 @@
 ﻿using Moq;
+using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.DigitalServices.GetDigitalServices;
 using SubscriptionManager.Domain.DigitalServices;
@@ -9,10 +10,11 @@ namespace SubscriptionManager.Application.Tests.DigitalServices
 public sealed class GetDigitalServicesHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ShouldReturnMappedDigitalServices()
+    public async Task HandleAsync_ShouldReturnAvailableDigitalServicesForCurrentUser()
     {
+        var ownerId = Guid.NewGuid();
         var netflixId = Guid.NewGuid();
-        var spotifyId = Guid.NewGuid();
+        var customServiceId = Guid.NewGuid();
         var createdAt = DateTimeOffset.UtcNow;
 
         var digitalServices = new[]
@@ -26,24 +28,34 @@ public sealed class GetDigitalServicesHandlerTests
                 "https://www.netflix.com/account",
                 10,
                 createdAt),
-            DigitalService.CreatePredefined(
-                spotifyId,
-                "spotify",
-                "Spotify",
-                DigitalServiceCategory.Music,
-                "spotify",
-                "https://www.spotify.com/account",
-                20,
+            DigitalService.CreateCustom(
+                customServiceId,
+                ownerId,
+                "my-streaming-service",
+                "My Streaming Service",
+                DigitalServiceCategory.Other,
+                "Streaming",
+                "custom-service",
+                "https://example.com/account",
                 createdAt)
         };
 
         var repository = new Mock<IDigitalServiceRepository>();
+        var currentUser = new Mock<ICurrentUser>();
+
+        currentUser
+            .SetupGet(x => x.UserId)
+            .Returns(ownerId);
 
         repository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAvailableAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(digitalServices);
 
-        var handler = new GetDigitalServicesHandler(repository.Object);
+        var handler = new GetDigitalServicesHandler(
+            repository.Object,
+            currentUser.Object);
 
         var result = await handler.HandleAsync();
 
@@ -66,38 +78,68 @@ public sealed class GetDigitalServicesHandlerTests
                 Assert.True(netflix.IsActive);
                 Assert.Equal(10, netflix.SortOrder);
             },
-            spotify =>
+            customService =>
             {
-                Assert.Equal(spotifyId, spotify.Id);
-                Assert.Equal("spotify", spotify.Key);
-                Assert.Equal("Spotify", spotify.Name);
-                Assert.True(spotify.IsPredefined);
+                Assert.Equal(customServiceId, customService.Id);
                 Assert.Equal(
-                    DigitalServiceCategory.Music,
-                    spotify.Category);
-                Assert.Null(spotify.CustomCategoryName);
-                Assert.Equal("spotify", spotify.IconKey);
+                    "my-streaming-service",
+                    customService.Key);
                 Assert.Equal(
-                    "https://www.spotify.com/account",
-                    spotify.ManagementUrl);
-                Assert.True(spotify.IsActive);
-                Assert.Equal(20, spotify.SortOrder);
+                    "My Streaming Service",
+                    customService.Name);
+                Assert.False(customService.IsPredefined);
+                Assert.Equal(
+                    DigitalServiceCategory.Other,
+                    customService.Category);
+                Assert.Equal(
+                    "Streaming",
+                    customService.CustomCategoryName);
+                Assert.Equal(
+                    "custom-service",
+                    customService.IconKey);
+                Assert.Equal(
+                    "https://example.com/account",
+                    customService.ManagementUrl);
+                Assert.True(customService.IsActive);
+                Assert.Equal(0, customService.SortOrder);
             });
+
+        repository.Verify(
+            x => x.GetAvailableAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnEmptyCollection_WhenCatalogIsEmpty()
+    public async Task HandleAsync_ShouldReturnEmptyCollection_WhenCurrentUserHasNoAvailableServices()
     {
+        var ownerId = Guid.NewGuid();
         var repository = new Mock<IDigitalServiceRepository>();
+        var currentUser = new Mock<ICurrentUser>();
+
+        currentUser
+            .SetupGet(x => x.UserId)
+            .Returns(ownerId);
 
         repository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAvailableAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<DigitalService>());
 
-        var handler = new GetDigitalServicesHandler(repository.Object);
+        var handler = new GetDigitalServicesHandler(
+            repository.Object,
+            currentUser.Object);
 
         var result = await handler.HandleAsync();
 
         Assert.Empty(result);
+
+        repository.Verify(
+            x => x.GetAvailableAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Moq;
+using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Application.Subscriptions.GetSubscriptions;
 using SubscriptionManager.Domain.Subscriptions;
@@ -8,12 +9,15 @@ namespace SubscriptionManager.Application.Tests.Subscriptions.GetSubscriptions;
 public sealed class GetSubscriptionsHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ShouldReturnMappedSubscriptions()
+    public async Task HandleAsync_ShouldReturnCurrentUserSubscriptions()
     {
+        var ownerId = Guid.NewGuid();
+
         var subscriptions = new[]
         {
             new Subscription(
                 Guid.NewGuid(),
+                ownerId,
                 "Netflix",
                 49m,
                 "PLN",
@@ -21,6 +25,7 @@ public sealed class GetSubscriptionsHandlerTests
                 new DateOnly(2026, 1, 1)),
             new Subscription(
                 Guid.NewGuid(),
+                ownerId,
                 "Microsoft 365",
                 299m,
                 "PLN",
@@ -29,12 +34,21 @@ public sealed class GetSubscriptionsHandlerTests
         };
 
         var repository = new Mock<ISubscriptionRepository>();
+        var currentUser = new Mock<ICurrentUser>();
+
+        currentUser
+            .SetupGet(x => x.UserId)
+            .Returns(ownerId);
 
         repository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAllAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(subscriptions);
 
-        var handler = new GetSubscriptionsHandler(repository.Object);
+        var handler = new GetSubscriptionsHandler(
+            repository.Object,
+            currentUser.Object);
 
         var result = await handler.HandleAsync();
 
@@ -47,30 +61,56 @@ public sealed class GetSubscriptionsHandlerTests
                 Assert.Equal("Netflix", first.Name);
                 Assert.Equal(49m, first.Amount);
                 Assert.Equal("PLN", first.Currency);
-                Assert.Equal(BillingPeriod.Monthly, first.BillingPeriod);
+                Assert.Equal(
+                    BillingPeriod.Monthly,
+                    first.BillingPeriod);
             },
             second =>
             {
                 Assert.Equal("Microsoft 365", second.Name);
                 Assert.Equal(299m, second.Amount);
                 Assert.Equal("PLN", second.Currency);
-                Assert.Equal(BillingPeriod.Yearly, second.BillingPeriod);
+                Assert.Equal(
+                    BillingPeriod.Yearly,
+                    second.BillingPeriod);
             });
+
+        repository.Verify(
+            x => x.GetAllAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnEmptyCollection_WhenNoSubscriptionsExist()
+    public async Task HandleAsync_ShouldReturnEmptyCollection_WhenCurrentUserHasNoSubscriptions()
     {
+        var ownerId = Guid.NewGuid();
         var repository = new Mock<ISubscriptionRepository>();
+        var currentUser = new Mock<ICurrentUser>();
+
+        currentUser
+            .SetupGet(x => x.UserId)
+            .Returns(ownerId);
 
         repository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAllAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Subscription>());
 
-        var handler = new GetSubscriptionsHandler(repository.Object);
+        var handler = new GetSubscriptionsHandler(
+            repository.Object,
+            currentUser.Object);
 
         var result = await handler.HandleAsync();
 
         Assert.Empty(result);
+
+        repository.Verify(
+            x => x.GetAllAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

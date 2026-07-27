@@ -35,18 +35,25 @@ internal sealed class SubscriptionRepository
 
     public async Task<Subscription?> GetByIdAsync(
         Guid id,
+        Guid ownerId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Subscriptions
             .SingleOrDefaultAsync(
-                subscription => subscription.Id == id,
+                subscription =>
+                    subscription.Id == id &&
+                    subscription.OwnerId == ownerId,
                 cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<Subscription>> GetAllAsync(
+        Guid ownerId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Subscriptions
+            .AsNoTracking()
+            .Where(subscription =>
+                subscription.OwnerId == ownerId)
             .OrderBy(subscription => subscription.Name)
             .ToListAsync(cancellationToken);
     }
