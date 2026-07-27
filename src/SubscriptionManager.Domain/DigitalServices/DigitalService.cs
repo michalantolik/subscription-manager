@@ -1,4 +1,4 @@
-﻿namespace SubscriptionManager.Domain.DigitalServices;
+namespace SubscriptionManager.Domain.DigitalServices;
 
 public sealed class DigitalService
 {
@@ -144,6 +144,52 @@ public sealed class DigitalService
             isActive: true,
             sortOrder: 0,
             createdAt);
+    }
+
+    public void Update(
+        string key,
+        string name,
+        DigitalServiceCategory category,
+        string? customCategoryName,
+        string? iconKey,
+        string? managementUrl)
+    {
+        if (IsPredefined)
+        {
+            throw new InvalidOperationException(
+                "A predefined digital service cannot be updated.");
+        }
+
+        if (!Enum.IsDefined(category))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(category),
+                "Digital service category is not supported.");
+        }
+
+        Category = category;
+        SetKey(key);
+        SetName(name);
+        SetCustomCategoryName(customCategoryName);
+        SetIconKey(iconKey);
+        SetManagementUrl(managementUrl);
+    }
+
+    public void Deactivate()
+    {
+        if (IsPredefined)
+        {
+            throw new InvalidOperationException(
+                "A predefined digital service cannot be deactivated.");
+        }
+
+        if (!IsActive)
+        {
+            throw new InvalidOperationException(
+                "The digital service is already inactive.");
+        }
+
+        IsActive = false;
     }
 
     private void SetKey(string key)

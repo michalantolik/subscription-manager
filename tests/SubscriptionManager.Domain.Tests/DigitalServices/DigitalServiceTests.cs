@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.DigitalServices;
 
 namespace SubscriptionManager.Domain.Tests.DigitalServices;
 
@@ -200,6 +200,88 @@ public sealed class DigitalServiceTests
             CreateDigitalService(managementUrl: managementUrl));
 
         Assert.Equal("managementUrl", exception.ParamName);
+    }
+
+    [Fact]
+    public void UpdateChangesCustomDigitalService()
+    {
+        var service = DigitalService.CreateCustom(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "my-service",
+            "My Service",
+            DigitalServiceCategory.Other,
+            "Streaming",
+            null,
+            null,
+            DateTimeOffset.UtcNow);
+
+        service.Update(
+            "updated-service",
+            "Updated Service",
+            DigitalServiceCategory.Productivity,
+            null,
+            "updated",
+            "https://example.com/settings");
+
+        Assert.Equal("updated-service", service.Key);
+        Assert.Equal("Updated Service", service.Name);
+        Assert.Equal(DigitalServiceCategory.Productivity, service.Category);
+        Assert.Null(service.CustomCategoryName);
+        Assert.Equal("updated", service.IconKey);
+        Assert.Equal("https://example.com/settings", service.ManagementUrl);
+    }
+
+    [Fact]
+    public void DeactivateMakesCustomDigitalServiceInactive()
+    {
+        var service = DigitalService.CreateCustom(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "my-service",
+            "My Service",
+            DigitalServiceCategory.Other,
+            null,
+            null,
+            null,
+            DateTimeOffset.UtcNow);
+
+        service.Deactivate();
+
+        Assert.False(service.IsActive);
+    }
+
+    [Fact]
+    public void UpdateThrowsForPredefinedDigitalService()
+    {
+        var service = CreateDigitalService();
+
+        Assert.Throws<InvalidOperationException>(() => service.Update(
+            "netflix",
+            "Netflix",
+            DigitalServiceCategory.Video,
+            null,
+            "netflix",
+            "https://www.netflix.com/account"));
+    }
+
+    [Fact]
+    public void DeactivateThrowsWhenCustomDigitalServiceIsAlreadyInactive()
+    {
+        var service = DigitalService.CreateCustom(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "my-service",
+            "My Service",
+            DigitalServiceCategory.Other,
+            null,
+            null,
+            null,
+            DateTimeOffset.UtcNow);
+
+        service.Deactivate();
+
+        Assert.Throws<InvalidOperationException>(service.Deactivate);
     }
 
     private static DigitalService CreateDigitalService(

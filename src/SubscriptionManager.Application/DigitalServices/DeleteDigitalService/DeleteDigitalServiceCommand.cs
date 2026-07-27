@@ -1,0 +1,3 @@
+namespace SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
+
+public sealed record DeleteDigitalServiceCommand(Guid DigitalServiceId);

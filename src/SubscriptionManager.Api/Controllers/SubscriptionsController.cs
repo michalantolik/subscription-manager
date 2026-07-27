@@ -14,6 +14,9 @@ namespace SubscriptionManager.Api.Controllers;
 [Route("api/subscriptions")]
 public sealed class SubscriptionsController : ControllerBase
 {
+    private const string GetSubscriptionByIdRouteName =
+        "GetSubscriptionById";
+
     private readonly CreateSubscriptionHandler _createSubscriptionHandler;
     private readonly GetSubscriptionsHandler _getSubscriptionsHandler;
     private readonly GetSubscriptionByIdHandler _getSubscriptionByIdHandler;
@@ -47,7 +50,7 @@ public sealed class SubscriptionsController : ControllerBase
         return Ok(subscriptions);
     }
 
-    [HttpGet("{id:guid}", Name = nameof(GetByIdAsync))]
+    [HttpGet("{id:guid}", Name = GetSubscriptionByIdRouteName)]
     public async Task<ActionResult<SubscriptionDto>> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken)
@@ -74,7 +77,7 @@ public sealed class SubscriptionsController : ControllerBase
             cancellationToken);
 
         return CreatedAtRoute(
-            nameof(GetByIdAsync),
+            GetSubscriptionByIdRouteName,
             new { id = subscriptionId },
             subscriptionId);
     }
