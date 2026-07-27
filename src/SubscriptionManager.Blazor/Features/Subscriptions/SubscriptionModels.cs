@@ -16,6 +16,7 @@ public enum BillingPeriod
 
 public sealed record SubscriptionResponse(
     Guid Id,
+    Guid? DigitalServiceId,
     string Name,
     decimal Amount,
     string Currency,
@@ -28,6 +29,8 @@ public sealed record SubscriptionResponse(
 
 public sealed class SubscriptionFormModel
 {
+    public Guid? DigitalServiceId { get; set; }
+
     [Required]
     [StringLength(200)]
     public string Name { get; set; } = string.Empty;
@@ -104,7 +107,8 @@ public sealed class SubscriptionsApiClient(HttpClient httpClient)
                 model.Amount,
                 Currency = model.Currency.ToUpperInvariant(),
                 model.BillingPeriod,
-                model.StartDate
+                model.StartDate,
+                model.DigitalServiceId
             },
             JsonOptions,
             cancellationToken);
@@ -128,7 +132,8 @@ public sealed class SubscriptionsApiClient(HttpClient httpClient)
                 model.Name,
                 model.Amount,
                 Currency = model.Currency.ToUpperInvariant(),
-                model.BillingPeriod
+                model.BillingPeriod,
+                model.DigitalServiceId
             },
             JsonOptions,
             cancellationToken);

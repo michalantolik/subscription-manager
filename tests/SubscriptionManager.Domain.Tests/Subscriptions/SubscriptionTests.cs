@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Domain.Tests.Subscriptions;
@@ -45,7 +45,6 @@ public class SubscriptionTests
 
         subscription.AssignDigitalService(
             digitalServiceId,
-            "  Netflix  ",
             DigitalServiceCategory.Video,
             null,
             "  netflix  ",
@@ -54,7 +53,7 @@ public class SubscriptionTests
         Assert.Equal(
             digitalServiceId,
             subscription.DigitalServiceId);
-        Assert.Equal("Netflix", subscription.Name);
+        Assert.Equal("Temporary name", subscription.Name);
         Assert.Equal(
             DigitalServiceCategory.Video,
             subscription.Category);
@@ -73,7 +72,6 @@ public class SubscriptionTests
 
         subscription.AssignDigitalService(
             digitalServiceId,
-            "My Service",
             DigitalServiceCategory.Other,
             "  Streaming  ",
             null,
@@ -95,7 +93,6 @@ public class SubscriptionTests
         var exception = Assert.Throws<ArgumentException>(() =>
             subscription.AssignDigitalService(
                 Guid.Empty,
-                "Netflix",
                 DigitalServiceCategory.Video,
                 null,
                 "netflix",
@@ -112,13 +109,35 @@ public class SubscriptionTests
         var exception = Assert.Throws<ArgumentException>(() =>
             subscription.AssignDigitalService(
                 Guid.NewGuid(),
-                "Netflix",
                 DigitalServiceCategory.Video,
                 "Streaming",
                 "netflix",
                 "https://www.netflix.com/account"));
 
         Assert.Equal("customCategoryName", exception.ParamName);
+    }
+
+
+    [Fact]
+    public void ClearDigitalService_ShouldRemoveServiceSnapshot()
+    {
+        var subscription = CreateSubscription();
+
+        subscription.AssignDigitalService(
+            Guid.NewGuid(),
+            DigitalServiceCategory.Video,
+            null,
+            "netflix",
+            "https://www.netflix.com/account");
+
+        subscription.ClearDigitalService();
+
+        Assert.Null(subscription.DigitalServiceId);
+        Assert.Null(subscription.Category);
+        Assert.Null(subscription.CustomCategoryName);
+        Assert.Null(subscription.IconKey);
+        Assert.Null(subscription.ManagementUrl);
+        Assert.Equal("Netflix", subscription.Name);
     }
 
     [Fact]

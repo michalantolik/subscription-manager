@@ -1,5 +1,7 @@
 @page "/subscriptions"
+@using SubscriptionManager.Blazor.Features.DigitalServices
 @inject SubscriptionsApiClient ApiClient
+@inject DigitalServicesApiClient DigitalServicesApiClient
 @inject Localizer T
 
 <PageTitle>Subscription Manager — @T["Navigation.Subscriptions"]</PageTitle>
@@ -216,6 +218,26 @@
 
                     <div class="modal-content form-grid">
                         <label class="form-field wide">
+                            <span>@T["Field.DigitalService"]</span>
+
+                            <InputSelect class="form-control"
+                                         @bind-Value="_form.DigitalServiceId"
+                                         @bind-Value:after="OnDigitalServiceChanged">
+                                <option value="">
+                                    @T["Field.SelectDigitalService"]
+                                </option>
+
+                                @foreach (var service in _digitalServices
+                                    .OrderBy(service => service.Name))
+                                {
+                                    <option value="@service.Id">
+                                        @service.Name
+                                    </option>
+                                }
+                            </InputSelect>
+                        </label>
+
+                        <label class="form-field wide">
                             <span>@T["Field.Name"]</span>
 
                             <InputText class="form-control"
@@ -372,6 +394,7 @@
 
 @code {
     private IReadOnlyList<SubscriptionResponse> _subscriptions = [];
+    private IReadOnlyList<DigitalServiceResponse> _digitalServices = [];
 
     private bool _loading = true;
     private bool _saving;
@@ -442,7 +465,11 @@
 
         try
         {
-            _subscriptions = await ApiClient.GetAllAsync();
+            _digitalServices =
+                await DigitalServicesApiClient.GetAllAsync();
+
+            _subscriptions =
+                await ApiClient.GetAllAsync();
         }
         catch
         {
@@ -462,12 +489,29 @@
         _dialog = DialogKind.Create;
     }
 
+    private void OnDigitalServiceChanged()
+    {
+        if (_form.DigitalServiceId is null)
+        {
+            return;
+        }
+
+        var digitalService = _digitalServices.FirstOrDefault(
+            service => service.Id == _form.DigitalServiceId);
+
+        if (digitalService is not null)
+        {
+            _form.Name = digitalService.Name;
+        }
+    }
+
     private void OpenEdit(SubscriptionResponse subscription)
     {
         _selected = subscription;
 
         _form = new SubscriptionFormModel
         {
+            DigitalServiceId = subscription.DigitalServiceId,
             Name = subscription.Name,
             Amount = subscription.Amount,
             Currency = subscription.Currency,
@@ -524,7 +568,9 @@
             }
             else if (_selected is not null)
             {
-                await ApiClient.UpdateAsync(_selected.Id, _form);
+                await ApiClient.UpdateAsync(
+                    _selected.Id,
+                    _form);
             }
 
             CloseDialogAfterSave();

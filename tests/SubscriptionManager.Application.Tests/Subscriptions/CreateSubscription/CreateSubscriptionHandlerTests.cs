@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.Subscriptions;
@@ -134,7 +134,7 @@ public sealed class CreateSubscriptionHandlerTests
 
         var result = await handler.HandleAsync(
             new CreateSubscriptionCommand(
-                "Ignored request name",
+                "Personal Netflix",
                 49m,
                 "pln",
                 BillingPeriod.Monthly,
@@ -148,7 +148,7 @@ public sealed class CreateSubscriptionHandlerTests
         Assert.Equal(
             digitalServiceId,
             addedSubscription.DigitalServiceId);
-        Assert.Equal("Netflix", addedSubscription.Name);
+        Assert.Equal("Personal Netflix", addedSubscription.Name);
         Assert.Equal(
             DigitalServiceCategory.Video,
             addedSubscription.Category);

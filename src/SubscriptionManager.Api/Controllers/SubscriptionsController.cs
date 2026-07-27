@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
@@ -90,7 +90,8 @@ public sealed class SubscriptionsController : ControllerBase
             request.Name,
             request.Amount,
             request.Currency,
-            request.BillingPeriod);
+            request.BillingPeriod,
+            request.DigitalServiceId);
 
         var updated = await _updateSubscriptionHandler.HandleAsync(
             command,
@@ -150,7 +151,8 @@ public sealed record UpdateSubscriptionRequest(
     string Name,
     decimal Amount,
     string Currency,
-    BillingPeriod BillingPeriod);
+    BillingPeriod BillingPeriod,
+    Guid? DigitalServiceId = null);
 
 public sealed record EndSubscriptionRequest(
     DateOnly EndDate);

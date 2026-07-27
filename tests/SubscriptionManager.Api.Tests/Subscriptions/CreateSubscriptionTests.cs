@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Domain.Subscriptions;
@@ -78,7 +78,7 @@ public sealed class CreateSubscriptionTests
     {
         var request = new
         {
-            Name = "Ignored request name",
+            Name = "Personal Netflix",
             Amount = 49m,
             Currency = "PLN",
             BillingPeriod = BillingPeriod.Monthly,
@@ -113,7 +113,7 @@ public sealed class CreateSubscriptionTests
         Assert.NotNull(subscription);
         Assert.Equal(subscriptionId, subscription.Id);
         Assert.Equal(NetflixId, subscription.DigitalServiceId);
-        Assert.Equal("Netflix", subscription.Name);
+        Assert.Equal("Personal Netflix", subscription.Name);
         Assert.Equal("Video", subscription.Category);
         Assert.Null(subscription.CustomCategoryName);
         Assert.Equal("netflix", subscription.IconKey);

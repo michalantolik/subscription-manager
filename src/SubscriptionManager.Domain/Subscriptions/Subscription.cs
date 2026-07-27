@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.DigitalServices;
 
 namespace SubscriptionManager.Domain.Subscriptions;
 
@@ -88,7 +88,6 @@ public sealed class Subscription
 
     public void AssignDigitalService(
         Guid digitalServiceId,
-        string name,
         DigitalServiceCategory category,
         string? customCategoryName,
         string? iconKey,
@@ -111,10 +110,18 @@ public sealed class Subscription
         DigitalServiceId = digitalServiceId;
         Category = category;
 
-        SetName(name);
         SetCustomCategoryName(customCategoryName);
         SetIconKey(iconKey);
         SetManagementUrl(managementUrl);
+    }
+
+    public void ClearDigitalService()
+    {
+        DigitalServiceId = null;
+        Category = null;
+        CustomCategoryName = null;
+        IconKey = null;
+        ManagementUrl = null;
     }
 
     public void Update(

@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Subscriptions.UpdateSubscription;
 
@@ -7,4 +7,5 @@ public sealed record UpdateSubscriptionCommand(
     string Name,
     decimal Amount,
     string Currency,
-    BillingPeriod BillingPeriod);
+    BillingPeriod BillingPeriod,
+    Guid? DigitalServiceId = null);

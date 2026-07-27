@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Application.Common.Authentication;
+using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
@@ -57,7 +57,7 @@ public sealed class CreateSubscriptionHandler
         var subscription = new Subscription(
             Guid.NewGuid(),
             ownerId,
-            digitalService?.Name ?? command.Name,
+            command.Name,
             command.Amount,
             command.Currency,
             command.BillingPeriod,
@@ -67,7 +67,6 @@ public sealed class CreateSubscriptionHandler
         {
             subscription.AssignDigitalService(
                 digitalService.Id,
-                digitalService.Name,
                 digitalService.Category,
                 digitalService.CustomCategoryName,
                 digitalService.IconKey,
