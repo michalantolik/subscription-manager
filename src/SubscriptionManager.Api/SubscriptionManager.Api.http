@@ -51,3 +51,17 @@ Content-Type: application/json
   "email": "michal@example.com",
   "password": "Test123!"
 }
+
+###
+
+### Confirm user email
+# Replace UserId with the value returned by the register request.
+# Replace ConfirmationToken with the token written to the API console logs.
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/auth/confirm-email
+Content-Type: application/json
+
+{
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "confirmationToken": "replace-with-confirmation-token"
+}

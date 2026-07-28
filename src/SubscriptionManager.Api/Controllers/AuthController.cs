@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Application.Identity.ConfirmEmail;
 using SubscriptionManager.Application.Identity.RegisterUser;
 
 namespace SubscriptionManager.Api.Controllers;
@@ -6,7 +8,8 @@ namespace SubscriptionManager.Api.Controllers;
 [ApiController]
 [Route("api/auth")]
 public sealed class AuthController(
-    RegisterUserHandler registerUserHandler)
+    RegisterUserHandler registerUserHandler,
+    ConfirmEmailHandler confirmEmailHandler)
     : ControllerBase
 {
     [HttpPost("register")]
@@ -24,16 +27,8 @@ public sealed class AuthController(
 
         if (!result.Succeeded)
         {
-            var errors = result.Errors
-                .GroupBy(error => error.Code)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group
-                        .Select(error => error.Description)
-                        .ToArray());
-
             return ValidationProblem(
-                new ValidationProblemDetails(errors));
+                CreateValidationProblemDetails(result.Errors));
         }
 
         var response = new RegisterUserResponse(
@@ -43,6 +38,42 @@ public sealed class AuthController(
             StatusCodes.Status201Created,
             response);
     }
+
+    [HttpPost("confirm-email")]
+    public async Task<IActionResult> ConfirmEmailAsync(
+        ConfirmEmailRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ConfirmEmailCommand(
+            request.UserId,
+            request.ConfirmationToken);
+
+        var result = await confirmEmailHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return ValidationProblem(
+                CreateValidationProblemDetails(result.Errors));
+        }
+
+        return NoContent();
+    }
+
+    private static ValidationProblemDetails CreateValidationProblemDetails(
+        IReadOnlyCollection<IdentityServiceError> errors)
+    {
+        var validationErrors = errors
+            .GroupBy(error => error.Code)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(error => error.Description)
+                    .ToArray());
+
+        return new ValidationProblemDetails(validationErrors);
+    }
 }
 
 public sealed record RegisterUserRequest(
@@ -51,3 +82,7 @@ public sealed record RegisterUserRequest(
 
 public sealed record RegisterUserResponse(
     Guid UserId);
+
+public sealed record ConfirmEmailRequest(
+    Guid UserId,
+    string ConfirmationToken);

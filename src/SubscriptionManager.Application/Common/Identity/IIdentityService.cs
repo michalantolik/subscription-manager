@@ -6,6 +6,15 @@ public interface IIdentityService
         string email,
         string password,
         CancellationToken cancellationToken = default);
+
+    Task<string?> GenerateEmailConfirmationTokenAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<ConfirmEmailResult> ConfirmEmailAsync(
+        Guid userId,
+        string confirmationToken,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record IdentityServiceError(
@@ -18,19 +27,21 @@ public sealed record CreateUserResult(
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static CreateUserResult Success(Guid userId)
-    {
-        return new CreateUserResult(
-            true,
-            userId,
-            []);
-    }
+        => new(true, userId, []);
 
     public static CreateUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
-    {
-        return new CreateUserResult(
-            false,
-            null,
-            errors.ToArray());
-    }
+        => new(false, null, errors.ToArray());
+}
+
+public sealed record ConfirmEmailResult(
+    bool Succeeded,
+    IReadOnlyCollection<IdentityServiceError> Errors)
+{
+    public static ConfirmEmailResult Success()
+        => new(true, []);
+
+    public static ConfirmEmailResult Failure(
+        IEnumerable<IdentityServiceError> errors)
+        => new(false, errors.ToArray());
 }

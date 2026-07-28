@@ -1,17 +1,42 @@
-﻿using SubscriptionManager.Application.Common.Identity;
+﻿using SubscriptionManager.Application.Common.Email;
+using SubscriptionManager.Application.Common.Identity;
 
 namespace SubscriptionManager.Application.Identity.RegisterUser;
 
 public sealed class RegisterUserHandler(
-    IIdentityService identityService)
+    IIdentityService identityService,
+    IEmailSender emailSender)
 {
-    public Task<CreateUserResult> HandleAsync(
+    public async Task<CreateUserResult> HandleAsync(
         RegisterUserCommand command,
         CancellationToken cancellationToken = default)
     {
-        return identityService.CreateUserAsync(
+        var result = await identityService.CreateUserAsync(
             command.Email,
             command.Password,
             cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return result;
+        }
+
+        var userId = result.UserId!.Value;
+
+        var confirmationToken =
+            await identityService.GenerateEmailConfirmationTokenAsync(
+                userId,
+                cancellationToken);
+
+        if (confirmationToken is not null)
+        {
+            await emailSender.SendEmailConfirmationAsync(
+                command.Email,
+                userId,
+                confirmationToken,
+                cancellationToken);
+        }
+
+        return result;
     }
 }

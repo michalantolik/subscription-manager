@@ -5,6 +5,7 @@ using SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
 using SubscriptionManager.Application.DigitalServices.GetDigitalServiceById;
 using SubscriptionManager.Application.DigitalServices.GetDigitalServices;
 using SubscriptionManager.Application.DigitalServices.UpdateDigitalService;
+using SubscriptionManager.Application.Identity.ConfirmEmail;
 using SubscriptionManager.Application.Identity.RegisterUser;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
@@ -35,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<DeleteSubscriptionHandler>();
 
         services.AddScoped<RegisterUserHandler>();
+        services.AddScoped<ConfirmEmailHandler>();
 
         return services;
     }
