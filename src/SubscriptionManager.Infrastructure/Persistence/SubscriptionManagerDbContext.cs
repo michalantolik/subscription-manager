@@ -1,10 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Infrastructure.Identity;
 
 namespace SubscriptionManager.Infrastructure.Persistence;
 
-public sealed class SubscriptionManagerDbContext : DbContext
+public sealed class SubscriptionManagerDbContext
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public SubscriptionManagerDbContext(
         DbContextOptions<SubscriptionManagerDbContext> options)
