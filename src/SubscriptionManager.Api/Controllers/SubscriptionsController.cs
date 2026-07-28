@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
@@ -11,6 +12,7 @@ using SubscriptionManager.Domain.Subscriptions;
 namespace SubscriptionManager.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/subscriptions")]
 public sealed class SubscriptionsController : ControllerBase
 {

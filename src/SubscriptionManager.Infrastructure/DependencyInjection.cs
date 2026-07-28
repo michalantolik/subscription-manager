@@ -2,10 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.Subscriptions;
+using SubscriptionManager.Infrastructure.Authentication;
 using SubscriptionManager.Infrastructure.Email;
 using SubscriptionManager.Infrastructure.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
@@ -34,8 +36,15 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<SubscriptionManagerDbContext>()
             .AddDefaultTokenProviders();
 
+        services.Configure<JwtOptions>(
+            configuration.GetSection(JwtOptions.SectionName));
+
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IEmailSender, DevelopmentEmailSender>();
+
+        services.AddScoped<
+            IAccessTokenGenerator,
+            JwtAccessTokenGenerator>();
 
         services.AddScoped<
             IDigitalServiceRepository,

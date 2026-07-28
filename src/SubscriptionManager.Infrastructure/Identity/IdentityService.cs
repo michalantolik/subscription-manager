@@ -74,6 +74,50 @@ public sealed class IdentityService(
             result.Errors.Select(MapError));
     }
 
+    public async Task<AuthenticateUserResult> AuthenticateUserAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+
+        if (user is null)
+        {
+            return AuthenticationFailed();
+        }
+
+        if (!user.EmailConfirmed)
+        {
+            return AuthenticateUserResult.Failure(
+            [
+                new IdentityServiceError(
+                    "EmailNotConfirmed",
+                    "The email address has not been confirmed.")
+            ]);
+        }
+
+        var passwordIsValid = await userManager.CheckPasswordAsync(
+            user,
+            password);
+
+        if (!passwordIsValid)
+        {
+            return AuthenticationFailed();
+        }
+
+        return AuthenticateUserResult.Success(user.Id);
+    }
+
+    private static AuthenticateUserResult AuthenticationFailed()
+    {
+        return AuthenticateUserResult.Failure(
+        [
+            new IdentityServiceError(
+                "InvalidCredentials",
+                "The email address or password is invalid.")
+        ]);
+    }
+
     private static IdentityServiceError MapError(
         IdentityError error)
     {

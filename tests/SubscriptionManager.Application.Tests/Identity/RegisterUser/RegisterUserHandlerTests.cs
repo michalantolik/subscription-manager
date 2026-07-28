@@ -100,6 +100,14 @@ public sealed class RegisterUserHandlerTests
         {
             throw new NotSupportedException();
         }
+
+        public Task<AuthenticateUserResult> AuthenticateUserAsync(
+            string email,
+            string password,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class TestEmailSender : IEmailSender

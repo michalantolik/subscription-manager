@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Identity.ConfirmEmail;
+using SubscriptionManager.Application.Identity.LoginUser;
 using SubscriptionManager.Application.Identity.RegisterUser;
 
 namespace SubscriptionManager.Api.Controllers;
@@ -9,7 +11,9 @@ namespace SubscriptionManager.Api.Controllers;
 [Route("api/auth")]
 public sealed class AuthController(
     RegisterUserHandler registerUserHandler,
-    ConfirmEmailHandler confirmEmailHandler)
+    ConfirmEmailHandler confirmEmailHandler,
+    LoginUserHandler loginUserHandler,
+    ICurrentUser currentUser)
     : ControllerBase
 {
     [HttpPost("register")]
@@ -61,6 +65,39 @@ public sealed class AuthController(
         return NoContent();
     }
 
+    [HttpPost("login")]
+    public async Task<ActionResult<LoginUserResponse>> LoginAsync(
+        LoginUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new LoginUserCommand(
+            request.Email,
+            request.Password);
+
+        var result = await loginUserHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return ValidationProblem(
+                CreateValidationProblemDetails(result.Errors));
+        }
+
+        var response = new LoginUserResponse(
+            result.AccessToken!);
+
+        return Ok(response);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public ActionResult<CurrentUserResponse> GetCurrentUser()
+    {
+        return Ok(
+            new CurrentUserResponse(currentUser.UserId));
+    }
+
     private static ValidationProblemDetails CreateValidationProblemDetails(
         IReadOnlyCollection<IdentityServiceError> errors)
     {
@@ -86,3 +123,13 @@ public sealed record RegisterUserResponse(
 public sealed record ConfirmEmailRequest(
     Guid UserId,
     string ConfirmationToken);
+
+public sealed record LoginUserRequest(
+    string Email,
+    string Password);
+
+public sealed record LoginUserResponse(
+    string AccessToken);
+
+public sealed record CurrentUserResponse(
+    Guid UserId);

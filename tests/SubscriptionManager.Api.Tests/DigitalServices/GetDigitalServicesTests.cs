@@ -6,12 +6,28 @@ namespace SubscriptionManager.Api.Tests.DigitalServices;
 public sealed class GetDigitalServicesTests
     : IClassFixture<CustomWebApplicationFactory>
 {
+    private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
     public GetDigitalServicesTests(
         CustomWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        using var client =
+            _factory.CreateUnauthenticatedClient();
+
+        var response = await client.GetAsync(
+            "/api/digital-services");
+
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            response.StatusCode);
     }
 
     [Fact]

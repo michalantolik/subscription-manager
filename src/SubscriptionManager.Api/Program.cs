@@ -1,12 +1,17 @@
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.Tokens;
 using SubscriptionManager.Api.Authentication;
 using SubscriptionManager.Api.ExceptionHandling;
 using SubscriptionManager.Application;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Infrastructure;
+using SubscriptionManager.Infrastructure.Authentication;
 using SubscriptionManager.Infrastructure.Persistence;
-using System.Text.Json.Serialization;
 
 namespace SubscriptionManager.Api;
 
@@ -23,7 +28,66 @@ public partial class Program
 
         builder.Services.AddScoped<
             ICurrentUser,
-            DevelopmentCurrentUser>();
+            CurrentUser>();
+
+        var jwtOptions = builder.Configuration
+            .GetSection(JwtOptions.SectionName)
+            .Get<JwtOptions>()
+            ?? throw new InvalidOperationException(
+                "JWT configuration is missing.");
+
+        ValidateJwtOptions(jwtOptions);
+
+        builder.Services
+            .AddAuthentication(
+                JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.MapInboundClaims = false;
+
+                options.TokenValidationParameters =
+                    new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtOptions.Issuer,
+
+                        ValidateAudience = true,
+                        ValidAudience = jwtOptions.Audience,
+
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(
+                                Encoding.UTF8.GetBytes(
+                                    jwtOptions.SigningKey)),
+
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
+                    };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        var userIdValue = context.Principal?
+                            .FindFirst(
+                                JwtRegisteredClaimNames.Sub)?
+                            .Value;
+
+                        if (!Guid.TryParse(
+                                userIdValue,
+                                out var userId)
+                            || userId == Guid.Empty)
+                        {
+                            context.Fail(
+                                "The access token does not contain a valid user identifier.");
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
+        builder.Services.AddAuthorization();
 
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<ApiExceptionHandler>();
@@ -111,11 +175,42 @@ public partial class Program
 
         app.UseRateLimiter();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers()
             .RequireRateLimiting("api");
 
         await app.RunAsync();
+    }
+
+    private static void ValidateJwtOptions(
+        JwtOptions jwtOptions)
+    {
+        if (string.IsNullOrWhiteSpace(jwtOptions.Issuer))
+        {
+            throw new InvalidOperationException(
+                "JWT issuer is missing.");
+        }
+
+        if (string.IsNullOrWhiteSpace(jwtOptions.Audience))
+        {
+            throw new InvalidOperationException(
+                "JWT audience is missing.");
+        }
+
+        if (string.IsNullOrWhiteSpace(jwtOptions.SigningKey)
+            || Encoding.UTF8.GetByteCount(
+                jwtOptions.SigningKey) < 32)
+        {
+            throw new InvalidOperationException(
+                "JWT signing key must contain at least 32 bytes.");
+        }
+
+        if (jwtOptions.ExpirationInMinutes <= 0)
+        {
+            throw new InvalidOperationException(
+                "JWT expiration must be greater than zero.");
+        }
     }
 }

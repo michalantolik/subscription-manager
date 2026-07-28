@@ -15,6 +15,11 @@ public interface IIdentityService
         Guid userId,
         string confirmationToken,
         CancellationToken cancellationToken = default);
+
+    Task<AuthenticateUserResult> AuthenticateUserAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record IdentityServiceError(
@@ -44,4 +49,17 @@ public sealed record ConfirmEmailResult(
     public static ConfirmEmailResult Failure(
         IEnumerable<IdentityServiceError> errors)
         => new(false, errors.ToArray());
+}
+
+public sealed record AuthenticateUserResult(
+    bool Succeeded,
+    Guid? UserId,
+    IReadOnlyCollection<IdentityServiceError> Errors)
+{
+    public static AuthenticateUserResult Success(Guid userId)
+        => new(true, userId, []);
+
+    public static AuthenticateUserResult Failure(
+        IEnumerable<IdentityServiceError> errors)
+        => new(false, null, errors.ToArray());
 }

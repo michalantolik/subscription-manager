@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.DigitalServices.CreateDigitalService;
@@ -11,6 +12,7 @@ using SubscriptionManager.Domain.DigitalServices;
 namespace SubscriptionManager.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/digital-services")]
 public sealed class DigitalServicesController : ControllerBase
 {
