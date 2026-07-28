@@ -1,5 +1,5 @@
 using Moq;
-using SubscriptionManager.Application.Common.Authentication;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.DigitalServices.DeactivateDigitalService;
 using SubscriptionManager.Domain.DigitalServices;

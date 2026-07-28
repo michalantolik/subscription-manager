@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Infrastructure.Identity;
@@ -30,6 +31,8 @@ public static class DependencyInjection
             })
             .AddEntityFrameworkStores<SubscriptionManagerDbContext>()
             .AddDefaultTokenProviders();
+
+        services.AddScoped<IIdentityService, IdentityService>();
 
         services.AddScoped<
             IDigitalServiceRepository,

@@ -27,3 +27,27 @@ Content-Type: application/json
   "billingPeriod": "Monthly",
   "startDate": "2026-07-18"
 }
+
+###
+
+### Register user
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "michal@example.com",
+  "password": "Test123!"
+}
+
+###
+
+### Register the same user again
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "michal@example.com",
+  "password": "Test123!"
+}

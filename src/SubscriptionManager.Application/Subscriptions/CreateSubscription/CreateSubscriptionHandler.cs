@@ -1,4 +1,4 @@
-using SubscriptionManager.Application.Common.Authentication;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;

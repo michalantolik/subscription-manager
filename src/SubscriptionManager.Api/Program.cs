@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using SubscriptionManager.Api.Authentication;
 using SubscriptionManager.Api.ExceptionHandling;
 using SubscriptionManager.Application;
-using SubscriptionManager.Application.Common.Authentication;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Infrastructure;
 using SubscriptionManager.Infrastructure.Persistence;
 using System.Text.Json.Serialization;

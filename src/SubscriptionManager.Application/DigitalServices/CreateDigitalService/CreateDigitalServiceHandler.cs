@@ -1,4 +1,4 @@
-using SubscriptionManager.Application.Common.Authentication;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Domain.DigitalServices;
 
 namespace SubscriptionManager.Application.DigitalServices.CreateDigitalService;
