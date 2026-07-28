@@ -129,13 +129,19 @@ public sealed class UpdateSubscriptionTests
             BillingPeriod = BillingPeriod.Yearly
         };
 
+        var subscriptionId = Guid.NewGuid();
+        var requestPath = $"/api/subscriptions/{subscriptionId}";
+
         var response = await _client.PutAsJsonAsync(
-            $"/api/subscriptions/{Guid.NewGuid()}",
+            requestPath,
             updateRequest);
 
-        Assert.Equal(
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
             HttpStatusCode.NotFound,
-            response.StatusCode);
+            "Subscription not found.",
+            $"Subscription with id '{subscriptionId}' was not found.",
+            requestPath);
     }
 
     private sealed record SubscriptionResponse(

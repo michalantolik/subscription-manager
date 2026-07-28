@@ -26,20 +26,35 @@ public sealed class DeactivateDigitalServiceTests
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        var getResponse = await _client.GetAsync(
-            $"/api/digital-services/{digitalServiceId}");
+        var requestPath =
+            $"/api/digital-services/{digitalServiceId}";
+        var getResponse = await _client.GetAsync(requestPath);
 
-        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+        await ProblemDetailsAssertions.AssertAsync(
+            getResponse,
+            HttpStatusCode.NotFound,
+            "Digital service not found.",
+            $"Digital service with id '{digitalServiceId}' was not found.",
+            requestPath);
     }
 
     [Fact]
     public async Task PostAsync_ShouldReturnNotFound_WhenDigitalServiceDoesNotExist()
     {
+        var digitalServiceId = Guid.NewGuid();
+        var requestPath =
+            $"/api/digital-services/{digitalServiceId}/deactivate";
+
         var response = await _client.PostAsync(
-            $"/api/digital-services/{Guid.NewGuid()}/deactivate",
+            requestPath,
             content: null);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
+            HttpStatusCode.NotFound,
+            "Digital service not found.",
+            $"Digital service with id '{digitalServiceId}' was not found.",
+            requestPath);
     }
 
     private async Task<Guid> CreateDigitalServiceAsync()

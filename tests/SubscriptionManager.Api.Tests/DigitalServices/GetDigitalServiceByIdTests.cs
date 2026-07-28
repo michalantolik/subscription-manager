@@ -44,10 +44,17 @@ public sealed class GetDigitalServiceByIdTests
     {
         var digitalServiceId = Guid.NewGuid();
 
-        var response = await _client.GetAsync(
-            $"/api/digital-services/{digitalServiceId}");
+        var requestPath =
+            $"/api/digital-services/{digitalServiceId}";
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var response = await _client.GetAsync(requestPath);
+
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
+            HttpStatusCode.NotFound,
+            "Digital service not found.",
+            $"Digital service with id '{digitalServiceId}' was not found.",
+            requestPath);
     }
 
     private sealed record DigitalServiceResponse(

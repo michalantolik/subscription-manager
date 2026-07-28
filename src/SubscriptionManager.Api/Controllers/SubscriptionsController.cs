@@ -61,7 +61,7 @@ public sealed class SubscriptionsController : ControllerBase
 
         if (subscription is null)
         {
-            return NotFound();
+            return SubscriptionNotFound(id);
         }
 
         return Ok(subscription);
@@ -102,7 +102,7 @@ public sealed class SubscriptionsController : ControllerBase
 
         if (!updated)
         {
-            return NotFound();
+            return SubscriptionNotFound(id);
         }
 
         return NoContent();
@@ -124,7 +124,7 @@ public sealed class SubscriptionsController : ControllerBase
 
         if (!ended)
         {
-            return NotFound();
+            return SubscriptionNotFound(id);
         }
 
         return NoContent();
@@ -143,10 +143,19 @@ public sealed class SubscriptionsController : ControllerBase
 
         if (!deleted)
         {
-            return NotFound();
+            return SubscriptionNotFound(id);
         }
 
         return NoContent();
+    }
+
+    private ObjectResult SubscriptionNotFound(Guid id)
+    {
+        return Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "Subscription not found.",
+            detail: $"Subscription with id '{id}' was not found.",
+            instance: HttpContext.Request.Path);
     }
 }
 

@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SubscriptionManager.Api.ExceptionHandling;
 
-internal sealed class ApiExceptionHandler : IExceptionHandler
+internal sealed class ApiExceptionHandler(
+    ILogger<ApiExceptionHandler> logger,
+    IProblemDetailsService problemDetailsService)
+    : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
@@ -26,21 +29,40 @@ internal sealed class ApiExceptionHandler : IExceptionHandler
                 Detail = exception.Message,
                 Instance = httpContext.Request.Path
             },
-            _ => null
+            _ => CreateInternalServerError(httpContext)
         };
 
-        if (problemDetails is null)
+        if (problemDetails.Status >= StatusCodes.Status500InternalServerError)
         {
-            return false;
+            logger.LogError(
+                exception,
+                "An unhandled exception occurred while processing {HttpMethod} {RequestPath}.",
+                httpContext.Request.Method,
+                httpContext.Request.Path);
         }
 
-        httpContext.Response.StatusCode =
-            problemDetails.Status!.Value;
+        httpContext.Response.StatusCode = problemDetails.Status!.Value;
 
-        await httpContext.Response.WriteAsJsonAsync(
-            problemDetails,
-            cancellationToken);
+        await problemDetailsService.WriteAsync(
+            new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                ProblemDetails = problemDetails,
+                Exception = exception
+            });
 
         return true;
+    }
+
+    private static ProblemDetails CreateInternalServerError(
+        HttpContext httpContext)
+    {
+        return new ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "An unexpected error occurred.",
+            Detail = "The request could not be completed.",
+            Instance = httpContext.Request.Path
+        };
     }
 }

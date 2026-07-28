@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using SubscriptionManager.Domain.Subscriptions;
 
@@ -47,12 +47,15 @@ public sealed class DeleteSubscriptionTests
             HttpStatusCode.NoContent,
             deleteResponse.StatusCode);
 
-        var getResponse = await _client.GetAsync(
-            $"/api/subscriptions/{subscriptionId}");
+        var requestPath = $"/api/subscriptions/{subscriptionId}";
+        var getResponse = await _client.GetAsync(requestPath);
 
-        Assert.Equal(
+        await ProblemDetailsAssertions.AssertAsync(
+            getResponse,
             HttpStatusCode.NotFound,
-            getResponse.StatusCode);
+            "Subscription not found.",
+            $"Subscription with id '{subscriptionId}' was not found.",
+            requestPath);
     }
 
     [Fact]
@@ -60,11 +63,15 @@ public sealed class DeleteSubscriptionTests
     {
         var subscriptionId = Guid.NewGuid();
 
-        var response = await _client.DeleteAsync(
-            $"/api/subscriptions/{subscriptionId}");
+        var requestPath = $"/api/subscriptions/{subscriptionId}";
 
-        Assert.Equal(
+        var response = await _client.DeleteAsync(requestPath);
+
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
             HttpStatusCode.NotFound,
-            response.StatusCode);
+            "Subscription not found.",
+            $"Subscription with id '{subscriptionId}' was not found.",
+            requestPath);
     }
 }

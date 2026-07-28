@@ -73,11 +73,19 @@ public sealed class UpdateDigitalServiceTests
             netflix.ManagementUrl
         };
 
+        var requestPath =
+            $"/api/digital-services/{netflix.Id}";
+
         var response = await _client.PutAsJsonAsync(
-            $"/api/digital-services/{netflix.Id}",
+            requestPath,
             updateRequest);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
+            HttpStatusCode.NotFound,
+            "Digital service not found.",
+            $"Digital service with id '{netflix.Id}' was not found.",
+            requestPath);
     }
 
     [Fact]
@@ -93,11 +101,20 @@ public sealed class UpdateDigitalServiceTests
             ManagementUrl = "https://example.com/settings"
         };
 
+        var digitalServiceId = Guid.NewGuid();
+        var requestPath =
+            $"/api/digital-services/{digitalServiceId}";
+
         var response = await _client.PutAsJsonAsync(
-            $"/api/digital-services/{Guid.NewGuid()}",
+            requestPath,
             updateRequest);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
+            HttpStatusCode.NotFound,
+            "Digital service not found.",
+            $"Digital service with id '{digitalServiceId}' was not found.",
+            requestPath);
     }
 
     private async Task<Guid> CreateDigitalServiceAsync()

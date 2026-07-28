@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 
 namespace SubscriptionManager.Api.Tests.Subscriptions;
 
@@ -14,15 +14,18 @@ public sealed class GetSubscriptionByIdTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_ShouldReturnNotFound_WhenSubscriptionDoesNotExist()
+    public async Task GetByIdAsync_ShouldReturnNotFoundProblemDetails_WhenSubscriptionDoesNotExist()
     {
         var subscriptionId = Guid.NewGuid();
+        var requestPath = $"/api/subscriptions/{subscriptionId}";
 
-        var response = await _client.GetAsync(
-            $"/api/subscriptions/{subscriptionId}");
+        var response = await _client.GetAsync(requestPath);
 
-        Assert.Equal(
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
             HttpStatusCode.NotFound,
-            response.StatusCode);
+            "Subscription not found.",
+            $"Subscription with id '{subscriptionId}' was not found.",
+            requestPath);
     }
 }

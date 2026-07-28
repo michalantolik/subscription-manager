@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Api.Tests.Subscriptions;
@@ -144,25 +143,12 @@ public sealed class CreateSubscriptionTests
             "/api/subscriptions",
             request);
 
-        Assert.Equal(
+        await ProblemDetailsAssertions.AssertContainsAsync(
+            response,
             HttpStatusCode.BadRequest,
-            response.StatusCode);
-
-        var problemDetails =
-            await response.Content
-                .ReadFromJsonAsync<ProblemDetails>();
-
-        Assert.NotNull(problemDetails);
-        Assert.Equal(400, problemDetails.Status);
-        Assert.Equal(
             "Invalid request.",
-            problemDetails.Title);
-        Assert.Contains(
             "The selected digital service is not available.",
-            problemDetails.Detail);
-        Assert.Equal(
-            "/api/subscriptions",
-            problemDetails.Instance);
+            "/api/subscriptions");
     }
 
     private sealed record SubscriptionResponse(

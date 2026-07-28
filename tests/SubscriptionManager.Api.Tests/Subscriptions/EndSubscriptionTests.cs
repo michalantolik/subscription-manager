@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using SubscriptionManager.Domain.Subscriptions;
 
@@ -77,13 +77,19 @@ public sealed class EndSubscriptionTests
             EndDate = new DateOnly(2026, 7, 21)
         };
 
+        var subscriptionId = Guid.NewGuid();
+        var requestPath = $"/api/subscriptions/{subscriptionId}/end";
+
         var response = await _client.PostAsJsonAsync(
-            $"/api/subscriptions/{Guid.NewGuid()}/end",
+            requestPath,
             endRequest);
 
-        Assert.Equal(
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
             HttpStatusCode.NotFound,
-            response.StatusCode);
+            "Subscription not found.",
+            $"Subscription with id '{subscriptionId}' was not found.",
+            requestPath);
     }
 
     private sealed record SubscriptionResponse(

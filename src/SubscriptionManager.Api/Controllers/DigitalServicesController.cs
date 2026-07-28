@@ -61,7 +61,7 @@ public sealed class DigitalServicesController : ControllerBase
 
         if (digitalService is null)
         {
-            return NotFound();
+            return DigitalServiceNotFound(id);
         }
 
         return Ok(digitalService);
@@ -103,7 +103,7 @@ public sealed class DigitalServicesController : ControllerBase
 
         if (!updated)
         {
-            return NotFound();
+            return DigitalServiceNotFound(id);
         }
 
         return NoContent();
@@ -122,7 +122,7 @@ public sealed class DigitalServicesController : ControllerBase
 
         if (!deactivated)
         {
-            return NotFound();
+            return DigitalServiceNotFound(id);
         }
 
         return NoContent();
@@ -141,10 +141,19 @@ public sealed class DigitalServicesController : ControllerBase
 
         if (!deleted)
         {
-            return NotFound();
+            return DigitalServiceNotFound(id);
         }
 
         return NoContent();
+    }
+
+    private ObjectResult DigitalServiceNotFound(Guid id)
+    {
+        return Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "Digital service not found.",
+            detail: $"Digital service with id '{id}' was not found.",
+            instance: HttpContext.Request.Path);
     }
 }
 

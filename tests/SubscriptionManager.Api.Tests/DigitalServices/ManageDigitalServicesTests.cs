@@ -70,8 +70,11 @@ public sealed class ManageDigitalServicesTests
             "/api/digital-services");
         var netflix = Assert.Single(services!, x => x.Key == "netflix");
 
+        var requestPath =
+            $"/api/digital-services/{netflix.Id}";
+
         var response = await _client.PutAsJsonAsync(
-            $"/api/digital-services/{netflix.Id}",
+            requestPath,
             new
             {
                 netflix.Key,
@@ -82,7 +85,12 @@ public sealed class ManageDigitalServicesTests
                 netflix.ManagementUrl
             });
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await ProblemDetailsAssertions.AssertAsync(
+            response,
+            HttpStatusCode.NotFound,
+            "Digital service not found.",
+            $"Digital service with id '{netflix.Id}' was not found.",
+            requestPath);
     }
 
     [Fact]
@@ -96,9 +104,16 @@ public sealed class ManageDigitalServicesTests
             content: null);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(
+
+        var requestPath = $"/api/digital-services/{id}";
+        var getResponse = await _client.GetAsync(requestPath);
+
+        await ProblemDetailsAssertions.AssertAsync(
+            getResponse,
             HttpStatusCode.NotFound,
-            (await _client.GetAsync($"/api/digital-services/{id}")).StatusCode);
+            "Digital service not found.",
+            $"Digital service with id '{id}' was not found.",
+            requestPath);
     }
 
     [Fact]
@@ -110,9 +125,16 @@ public sealed class ManageDigitalServicesTests
         var response = await _client.DeleteAsync($"/api/digital-services/{id}");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(
+
+        var requestPath = $"/api/digital-services/{id}";
+        var getResponse = await _client.GetAsync(requestPath);
+
+        await ProblemDetailsAssertions.AssertAsync(
+            getResponse,
             HttpStatusCode.NotFound,
-            (await _client.GetAsync($"/api/digital-services/{id}")).StatusCode);
+            "Digital service not found.",
+            $"Digital service with id '{id}' was not found.",
+            requestPath);
     }
 
     private Task<HttpResponseMessage> CreateDigitalServiceAsync()
