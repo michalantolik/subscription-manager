@@ -1,4 +1,5 @@
 @page "/subscriptions"
+@attribute [Authorize]
 @using SubscriptionManager.Blazor.Features.DigitalServices
 @inject SubscriptionsApiClient ApiClient
 @inject DigitalServicesApiClient DigitalServicesApiClient
@@ -272,6 +273,12 @@
 }
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    private System.Security.Claims.ClaimsPrincipal _user =
+        new(new System.Security.Claims.ClaimsIdentity());
+
     private IReadOnlyList<SubscriptionResponse> _subscriptions = [];
     private IReadOnlyList<DigitalServiceResponse> _digitalServices = [];
     private bool _loading = true;
@@ -300,12 +307,27 @@
     private string DialogDescription => _dialog switch { DialogKind.Catalog => T["Catalog.Description"], DialogKind.Create => T["Dialog.CreateDescription"], DialogKind.Edit => T["Dialog.EditDescription"], DialogKind.End => T["Dialog.EndDescription"], DialogKind.Delete => T["Dialog.DeleteDescription"], _ => string.Empty };
     private string DialogIcon => _dialog == DialogKind.Edit ? "edit" : _dialog == DialogKind.Delete ? "trash" : "subscriptions";
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateTask;
+
+        _user = authenticationState.User;
+
+        await LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
         _loading = true; _pageError = null;
-        try { _digitalServices = await DigitalServicesApiClient.GetAllAsync(); _subscriptions = await ApiClient.GetAllAsync(); }
+        try
+        {
+            _digitalServices =
+                await DigitalServicesApiClient.GetAllAsync(_user);
+
+            _subscriptions =
+                await ApiClient.GetAllAsync(_user);
+        }
         catch { _pageError = T["Error.Load"]; }
         finally { _loading = false; }
     }
@@ -327,21 +349,21 @@
     private async Task SaveAsync()
     {
         _saving = true; _dialogError = null;
-        try { if (_dialog == DialogKind.Create) await ApiClient.CreateAsync(_form); else if (_selected is not null) await ApiClient.UpdateAsync(_selected.Id, _form); CloseDialogAfterSave(); await LoadAsync(); }
+        try { if (_dialog == DialogKind.Create) await ApiClient.CreateAsync(_form, _user); else if (_selected is not null) await ApiClient.UpdateAsync(_selected.Id, _form, _user); CloseDialogAfterSave(); await LoadAsync(); }
         catch { _dialogError = T["Error.Save"]; }
         finally { _saving = false; }
     }
     private async Task EndAsync()
     {
         if (_selected is null) return; _saving = true; _dialogError = null;
-        try { await ApiClient.EndAsync(_selected.Id, _endModel.EndDate); CloseDialogAfterSave(); await LoadAsync(); }
+        try { await ApiClient.EndAsync(_selected.Id, _endModel.EndDate, _user); CloseDialogAfterSave(); await LoadAsync(); }
         catch { _dialogError = T["Error.Save"]; }
         finally { _saving = false; }
     }
     private async Task DeleteAsync()
     {
         if (_selected is null) return; _saving = true; _dialogError = null;
-        try { await ApiClient.DeleteAsync(_selected.Id); CloseDialogAfterSave(); await LoadAsync(); }
+        try { await ApiClient.DeleteAsync(_selected.Id, _user); CloseDialogAfterSave(); await LoadAsync(); }
         catch { _dialogError = T["Error.Delete"]; }
         finally { _saving = false; }
     }

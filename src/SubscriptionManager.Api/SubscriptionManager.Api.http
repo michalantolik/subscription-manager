@@ -37,7 +37,8 @@ Content-Type: application/json
 
 {
   "email": "michal@example.com",
-  "password": "Test123!"
+  "password": "Test123!",
+  "languageCode": "pl"
 }
 
 ###
@@ -49,7 +50,8 @@ Content-Type: application/json
 
 {
   "email": "michal@example.com",
-  "password": "Test123!"
+  "password": "Test123!",
+  "languageCode": "pl"
 }
 
 ###

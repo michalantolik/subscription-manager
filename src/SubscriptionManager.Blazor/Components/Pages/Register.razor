@@ -1,0 +1,234 @@
+@page "/register"
+@attribute [AllowAnonymous]
+@using Microsoft.AspNetCore.Components
+@using System.Globalization
+@using SubscriptionManager.Blazor.Features.Authentication
+@inject Localizer T
+
+<PageTitle>
+    Subscription Manager — @T["Authentication.Register.Title"]
+</PageTitle>
+
+<section class="page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                @T["Authentication.Register.Eyebrow"]
+            </p>
+
+            <h1>
+                @T["Authentication.Register.Title"]
+            </h1>
+
+            <p>
+                @T["Authentication.Register.Description"]
+            </p>
+        </div>
+    </div>
+
+    <div class="ui-card"
+         style="max-width: 560px;">
+        @if (IsCreated)
+        {
+            <div class="ui-form">
+                <div class="ui-alert ui-alert-success"
+                     role="status">
+                    @T["Authentication.Register.Success"]
+                </div>
+
+                <div class="ui-form-actions">
+                    <a class="primary-button"
+                       href="/login">
+                        @T["Authentication.GoToSignIn"]
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <form method="post"
+                  action="/authentication/register">
+                <AntiforgeryToken />
+                <input type="hidden"
+                       name="languageCode"
+                       value="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName" />
+
+                <div class="ui-form">
+                    <div class="ui-form-section">
+                        <div class="ui-form-section-header">
+                            <h2 class="ui-form-section-title">
+                                @T["Authentication.Register.FormTitle"]
+                            </h2>
+
+                            <p class="ui-form-section-description">
+                                @T["Authentication.Register.FormDescription"]
+                            </p>
+                        </div>
+
+                        <div class="ui-form-grid ui-form-grid-single">
+                            <div class="ui-field">
+                                <div class="ui-field-heading">
+                                    <label class="ui-label"
+                                           for="register-email">
+                                        @T["Field.Email"]
+                                    </label>
+                                </div>
+
+                                <input id="register-email"
+                                       class="ui-control"
+                                       name="email"
+                                       type="email"
+                                       autocomplete="username"
+                                       placeholder="@T["Field.EmailPlaceholder"]"
+                                       required />
+                            </div>
+
+                            <div class="ui-field">
+                                <div class="ui-field-heading">
+                                    <label class="ui-label"
+                                           for="register-password">
+                                        @T["Authentication.Password"]
+                                    </label>
+                                </div>
+
+                                <input id="register-password"
+                                       class="ui-control"
+                                       name="password"
+                                       type="password"
+                                       minlength="8"
+                                       autocomplete="new-password"
+                                       placeholder="@T["Authentication.PasswordPlaceholder"]"
+                                       required />
+                            </div>
+
+                            <div class="ui-field">
+                                <div class="ui-field-heading">
+                                    <label class="ui-label"
+                                           for="register-confirm-password">
+                                        @T["Authentication.ConfirmPassword"]
+                                    </label>
+                                </div>
+
+                                <input id="register-confirm-password"
+                                       class="ui-control"
+                                       name="confirmPassword"
+                                       type="password"
+                                       minlength="8"
+                                       autocomplete="new-password"
+                                       placeholder="@T["Authentication.Register.ConfirmPasswordPlaceholder"]"
+                                       required />
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (ErrorMessages.Count > 0)
+                    {
+                        <div class="ui-alert ui-alert-error"
+                             role="alert">
+                            @if (ErrorMessages.Count == 1)
+                            {
+                                @ErrorMessages[0]
+                            }
+                            else
+                            {
+                                <ul class="ui-alert-list">
+                                    @foreach (var message in ErrorMessages)
+                                    {
+                                        <li>@message</li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    }
+
+                    <div class="ui-form-actions">
+                        <a class="secondary-button"
+                           href="/login">
+                            @T["Authentication.BackToSignIn"]
+                        </a>
+
+                        <button class="primary-button"
+                                type="submit">
+                            @T["Authentication.Register.Submit"]
+                        </button>
+                    </div>
+                </div>
+            </form>
+        }
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "errors")]
+    private string? Errors { get; set; }
+
+    [SupplyParameterFromQuery(Name = "status")]
+    private string? Status { get; set; }
+
+    private bool IsCreated =>
+        string.Equals(
+            Status,
+            "created",
+            StringComparison.Ordinal);
+
+    private IReadOnlyList<string> ErrorMessages
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Errors))
+            {
+                return [];
+            }
+
+            var errorCodes = Errors.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries |
+                StringSplitOptions.TrimEntries);
+
+            return AuthenticationErrorCodes.Normalize(errorCodes)
+                .Select(GetErrorMessage)
+                .ToArray();
+        }
+    }
+
+    private string GetErrorMessage(string code) => code switch
+    {
+        AuthenticationErrorCodes.Required =>
+            T["Authentication.Register.Required"],
+
+        AuthenticationErrorCodes.PasswordMismatch =>
+            T["Authentication.Register.PasswordMismatch"],
+
+        AuthenticationErrorCodes.InvalidEmail or
+        AuthenticationErrorCodes.InvalidUserName =>
+            T["Authentication.Register.InvalidEmail"],
+
+        AuthenticationErrorCodes.DuplicateEmail or
+        AuthenticationErrorCodes.DuplicateUserName =>
+            T["Authentication.Register.DuplicateEmail"],
+
+        AuthenticationErrorCodes.PasswordTooShort =>
+            T["Authentication.Register.PasswordTooShort"],
+
+        AuthenticationErrorCodes.PasswordRequiresDigit =>
+            T["Authentication.Register.PasswordRequiresDigit"],
+
+        AuthenticationErrorCodes.PasswordRequiresLower =>
+            T["Authentication.Register.PasswordRequiresLower"],
+
+        AuthenticationErrorCodes.PasswordRequiresUpper =>
+            T["Authentication.Register.PasswordRequiresUpper"],
+
+        AuthenticationErrorCodes.PasswordRequiresNonAlphanumeric =>
+            T["Authentication.Register.PasswordRequiresSpecialCharacter"],
+
+        AuthenticationErrorCodes.PasswordRequiresUniqueChars =>
+            T["Authentication.Register.PasswordRequiresUniqueCharacters"],
+
+        AuthenticationErrorCodes.ServiceUnavailable =>
+            T["Authentication.Register.Unavailable"],
+
+        _ =>
+            T["Authentication.Register.Error"]
+    };
+}

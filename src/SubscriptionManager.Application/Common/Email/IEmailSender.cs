@@ -6,5 +6,13 @@ public interface IEmailSender
         string email,
         Guid userId,
         string confirmationToken,
+        string languageCode,
+        CancellationToken cancellationToken = default);
+
+    Task SendPasswordResetAsync(
+        string email,
+        Guid userId,
+        string resetToken,
+        string languageCode,
         CancellationToken cancellationToken = default);
 }

@@ -2,8 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Identity.ConfirmEmail;
+using SubscriptionManager.Application.Identity.DeleteUser;
+using SubscriptionManager.Application.Identity.ForgotPassword;
 using SubscriptionManager.Application.Identity.LoginUser;
 using SubscriptionManager.Application.Identity.RegisterUser;
+using SubscriptionManager.Application.Identity.ResetPassword;
 
 namespace SubscriptionManager.Api.Controllers;
 
@@ -13,6 +16,9 @@ public sealed class AuthController(
     RegisterUserHandler registerUserHandler,
     ConfirmEmailHandler confirmEmailHandler,
     LoginUserHandler loginUserHandler,
+    ForgotPasswordHandler forgotPasswordHandler,
+    ResetPasswordHandler resetPasswordHandler,
+    DeleteUserHandler deleteUserHandler,
     ICurrentUser currentUser)
     : ControllerBase
 {
@@ -23,7 +29,8 @@ public sealed class AuthController(
     {
         var command = new RegisterUserCommand(
             request.Email,
-            request.Password);
+            request.Password,
+            request.LanguageCode);
 
         var result = await registerUserHandler.HandleAsync(
             command,
@@ -90,12 +97,72 @@ public sealed class AuthController(
         return Ok(response);
     }
 
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPasswordAsync(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ForgotPasswordCommand(
+            request.Email,
+            request.LanguageCode);
+
+        await forgotPasswordHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ResetPasswordCommand(
+            request.UserId,
+            request.ResetToken,
+            request.NewPassword);
+
+        var result = await resetPasswordHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return ValidationProblem(
+                CreateValidationProblemDetails(result.Errors));
+        }
+
+        return NoContent();
+    }
+
     [Authorize]
     [HttpGet("me")]
     public ActionResult<CurrentUserResponse> GetCurrentUser()
     {
         return Ok(
             new CurrentUserResponse(currentUser.UserId));
+    }
+
+    [Authorize]
+    [HttpDelete("account")]
+    public async Task<IActionResult> DeleteAccountAsync(
+        CancellationToken cancellationToken)
+    {
+        var command = new DeleteUserCommand(
+            currentUser.UserId);
+
+        var result = await deleteUserHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return ValidationProblem(
+                CreateValidationProblemDetails(result.Errors));
+        }
+
+        return NoContent();
     }
 
     private static ValidationProblemDetails CreateValidationProblemDetails(
@@ -115,7 +182,8 @@ public sealed class AuthController(
 
 public sealed record RegisterUserRequest(
     string Email,
-    string Password);
+    string Password,
+    string LanguageCode);
 
 public sealed record RegisterUserResponse(
     Guid UserId);
@@ -130,6 +198,15 @@ public sealed record LoginUserRequest(
 
 public sealed record LoginUserResponse(
     string AccessToken);
+
+public sealed record ForgotPasswordRequest(
+    string Email,
+    string LanguageCode);
+
+public sealed record ResetPasswordRequest(
+    Guid UserId,
+    string ResetToken,
+    string NewPassword);
 
 public sealed record CurrentUserResponse(
     Guid UserId);

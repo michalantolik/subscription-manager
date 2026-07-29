@@ -1,4 +1,5 @@
-﻿using SubscriptionManager.Application.Common.Email;
+using Moq;
+using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Identity.RegisterUser;
 
@@ -11,19 +12,31 @@ public sealed class RegisterUserHandlerTests
     {
         var userId = Guid.NewGuid();
 
-        var identityService = new TestIdentityService(
-            CreateUserResult.Success(userId),
-            "confirmation-token");
+        var identityService = new Mock<IIdentityService>();
 
-        var emailSender = new TestEmailSender();
+        identityService
+            .Setup(service => service.CreateUserAsync(
+                "michal@example.com",
+                "Test123!",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateUserResult.Success(userId));
+
+        identityService
+            .Setup(service => service.GenerateEmailConfirmationTokenAsync(
+                userId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync("confirmation-token");
+
+        var emailSender = new Mock<IEmailSender>();
 
         var handler = new RegisterUserHandler(
-            identityService,
-            emailSender);
+            identityService.Object,
+            emailSender.Object);
 
         var command = new RegisterUserCommand(
             "michal@example.com",
-            "Test123!");
+            "Test123!",
+            "pl");
 
         var result = await handler.HandleAsync(command);
 
@@ -31,10 +44,27 @@ public sealed class RegisterUserHandlerTests
         Assert.Equal(userId, result.UserId);
         Assert.Empty(result.Errors);
 
-        Assert.True(emailSender.WasCalled);
-        Assert.Equal("michal@example.com", emailSender.Email);
-        Assert.Equal(userId, emailSender.UserId);
-        Assert.Equal("confirmation-token", emailSender.ConfirmationToken);
+        identityService.Verify(
+            service => service.CreateUserAsync(
+                "michal@example.com",
+                "Test123!",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        identityService.Verify(
+            service => service.GenerateEmailConfirmationTokenAsync(
+                userId,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        emailSender.Verify(
+            sender => sender.SendEmailConfirmationAsync(
+                "michal@example.com",
+                userId,
+                "confirmation-token",
+                "pl",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -47,18 +77,25 @@ public sealed class RegisterUserHandlerTests
                 "Email is already taken.")
         };
 
-        var identityService = new TestIdentityService(
-            CreateUserResult.Failure(errors));
+        var identityService = new Mock<IIdentityService>();
 
-        var emailSender = new TestEmailSender();
+        identityService
+            .Setup(service => service.CreateUserAsync(
+                "michal@example.com",
+                "Test123!",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateUserResult.Failure(errors));
+
+        var emailSender = new Mock<IEmailSender>();
 
         var handler = new RegisterUserHandler(
-            identityService,
-            emailSender);
+            identityService.Object,
+            emailSender.Object);
 
         var command = new RegisterUserCommand(
             "michal@example.com",
-            "Test123!");
+            "Test123!",
+            "pl");
 
         var result = await handler.HandleAsync(command);
 
@@ -68,70 +105,30 @@ public sealed class RegisterUserHandlerTests
         var error = Assert.Single(result.Errors);
 
         Assert.Equal("DuplicateEmail", error.Code);
-        Assert.Equal("Email is already taken.", error.Description);
+        Assert.Equal(
+            "Email is already taken.",
+            error.Description);
 
-        Assert.False(emailSender.WasCalled);
-    }
+        identityService.Verify(
+            service => service.CreateUserAsync(
+                "michal@example.com",
+                "Test123!",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-    private sealed class TestIdentityService(
-        CreateUserResult createUserResult,
-        string? confirmationToken = null)
-        : IIdentityService
-    {
-        public Task<CreateUserResult> CreateUserAsync(
-            string email,
-            string password,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(createUserResult);
-        }
+        identityService.Verify(
+            service => service.GenerateEmailConfirmationTokenAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
 
-        public Task<string?> GenerateEmailConfirmationTokenAsync(
-            Guid userId,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(confirmationToken);
-        }
-
-        public Task<ConfirmEmailResult> ConfirmEmailAsync(
-            Guid userId,
-            string confirmationToken,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        public Task<AuthenticateUserResult> AuthenticateUserAsync(
-            string email,
-            string password,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-    }
-
-    private sealed class TestEmailSender : IEmailSender
-    {
-        public bool WasCalled { get; private set; }
-
-        public string? Email { get; private set; }
-
-        public Guid? UserId { get; private set; }
-
-        public string? ConfirmationToken { get; private set; }
-
-        public Task SendEmailConfirmationAsync(
-            string email,
-            Guid userId,
-            string confirmationToken,
-            CancellationToken cancellationToken = default)
-        {
-            WasCalled = true;
-            Email = email;
-            UserId = userId;
-            ConfirmationToken = confirmationToken;
-
-            return Task.CompletedTask;
-        }
+        emailSender.Verify(
+            sender => sender.SendEmailConfirmationAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

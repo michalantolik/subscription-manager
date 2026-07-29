@@ -108,6 +108,84 @@ public sealed class IdentityService(
         return AuthenticateUserResult.Success(user.Id);
     }
 
+    public async Task<PasswordResetToken?> GeneratePasswordResetTokenAsync(
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+
+        return new PasswordResetToken(
+            user.Id,
+            user.Email!,
+            token);
+    }
+
+    public async Task<ResetPasswordResult> ResetPasswordAsync(
+        Guid userId,
+        string resetToken,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+
+        if (user is null)
+        {
+            return ResetPasswordResult.Failure(
+            [
+                new IdentityServiceError(
+                    "UserNotFound",
+                    "The user was not found.")
+            ]);
+        }
+
+        var result = await userManager.ResetPasswordAsync(
+            user,
+            resetToken,
+            newPassword);
+
+        if (result.Succeeded)
+        {
+            return ResetPasswordResult.Success();
+        }
+
+        return ResetPasswordResult.Failure(
+            result.Errors.Select(MapError));
+    }
+
+    public async Task<DeleteUserResult> DeleteUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+
+        if (user is null)
+        {
+            return DeleteUserResult.Failure(
+            [
+                new IdentityServiceError(
+                    "UserNotFound",
+                    "The user was not found.")
+            ]);
+        }
+
+        var result = await userManager.DeleteAsync(user);
+
+        if (result.Succeeded)
+        {
+            return DeleteUserResult.Success();
+        }
+
+        return DeleteUserResult.Failure(
+            result.Errors.Select(MapError));
+    }
+
     private static AuthenticateUserResult AuthenticationFailed()
     {
         return AuthenticateUserResult.Failure(

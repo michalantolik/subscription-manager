@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SubscriptionManager.Blazor.Features.Authentication;
 
 namespace SubscriptionManager.Blazor.Features.Subscriptions;
 
@@ -64,7 +66,8 @@ public sealed class PositiveDecimalAttribute : ValidationAttribute
     }
 }
 
-public sealed class SubscriptionsApiClient(HttpClient httpClient)
+public sealed class SubscriptionsApiClient(
+    HttpClient httpClient)
 {
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web)
@@ -76,41 +79,83 @@ public sealed class SubscriptionsApiClient(HttpClient httpClient)
         };
 
     public async Task<IReadOnlyList<SubscriptionResponse>> GetAllAsync(
+        ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
     {
-        return await httpClient.GetFromJsonAsync<List<SubscriptionResponse>>(
-                   "api/subscriptions",
-                   JsonOptions,
-                   cancellationToken)
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "api/subscriptions");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+                   .ReadFromJsonAsync<List<SubscriptionResponse>>(
+                       JsonOptions,
+                       cancellationToken)
                ?? [];
     }
 
-    public Task<SubscriptionResponse?> GetByIdAsync(
+    public async Task<SubscriptionResponse?> GetByIdAsync(
         Guid id,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
     {
-        return httpClient.GetFromJsonAsync<SubscriptionResponse>(
-            $"api/subscriptions/{id}",
-            JsonOptions,
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"api/subscriptions/{id}");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
             cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsync<SubscriptionResponse>(
+                JsonOptions,
+                cancellationToken);
     }
 
     public async Task<Guid> CreateAsync(
         SubscriptionFormModel model,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
     {
-        using var response = await httpClient.PostAsJsonAsync(
-            "api/subscriptions",
-            new
-            {
-                model.Name,
-                model.Amount,
-                Currency = model.Currency.ToUpperInvariant(),
-                model.BillingPeriod,
-                model.StartDate,
-                model.DigitalServiceId
-            },
-            JsonOptions,
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            "api/subscriptions")
+        {
+            Content = JsonContent.Create(
+                new
+                {
+                    model.Name,
+                    model.Amount,
+                    Currency = model.Currency.ToUpperInvariant(),
+                    model.BillingPeriod,
+                    model.StartDate,
+                    model.DigitalServiceId
+                },
+                options: JsonOptions)
+        };
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
@@ -123,19 +168,31 @@ public sealed class SubscriptionsApiClient(HttpClient httpClient)
     public async Task UpdateAsync(
         Guid id,
         SubscriptionFormModel model,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
     {
-        using var response = await httpClient.PutAsJsonAsync(
-            $"api/subscriptions/{id}",
-            new
-            {
-                model.Name,
-                model.Amount,
-                Currency = model.Currency.ToUpperInvariant(),
-                model.BillingPeriod,
-                model.DigitalServiceId
-            },
-            JsonOptions,
+        using var request = new HttpRequestMessage(
+            HttpMethod.Put,
+            $"api/subscriptions/{id}")
+        {
+            Content = JsonContent.Create(
+                new
+                {
+                    model.Name,
+                    model.Amount,
+                    Currency = model.Currency.ToUpperInvariant(),
+                    model.BillingPeriod,
+                    model.DigitalServiceId
+                },
+                options: JsonOptions)
+        };
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
@@ -144,15 +201,27 @@ public sealed class SubscriptionsApiClient(HttpClient httpClient)
     public async Task EndAsync(
         Guid id,
         DateOnly endDate,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
     {
-        using var response = await httpClient.PostAsJsonAsync(
-            $"api/subscriptions/{id}/end",
-            new
-            {
-                EndDate = endDate
-            },
-            JsonOptions,
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"api/subscriptions/{id}/end")
+        {
+            Content = JsonContent.Create(
+                new
+                {
+                    EndDate = endDate
+                },
+                options: JsonOptions)
+        };
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
@@ -160,10 +229,19 @@ public sealed class SubscriptionsApiClient(HttpClient httpClient)
 
     public async Task DeleteAsync(
         Guid id,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
     {
-        using var response = await httpClient.DeleteAsync(
-            $"api/subscriptions/{id}",
+        using var request = new HttpRequestMessage(
+            HttpMethod.Delete,
+            $"api/subscriptions/{id}");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
             cancellationToken);
 
         response.EnsureSuccessStatusCode();

@@ -1,0 +1,115 @@
+@page "/confirm-email"
+@attribute [AllowAnonymous]
+@using Microsoft.AspNetCore.Components
+@using SubscriptionManager.Blazor.Features.Authentication
+@inject AuthenticationApiClient ApiClient
+@inject Localizer T
+
+<PageTitle>
+    Subscription Manager — @T["Authentication.ConfirmEmail.Title"]
+</PageTitle>
+
+<section class="page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                @T["Authentication.ConfirmEmail.Eyebrow"]
+            </p>
+
+            <h1>
+                @T["Authentication.ConfirmEmail.Title"]
+            </h1>
+
+            <p>
+                @T["Authentication.ConfirmEmail.Description"]
+            </p>
+        </div>
+    </div>
+
+    <div class="ui-card"
+         style="max-width: 560px;">
+        <div class="ui-form">
+            @if (_isConfirming)
+            {
+                <div class="ui-alert"
+                     role="status">
+                    @T["Authentication.ConfirmEmail.Confirming"]
+                </div>
+            }
+            else if (_isConfirmed)
+            {
+                <div class="ui-alert ui-alert-success"
+                     role="status">
+                    @T["Authentication.ConfirmEmail.Success"]
+                </div>
+
+                <div class="ui-form-actions">
+                    <a class="primary-button"
+                       href="/login">
+                        @T["Authentication.GoToSignIn"]
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="ui-alert ui-alert-error"
+                     role="alert">
+                    @T["Authentication.ConfirmEmail.Error"]
+                </div>
+
+                <div class="ui-form-actions">
+                    <a class="secondary-button"
+                       href="/register">
+                        @T["Authentication.ConfirmEmail.BackToRegister"]
+                    </a>
+
+                    <a class="primary-button"
+                       href="/login">
+                        @T["Authentication.BackToSignIn"]
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public Guid? UserId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "token")]
+    public string? ConfirmationToken { get; set; }
+
+    private bool _isConfirming = true;
+    private bool _isConfirmed;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!UserId.HasValue ||
+            UserId.Value == Guid.Empty ||
+            string.IsNullOrWhiteSpace(ConfirmationToken))
+        {
+            _isConfirming = false;
+            return;
+        }
+
+        try
+        {
+            var result = await ApiClient.ConfirmEmailAsync(
+                UserId.Value,
+                ConfirmationToken);
+
+            _isConfirmed = result.Succeeded;
+        }
+        catch (HttpRequestException)
+        {
+            _isConfirmed = false;
+        }
+        finally
+        {
+            _isConfirming = false;
+        }
+    }
+}

@@ -1,42 +1,129 @@
 @using System.Globalization
+@using System.Security.Claims
 @inject AppState State
 @inject Localizer T
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
 <header class="topbar">
-    <button class="icon-button mobile-menu-button" type="button" @onclick="State.ToggleMobileMenu"><AppIcon Name="menu" /></button>
+    <button class="icon-button mobile-menu-button"
+            type="button"
+            @onclick="State.ToggleMobileMenu">
+        <AppIcon Name="menu" />
+    </button>
+
     <div class="topbar-actions">
-        <div class="language-switch" aria-label="Language">
+        <div class="language-switch"
+             aria-label="Language">
             @foreach (var language in Languages)
             {
-                <button class="language-button @(CurrentLanguage == language.Code ? "active" : null)" type="button" @onclick="() => ChangeLanguage(language.Code)">@language.Label</button>
+                <button class="language-button @(CurrentLanguage == language.Code ? "active" : null)"
+                        type="button"
+                        @onclick="() => ChangeLanguage(language.Code)">
+                    @language.Label
+                </button>
             }
         </div>
-        <button class="icon-button" type="button" @onclick="ToggleThemeAsync"><AppIcon Name="@(State.Theme == AppState.LightTheme ? "moon" : "sun")" /></button>
-        <button class="icon-button notification-button" type="button"><AppIcon Name="bell" /><span></span></button>
-        <div class="user-menu static-user">
-            <span class="user-copy"><strong>Michał</strong><small>@T["User.Role"]</small></span>
-            <span class="avatar">M</span>
-        </div>
+
+        <button class="icon-button"
+                type="button"
+                @onclick="ToggleThemeAsync">
+            <AppIcon Name="@(State.Theme == AppState.LightTheme ? "moon" : "sun")" />
+        </button>
+
+        <button class="icon-button notification-button"
+                type="button">
+            <AppIcon Name="bell" />
+            <span></span>
+        </button>
+
+        <AuthorizeView>
+            <Authorized Context="authenticationState">
+                <div class="user-menu static-user">
+                    <span class="user-copy">
+                        <strong>@DisplayName(authenticationState.User)</strong>
+                        <small>@T["User.Role"]</small>
+                    </span>
+
+                    <span class="avatar">
+                        @Initial(authenticationState.User)
+                    </span>
+                </div>
+
+                <form method="post"
+                      action="/authentication/logout">
+                    <AntiforgeryToken />
+
+                    <button class="secondary-button"
+                            type="submit">
+                        @T["Authentication.Logout"]
+                    </button>
+                </form>
+            </Authorized>
+        </AuthorizeView>
     </div>
 </header>
 
 @code {
-    private static readonly (string Code, string Label)[] Languages = [("pl", "PL"), ("en", "EN"), ("de", "DE")];
-    private string CurrentLanguage => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    private static readonly (string Code, string Label)[] Languages =
+    [
+        ("pl", "PL"),
+        ("en", "EN"),
+        ("de", "DE")
+    ];
+
+    private string CurrentLanguage =>
+        CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 
     private async Task ToggleThemeAsync()
     {
         State.ToggleTheme();
-        await JS.InvokeVoidAsync("subscriptionManagerTheme.set", State.Theme, AppState.ThemeCookieName);
+
+        await JS.InvokeVoidAsync(
+            "subscriptionManagerTheme.set",
+            State.Theme,
+            AppState.ThemeCookieName);
     }
 
-    private void ChangeLanguage(string languageCode)
+    private void ChangeLanguage(
+        string languageCode)
     {
-        var culture = SupportedCultures.ByLanguageCode.TryGetValue(languageCode, out var selected) ? selected : SupportedCultures.DefaultCulture;
-        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
-        var redirectUri = string.IsNullOrWhiteSpace(currentPath) ? "/" : $"/{currentPath}";
-        Navigation.NavigateTo($"/culture/set?culture={Uri.EscapeDataString(culture)}&redirectUri={Uri.EscapeDataString(redirectUri)}", forceLoad: true);
+        var culture =
+            SupportedCultures.ByLanguageCode.TryGetValue(
+                languageCode,
+                out var selected)
+                ? selected
+                : SupportedCultures.DefaultCulture;
+
+        var currentPath =
+            Navigation.ToBaseRelativePath(
+                Navigation.Uri);
+
+        var redirectUri =
+            string.IsNullOrWhiteSpace(currentPath)
+                ? "/"
+                : $"/{currentPath}";
+
+        Navigation.NavigateTo(
+            "/culture/set" +
+            $"?culture={Uri.EscapeDataString(culture)}" +
+            $"&redirectUri={Uri.EscapeDataString(redirectUri)}",
+            forceLoad: true);
+    }
+
+    private static string DisplayName(
+        ClaimsPrincipal user)
+        => user.FindFirst(ClaimTypes.Email)?.Value ??
+           user.Identity?.Name ??
+           "User";
+
+    private static string Initial(
+        ClaimsPrincipal user)
+    {
+        var displayName = DisplayName(user);
+
+        return displayName.Length == 0
+            ? "U"
+            : char.ToUpperInvariant(displayName[0]).ToString();
     }
 }

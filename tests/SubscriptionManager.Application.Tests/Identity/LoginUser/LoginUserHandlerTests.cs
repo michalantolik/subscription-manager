@@ -1,4 +1,5 @@
-﻿using SubscriptionManager.Application.Common.Authentication;
+﻿using Moq;
+using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Identity.LoginUser;
 
@@ -11,15 +12,24 @@ public sealed class LoginUserHandlerTests
     {
         var userId = Guid.NewGuid();
 
-        var identityService = new TestIdentityService(
-            AuthenticateUserResult.Success(userId));
+        var identityService = new Mock<IIdentityService>();
 
-        var accessTokenGenerator = new TestAccessTokenGenerator(
-            "access-token");
+        identityService
+            .Setup(service => service.AuthenticateUserAsync(
+                "michal@example.com",
+                "Test123!",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AuthenticateUserResult.Success(userId));
+
+        var accessTokenGenerator = new Mock<IAccessTokenGenerator>();
+
+        accessTokenGenerator
+            .Setup(generator => generator.GenerateToken(userId))
+            .Returns("access-token");
 
         var handler = new LoginUserHandler(
-            identityService,
-            accessTokenGenerator);
+            identityService.Object,
+            accessTokenGenerator.Object);
 
         var command = new LoginUserCommand(
             "michal@example.com",
@@ -31,12 +41,16 @@ public sealed class LoginUserHandlerTests
         Assert.Equal("access-token", result.AccessToken);
         Assert.Empty(result.Errors);
 
-        Assert.True(identityService.WasCalled);
-        Assert.Equal("michal@example.com", identityService.Email);
-        Assert.Equal("Test123!", identityService.Password);
+        identityService.Verify(
+            service => service.AuthenticateUserAsync(
+                "michal@example.com",
+                "Test123!",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-        Assert.True(accessTokenGenerator.WasCalled);
-        Assert.Equal(userId, accessTokenGenerator.UserId);
+        accessTokenGenerator.Verify(
+            generator => generator.GenerateToken(userId),
+            Times.Once);
     }
 
     [Fact]
@@ -49,15 +63,20 @@ public sealed class LoginUserHandlerTests
                 "The email address or password is invalid.")
         };
 
-        var identityService = new TestIdentityService(
-            AuthenticateUserResult.Failure(errors));
+        var identityService = new Mock<IIdentityService>();
 
-        var accessTokenGenerator = new TestAccessTokenGenerator(
-            "access-token");
+        identityService
+            .Setup(service => service.AuthenticateUserAsync(
+                "michal@example.com",
+                "WrongPassword!",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AuthenticateUserResult.Failure(errors));
+
+        var accessTokenGenerator = new Mock<IAccessTokenGenerator>();
 
         var handler = new LoginUserHandler(
-            identityService,
-            accessTokenGenerator);
+            identityService.Object,
+            accessTokenGenerator.Object);
 
         var command = new LoginUserCommand(
             "michal@example.com",
@@ -75,73 +94,15 @@ public sealed class LoginUserHandlerTests
             "The email address or password is invalid.",
             error.Description);
 
-        Assert.True(identityService.WasCalled);
-        Assert.Equal("michal@example.com", identityService.Email);
-        Assert.Equal("WrongPassword!", identityService.Password);
+        identityService.Verify(
+            service => service.AuthenticateUserAsync(
+                "michal@example.com",
+                "WrongPassword!",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-        Assert.False(accessTokenGenerator.WasCalled);
-    }
-
-    private sealed class TestIdentityService(
-        AuthenticateUserResult authenticateUserResult)
-        : IIdentityService
-    {
-        public bool WasCalled { get; private set; }
-
-        public string? Email { get; private set; }
-
-        public string? Password { get; private set; }
-
-        public Task<CreateUserResult> CreateUserAsync(
-            string email,
-            string password,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        public Task<string?> GenerateEmailConfirmationTokenAsync(
-            Guid userId,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        public Task<ConfirmEmailResult> ConfirmEmailAsync(
-            Guid userId,
-            string confirmationToken,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        public Task<AuthenticateUserResult> AuthenticateUserAsync(
-            string email,
-            string password,
-            CancellationToken cancellationToken = default)
-        {
-            WasCalled = true;
-            Email = email;
-            Password = password;
-
-            return Task.FromResult(authenticateUserResult);
-        }
-    }
-
-    private sealed class TestAccessTokenGenerator(
-        string accessToken)
-        : IAccessTokenGenerator
-    {
-        public bool WasCalled { get; private set; }
-
-        public Guid? UserId { get; private set; }
-
-        public string GenerateToken(Guid userId)
-        {
-            WasCalled = true;
-            UserId = userId;
-
-            return accessToken;
-        }
+        accessTokenGenerator.Verify(
+            generator => generator.GenerateToken(It.IsAny<Guid>()),
+            Times.Never);
     }
 }

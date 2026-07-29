@@ -20,6 +20,20 @@ public interface IIdentityService
         string email,
         string password,
         CancellationToken cancellationToken = default);
+
+    Task<PasswordResetToken?> GeneratePasswordResetTokenAsync(
+        string email,
+        CancellationToken cancellationToken = default);
+
+    Task<ResetPasswordResult> ResetPasswordAsync(
+        Guid userId,
+        string resetToken,
+        string newPassword,
+        CancellationToken cancellationToken = default);
+
+    Task<DeleteUserResult> DeleteUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record IdentityServiceError(
@@ -62,4 +76,33 @@ public sealed record AuthenticateUserResult(
     public static AuthenticateUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
         => new(false, null, errors.ToArray());
+}
+
+public sealed record PasswordResetToken(
+    Guid UserId,
+    string Email,
+    string Token);
+
+public sealed record ResetPasswordResult(
+    bool Succeeded,
+    IReadOnlyCollection<IdentityServiceError> Errors)
+{
+    public static ResetPasswordResult Success()
+        => new(true, []);
+
+    public static ResetPasswordResult Failure(
+        IEnumerable<IdentityServiceError> errors)
+        => new(false, errors.ToArray());
+}
+
+public sealed record DeleteUserResult(
+    bool Succeeded,
+    IReadOnlyCollection<IdentityServiceError> Errors)
+{
+    public static DeleteUserResult Success()
+        => new(true, []);
+
+    public static DeleteUserResult Failure(
+        IEnumerable<IdentityServiceError> errors)
+        => new(false, errors.ToArray());
 }

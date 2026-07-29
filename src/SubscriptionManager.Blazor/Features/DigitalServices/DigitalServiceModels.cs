@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Security.Claims;
+using SubscriptionManager.Blazor.Features.Authentication;
 
 namespace SubscriptionManager.Blazor.Features.DigitalServices;
 
@@ -11,14 +13,30 @@ public sealed record DigitalServiceResponse(
     string? ManagementUrl,
     bool IsPredefined);
 
-public sealed class DigitalServicesApiClient(HttpClient httpClient)
+public sealed class DigitalServicesApiClient(
+    HttpClient httpClient)
 {
     public async Task<IReadOnlyList<DigitalServiceResponse>> GetAllAsync(
+        ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
     {
-        return await httpClient.GetFromJsonAsync<IReadOnlyList<DigitalServiceResponse>>(
-                   "api/digital-services",
-                   cancellationToken)
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "api/digital-services");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+                   .ReadFromJsonAsync<IReadOnlyList<DigitalServiceResponse>>(
+                       cancellationToken)
                ?? [];
     }
 }

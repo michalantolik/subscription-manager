@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Application.Common.Email;
+using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
 
 namespace SubscriptionManager.Application.Identity.RegisterUser;
@@ -34,6 +34,7 @@ public sealed class RegisterUserHandler(
                 command.Email,
                 userId,
                 confirmationToken,
+                command.LanguageCode,
                 cancellationToken);
         }
 
