@@ -175,7 +175,7 @@ public static class AuthenticationEndpoints
         var authenticationProperties =
             new AuthenticationProperties
             {
-                AllowRefresh = true,
+                AllowRefresh = false,
                 IsPersistent = false,
                 IssuedUtc = DateTimeOffset.UtcNow,
                 ExpiresUtc =

@@ -75,7 +75,7 @@ builder.Services
                 authenticationOptions
                     .AuthenticationCookieExpirationInMinutes);
 
-        options.SlidingExpiration = true;
+        options.SlidingExpiration = false;
 
         options.Events.OnValidatePrincipal = context =>
         {
