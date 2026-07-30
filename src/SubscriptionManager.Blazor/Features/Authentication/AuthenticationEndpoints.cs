@@ -2,6 +2,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
+using SubscriptionManager.Blazor.Configuration;
 
 namespace SubscriptionManager.Blazor.Features.Authentication;
 
@@ -93,6 +95,7 @@ public static class AuthenticationEndpoints
     private static async Task<IResult> LoginAsync(
         HttpContext context,
         AuthenticationApiClient authenticationApiClient,
+        IOptions<AuthenticationCookieOptions> authenticationOptions,
         IAntiforgery antiforgery,
         CancellationToken cancellationToken)
     {
@@ -175,7 +178,10 @@ public static class AuthenticationEndpoints
                 AllowRefresh = true,
                 IsPersistent = false,
                 IssuedUtc = DateTimeOffset.UtcNow,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                ExpiresUtc =
+                    DateTimeOffset.UtcNow.AddMinutes(
+                        authenticationOptions.Value
+                            .AuthenticationCookieExpirationInMinutes)
             };
 
         await context.SignInAsync(
@@ -240,6 +246,7 @@ public static class AuthenticationEndpoints
 
         return returnUrl;
     }
+
     private static string NormalizeLanguageCode(
         string? languageCode)
     {
@@ -250,5 +257,4 @@ public static class AuthenticationEndpoints
             _ => "pl"
         };
     }
-
 }

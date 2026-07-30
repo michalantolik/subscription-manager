@@ -10,6 +10,13 @@ using SubscriptionManager.Blazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var authenticationOptions =
+    builder.Configuration
+        .GetSection(AuthenticationCookieOptions.SectionName)
+        .Get<AuthenticationCookieOptions>()
+    ?? throw new InvalidOperationException(
+        "Authentication configuration is missing.");
+
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents(options =>
@@ -21,6 +28,10 @@ builder.Services
 builder.Services.Configure<ApiOptions>(
     builder.Configuration.GetSection(
         ApiOptions.SectionName));
+
+builder.Services.Configure<AuthenticationCookieOptions>(
+    builder.Configuration.GetSection(
+        AuthenticationCookieOptions.SectionName));
 
 builder.Services.Configure<RequestLocalizationOptions>(
     options =>
@@ -60,7 +71,9 @@ builder.Services
         options.ReturnUrlParameter = "returnUrl";
 
         options.ExpireTimeSpan =
-            TimeSpan.FromHours(8);
+            TimeSpan.FromMinutes(
+                authenticationOptions
+                    .AuthenticationCookieExpirationInMinutes);
 
         options.SlidingExpiration = true;
 
@@ -84,7 +97,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddHttpContextAccessor();
-
 
 builder.Services.AddScoped<AppState>();
 builder.Services.AddScoped<Localizer>();
