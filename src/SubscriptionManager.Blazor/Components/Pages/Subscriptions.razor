@@ -335,7 +335,7 @@
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            RedirectToLogin();
+            SessionExpirationNavigation.RedirectToLogin(Navigation);
         }
         catch
         {
@@ -387,7 +387,7 @@
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            RedirectToLogin();
+            SessionExpirationNavigation.RedirectToLogin(Navigation);
         }
         catch
         {
@@ -423,7 +423,7 @@
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            RedirectToLogin();
+            SessionExpirationNavigation.RedirectToLogin(Navigation);
         }
         catch
         {
@@ -458,7 +458,7 @@
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            RedirectToLogin();
+            SessionExpirationNavigation.RedirectToLogin(Navigation);
         }
         catch
         {
@@ -468,20 +468,6 @@
         {
             _saving = false;
         }
-    }
-    private void RedirectToLogin()
-    {
-        var returnUrl = Navigation.ToBaseRelativePath(
-            Navigation.Uri);
-
-        var localReturnUrl = string.IsNullOrWhiteSpace(returnUrl)
-            ? "/"
-            : $"/{returnUrl}";
-
-        Navigation.NavigateTo(
-            "/authentication/session-expired" +
-            $"?returnUrl={Uri.EscapeDataString(localReturnUrl)}",
-            forceLoad: true);
     }
 
     private void CloseDialogAfterSave() { _dialog = DialogKind.None; _selected = null; _selectedService = null; _dialogError = null; }

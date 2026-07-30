@@ -2,6 +2,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/SubscriptionManager.Api.Tests/SubscriptionManager.Api.Tests.csproj" />
     <Project Path="tests/SubscriptionManager.Application.Tests/SubscriptionManager.Application.Tests.csproj" />
+    <Project Path="tests/SubscriptionManager.Blazor.Tests/SubscriptionManager.Blazor.Tests.csproj" />
     <Project Path="tests/SubscriptionManager.Domain.Tests/SubscriptionManager.Domain.Tests.csproj" Id="85124548-6cfe-45a9-aa49-bc221c941b38" />
   </Folder>
   <Project Path="src/SubscriptionManager.Api/SubscriptionManager.Api.csproj" Id="2ff4c55b-5e86-4cad-9507-1147038c44b5" />
