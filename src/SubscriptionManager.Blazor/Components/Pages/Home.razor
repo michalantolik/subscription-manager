@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject SubscriptionsApiClient ApiClient
 @inject Localizer T
+@inject NavigationManager Navigation
 
 <PageTitle>Subscription Manager — @T["Navigation.Overview"]</PageTitle>
 
@@ -69,11 +70,32 @@
             _subscriptions = await ApiClient.GetAllAsync(
                 authenticationState.User);
         }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            RedirectToLogin();
+        }
         catch
         {
             _error = true;
         }
         finally { _loading = false; }
+    }
+
+    private void RedirectToLogin()
+    {
+        var returnUrl = Navigation.ToBaseRelativePath(
+            Navigation.Uri);
+
+        var localReturnUrl = string.IsNullOrWhiteSpace(returnUrl)
+            ? "/"
+            : $"/{returnUrl}";
+
+        Navigation.NavigateTo(
+            "/authentication/session-expired" +
+            $"?returnUrl={Uri.EscapeDataString(localReturnUrl)}",
+            forceLoad: true);
     }
 
     private string Money(decimal value) => string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:N2} {1}", value, Active.FirstOrDefault()?.Currency ?? "PLN");

@@ -4,6 +4,7 @@
 @inject SubscriptionsApiClient ApiClient
 @inject DigitalServicesApiClient DigitalServicesApiClient
 @inject Localizer T
+@inject NavigationManager Navigation
 
 <PageTitle>Subscription Manager — @T["Navigation.Subscriptions"]</PageTitle>
 
@@ -319,7 +320,9 @@
 
     private async Task LoadAsync()
     {
-        _loading = true; _pageError = null;
+        _loading = true;
+        _pageError = null;
+
         try
         {
             _digitalServices =
@@ -328,8 +331,20 @@
             _subscriptions =
                 await ApiClient.GetAllAsync(_user);
         }
-        catch { _pageError = T["Error.Load"]; }
-        finally { _loading = false; }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            RedirectToLogin();
+        }
+        catch
+        {
+            _pageError = T["Error.Load"];
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     private void OpenCatalog() { _selected = null; _selectedService = null; _catalogSearch = string.Empty; _dialogError = null; _dialog = DialogKind.Catalog; }
@@ -348,25 +363,127 @@
 
     private async Task SaveAsync()
     {
-        _saving = true; _dialogError = null;
-        try { if (_dialog == DialogKind.Create) await ApiClient.CreateAsync(_form, _user); else if (_selected is not null) await ApiClient.UpdateAsync(_selected.Id, _form, _user); CloseDialogAfterSave(); await LoadAsync(); }
-        catch { _dialogError = T["Error.Save"]; }
-        finally { _saving = false; }
+        _saving = true;
+        _dialogError = null;
+
+        try
+        {
+            if (_dialog == DialogKind.Create)
+            {
+                await ApiClient.CreateAsync(_form, _user);
+            }
+            else if (_selected is not null)
+            {
+                await ApiClient.UpdateAsync(
+                    _selected.Id,
+                    _form,
+                    _user);
+            }
+
+            CloseDialogAfterSave();
+            await LoadAsync();
+        }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            RedirectToLogin();
+        }
+        catch
+        {
+            _dialogError = T["Error.Save"];
+        }
+        finally
+        {
+            _saving = false;
+        }
     }
+
     private async Task EndAsync()
     {
-        if (_selected is null) return; _saving = true; _dialogError = null;
-        try { await ApiClient.EndAsync(_selected.Id, _endModel.EndDate, _user); CloseDialogAfterSave(); await LoadAsync(); }
-        catch { _dialogError = T["Error.Save"]; }
-        finally { _saving = false; }
+        if (_selected is null)
+        {
+            return;
+        }
+
+        _saving = true;
+        _dialogError = null;
+
+        try
+        {
+            await ApiClient.EndAsync(
+                _selected.Id,
+                _endModel.EndDate,
+                _user);
+
+            CloseDialogAfterSave();
+            await LoadAsync();
+        }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            RedirectToLogin();
+        }
+        catch
+        {
+            _dialogError = T["Error.Save"];
+        }
+        finally
+        {
+            _saving = false;
+        }
     }
+
     private async Task DeleteAsync()
     {
-        if (_selected is null) return; _saving = true; _dialogError = null;
-        try { await ApiClient.DeleteAsync(_selected.Id, _user); CloseDialogAfterSave(); await LoadAsync(); }
-        catch { _dialogError = T["Error.Delete"]; }
-        finally { _saving = false; }
+        if (_selected is null)
+        {
+            return;
+        }
+
+        _saving = true;
+        _dialogError = null;
+
+        try
+        {
+            await ApiClient.DeleteAsync(
+                _selected.Id,
+                _user);
+
+            CloseDialogAfterSave();
+            await LoadAsync();
+        }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            RedirectToLogin();
+        }
+        catch
+        {
+            _dialogError = T["Error.Delete"];
+        }
+        finally
+        {
+            _saving = false;
+        }
     }
+    private void RedirectToLogin()
+    {
+        var returnUrl = Navigation.ToBaseRelativePath(
+            Navigation.Uri);
+
+        var localReturnUrl = string.IsNullOrWhiteSpace(returnUrl)
+            ? "/"
+            : $"/{returnUrl}";
+
+        Navigation.NavigateTo(
+            "/authentication/session-expired" +
+            $"?returnUrl={Uri.EscapeDataString(localReturnUrl)}",
+            forceLoad: true);
+    }
+
     private void CloseDialogAfterSave() { _dialog = DialogKind.None; _selected = null; _selectedService = null; _dialogError = null; }
     private bool MatchesStatus(SubscriptionResponse x) => _status == StatusFilter.All || (_status == StatusFilter.Active ? x.IsActive : !x.IsActive);
     private DigitalServiceResponse? ServiceFor(SubscriptionResponse x) => x.DigitalServiceId is null ? null : _digitalServices.FirstOrDefault(service => service.Id == x.DigitalServiceId);

@@ -24,6 +24,10 @@ public static class AuthenticationEndpoints
             "/authentication/logout",
             LogoutAsync);
 
+        endpoints.MapGet(
+            "/authentication/session-expired",
+            SessionExpiredAsync);
+
         return endpoints;
     }
 
@@ -190,6 +194,21 @@ public static class AuthenticationEndpoints
             authenticationProperties);
 
         return Results.LocalRedirect(returnUrl);
+    }
+
+
+    private static async Task<IResult> SessionExpiredAsync(
+        HttpContext context,
+        string? returnUrl)
+    {
+        await context.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var safeReturnUrl = GetSafeReturnUrl(returnUrl);
+
+        return RedirectToLogin(
+            safeReturnUrl,
+            AuthenticationErrorCodes.SessionExpired);
     }
 
     private static async Task<IResult> LogoutAsync(

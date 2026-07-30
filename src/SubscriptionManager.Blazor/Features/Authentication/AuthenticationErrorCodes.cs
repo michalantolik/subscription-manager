@@ -6,6 +6,7 @@ public static class AuthenticationErrorCodes
     public const string PasswordMismatch = "PasswordMismatch";
     public const string ServiceUnavailable = "ServiceUnavailable";
     public const string UnexpectedError = "UnexpectedError";
+    public const string SessionExpired = "SessionExpired";
 
     public const string InvalidEmail = "InvalidEmail";
     public const string InvalidUserName = "InvalidUserName";
@@ -29,6 +30,7 @@ public static class AuthenticationErrorCodes
         PasswordMismatch,
         ServiceUnavailable,
         UnexpectedError,
+        SessionExpired,
         InvalidEmail,
         InvalidUserName,
         DuplicateEmail,
