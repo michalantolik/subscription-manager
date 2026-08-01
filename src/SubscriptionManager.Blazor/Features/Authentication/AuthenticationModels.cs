@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace SubscriptionManager.Blazor.Features.Authentication;
@@ -244,6 +244,32 @@ public sealed class AuthenticationApiClient(
                 NewPassword = newPassword
             },
             JsonOptions,
+            cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return AuthenticationOperationResult.Success();
+        }
+
+        return await ReadFailureAsync(
+            response,
+            cancellationToken);
+    }
+
+    public async Task<AuthenticationOperationResult> DeleteAccountAsync(
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Delete,
+            "api/auth/account");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
             cancellationToken);
 
         if (response.IsSuccessStatusCode)

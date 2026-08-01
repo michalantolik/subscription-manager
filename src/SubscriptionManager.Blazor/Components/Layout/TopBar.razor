@@ -39,30 +39,106 @@
 
         <AuthorizeView>
             <Authorized Context="authenticationState">
-                <div class="user-menu static-user">
-                    <span class="user-copy">
-                        <strong>@DisplayName(authenticationState.User)</strong>
-                        <small>@T["User.Role"]</small>
-                    </span>
+                <div class="account-menu-container">
+                    @if (_accountMenuOpen)
+                    {
+                        <button class="account-menu-overlay"
+                                type="button"
+                                aria-label="@T["Action.Close"]"
+                                @onclick="CloseAccountMenu"></button>
+                    }
 
-                    <span class="avatar">
-                        @Initial(authenticationState.User)
-                    </span>
-                </div>
+                    <button class="user-menu"
+                            type="button"
+                            aria-haspopup="menu"
+                            aria-expanded="@_accountMenuOpen"
+                            @onclick="ToggleAccountMenu">
+                        <span class="user-copy">
+                            <strong>
+                                @DisplayName(authenticationState.User)
+                            </strong>
 
-                <form method="post"
-                      action="/authentication/logout">
-                    <AntiforgeryToken />
+                            <small>
+                                @T["User.Role"]
+                            </small>
+                        </span>
 
-                    <button class="secondary-button"
-                            type="submit">
-                        @T["Authentication.Logout"]
+                        <span class="avatar">
+                            @Initial(authenticationState.User)
+                        </span>
+
+                        <AppIcon Name="chevron"
+                                 CssClass="@AccountMenuChevronClass" />
                     </button>
-                </form>
+
+                    @if (_accountMenuOpen)
+                    {
+                        <div class="account-menu-dropdown"
+                             role="menu">
+                            <div class="account-menu-heading">
+                                <strong>
+                                    @DisplayName(authenticationState.User)
+                                </strong>
+
+                                <span>
+                                    @T["Account.Menu.Description"]
+                                </span>
+                            </div>
+
+                            <button class="account-menu-item"
+                                    type="button"
+                                    role="menuitem"
+                                    @onclick="OpenAccountSettings">
+                                <AppIcon Name="settings" />
+
+                                <span>
+                                    <strong>
+                                        @T["Account.Settings.Title"]
+                                    </strong>
+
+                                    <small>
+                                        @T["Account.Menu.SettingsHint"]
+                                    </small>
+                                </span>
+                            </button>
+
+                            <form method="post"
+                                  action="/authentication/logout">
+                                <AntiforgeryToken />
+
+                                <button class="account-menu-item"
+                                        type="submit"
+                                        role="menuitem">
+                                    <AppIcon Name="logout" />
+
+                                    <span>
+                                        <strong>
+                                            @T["Authentication.Logout"]
+                                        </strong>
+
+                                        <small>
+                                            @T["Account.Menu.LogoutHint"]
+                                        </small>
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
             </Authorized>
         </AuthorizeView>
     </div>
 </header>
+
+@if (_accountSettingsOpen)
+{
+    <AuthorizeView>
+        <Authorized Context="accountSettingsAuthenticationState">
+            <AccountSettingsDialog User="accountSettingsAuthenticationState.User"
+                                   OnClose="CloseAccountSettings" />
+        </Authorized>
+    </AuthorizeView>
+}
 
 @code {
     private static readonly (string Code, string Label)[] Languages =
@@ -72,8 +148,31 @@
         ("de", "DE")
     ];
 
+    private bool _accountMenuOpen;
+    private bool _accountSettingsOpen;
+
     private string CurrentLanguage =>
         CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    private string AccountMenuChevronClass =>
+        _accountMenuOpen
+            ? "account-menu-chevron open"
+            : "account-menu-chevron";
+
+    private void ToggleAccountMenu()
+        => _accountMenuOpen = !_accountMenuOpen;
+
+    private void CloseAccountMenu()
+        => _accountMenuOpen = false;
+
+    private void OpenAccountSettings()
+    {
+        _accountMenuOpen = false;
+        _accountSettingsOpen = true;
+    }
+
+    private void CloseAccountSettings()
+        => _accountSettingsOpen = false;
 
     private async Task ToggleThemeAsync()
     {
@@ -124,6 +223,7 @@
 
         return displayName.Length == 0
             ? "U"
-            : char.ToUpperInvariant(displayName[0]).ToString();
+            : char.ToUpperInvariant(
+                displayName[0]).ToString();
     }
 }

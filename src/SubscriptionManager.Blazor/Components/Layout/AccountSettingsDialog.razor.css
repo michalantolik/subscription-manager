@@ -1,0 +1,174 @@
+.account-dialog-backdrop {
+    z-index: 1100;
+}
+
+.account-dialog-mark-danger {
+    color: var(--red);
+    background: var(--red-soft);
+    border-color: color-mix(in srgb, var(--red) 24%, var(--border));
+}
+
+.account-settings-content,
+.account-confirmation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-5);
+}
+
+.account-profile-card {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-4);
+    padding: var(--ui-space-4);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-lg);
+}
+
+.account-profile-avatar {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: linear-gradient(135deg, var(--brand), #1f6a3b);
+    border-radius: 50%;
+    font-weight: 800;
+}
+
+.account-profile-card div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.account-profile-card strong {
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-profile-card span:last-child {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.account-danger-zone {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--ui-space-5);
+    padding-top: var(--ui-space-5);
+    border-top: 1px solid var(--border);
+}
+
+.account-danger-zone h3 {
+    margin: 12px 0 0;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.account-danger-zone p {
+    max-width: 310px;
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.account-delete-list {
+    margin-top: 10px;
+}
+
+.account-confirm-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 14px;
+    color: var(--text);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-md);
+    font-size: 12px;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.account-confirm-checkbox input {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    margin: 1px 0 0;
+    accent-color: var(--red);
+}
+
+.account-operation-state {
+    min-height: 230px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.account-operation-state strong {
+    font-size: 16px;
+}
+
+.account-operation-state p {
+    max-width: 330px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.account-spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid var(--border);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: account-spin .8s linear infinite;
+}
+
+.account-success-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    color: var(--brand-strong);
+    background: var(--brand-soft);
+    border: 1px solid color-mix(in srgb, var(--brand) 24%, var(--border));
+    border-radius: 50%;
+}
+
+.account-success-icon ::deep .app-icon {
+    width: 24px;
+    height: 24px;
+}
+
+@keyframes account-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+    .account-danger-zone {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .account-danger-zone .danger-button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .account-spinner {
+        animation-duration: 1.5s;
+    }
+}

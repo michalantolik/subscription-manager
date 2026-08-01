@@ -380,6 +380,7 @@ h1[tabindex="-1"]:focus {
     color: var(--text);
     border-radius: 12px;
     padding: 5px 6px 5px 10px;
+    cursor: pointer;
 }
 
     .user-menu:hover {
@@ -413,6 +414,109 @@ h1[tabindex="-1"]:focus {
     display: grid;
     place-items: center;
     font-weight: 800;
+}
+
+.account-menu-container {
+    position: relative;
+}
+
+.account-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    border: 0;
+    background: transparent;
+    cursor: default;
+}
+
+.account-menu-chevron {
+    width: 15px !important;
+    height: 15px !important;
+    color: var(--muted);
+    transform: rotate(90deg);
+    transition: transform .18s ease;
+}
+
+.account-menu-chevron.open {
+    transform: rotate(-90deg);
+}
+
+.account-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 40;
+    width: min(300px, calc(100vw - 24px));
+    padding: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    box-shadow: 0 20px 55px rgba(8, 24, 15, .18), var(--shadow);
+}
+
+.account-menu-heading {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 11px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.account-menu-heading strong {
+    overflow: hidden;
+    color: var(--text);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-menu-heading span {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.account-menu-item {
+    width: 100%;
+    min-height: 54px;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+    padding: 8px 10px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.account-menu-item:hover {
+    background: var(--surface-hover);
+}
+
+.account-menu-item > .app-icon {
+    width: 19px;
+    height: 19px;
+    color: var(--brand);
+}
+
+.account-menu-item > span {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.account-menu-item strong {
+    font-size: 12px;
+}
+
+.account-menu-item small {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.35;
 }
 
 .development-user-menu {
@@ -1105,6 +1209,10 @@ h1[tabindex="-1"]:focus {
 
     .user-menu {
         padding-left: 4px;
+    }
+
+    .account-menu-chevron {
+        display: none;
     }
 
     .main-content {

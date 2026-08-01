@@ -1,0 +1,289 @@
+@using System.Security.Claims
+@using SubscriptionManager.Blazor.Features.Authentication
+@inject AuthenticationApiClient AuthenticationApiClient
+@inject Localizer T
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<div class="ui-dialog-backdrop account-dialog-backdrop"
+     @onclick="CloseFromBackdrop">
+    <section class="ui-dialog ui-dialog-small account-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="account-dialog-title"
+             @onclick:stopPropagation="true">
+        <header class="ui-dialog-header">
+            <div class="ui-dialog-heading">
+                <span class="ui-dialog-mark @(_stage == DialogStage.Confirm ? "account-dialog-mark-danger" : null)">
+                    <AppIcon Name="@(_stage == DialogStage.Confirm ? "trash" : "settings")" />
+                </span>
+
+                <div>
+                    <h2 class="ui-dialog-title"
+                        id="account-dialog-title">
+                        @DialogTitle
+                    </h2>
+
+                    <p class="ui-dialog-description">
+                        @DialogDescription
+                    </p>
+                </div>
+            </div>
+
+            @if (_stage is DialogStage.Settings or DialogStage.Confirm)
+            {
+                <button class="ui-dialog-close"
+                        type="button"
+                        title="@T["Action.Close"]"
+                        @onclick="CloseAsync">
+                    <AppIcon Name="close" />
+                </button>
+            }
+        </header>
+
+        <div class="ui-dialog-body">
+            @if (_stage == DialogStage.Settings)
+            {
+                <div class="account-settings-content">
+                    <section class="account-profile-card">
+                        <span class="account-profile-avatar">
+                            @Initial
+                        </span>
+
+                        <div>
+                            <strong>@Email</strong>
+                            <span>@T["Account.Settings.ActiveAccount"]</span>
+                        </div>
+                    </section>
+
+                    <section class="account-danger-zone">
+                        <div>
+                            <span class="ui-badge ui-badge-danger">
+                                @T["Account.Settings.DangerZone"]
+                            </span>
+
+                            <h3>@T["Account.Delete.Title"]</h3>
+
+                            <p>@T["Account.Delete.Summary"]</p>
+                        </div>
+
+                        <button class="danger-button"
+                                type="button"
+                                @onclick="OpenConfirmation">
+                            <AppIcon Name="trash" />
+                            @T["Account.Delete.Action"]
+                        </button>
+                    </section>
+                </div>
+            }
+            else if (_stage == DialogStage.Confirm)
+            {
+                <div class="account-confirmation">
+                    <div class="ui-alert ui-alert-error"
+                         role="alert">
+                        <strong>@T["Account.Delete.WarningTitle"]</strong>
+                        <ul class="ui-alert-list account-delete-list">
+                            <li>@T["Account.Delete.WarningAccount"]</li>
+                            <li>@T["Account.Delete.WarningSubscriptions"]</li>
+                            <li>@T["Account.Delete.WarningServices"]</li>
+                            <li>@T["Account.Delete.WarningSignOut"]</li>
+                        </ul>
+                    </div>
+
+                    <label class="account-confirm-checkbox">
+                        <input type="checkbox"
+                               @bind="_confirmed" />
+                        <span>@T["Account.Delete.Confirmation"]</span>
+                    </label>
+
+                    @if (!string.IsNullOrWhiteSpace(_error))
+                    {
+                        <div class="ui-alert ui-alert-error"
+                             role="alert">
+                            @_error
+                        </div>
+                    }
+                </div>
+            }
+            else if (_stage == DialogStage.Deleting)
+            {
+                <div class="account-operation-state"
+                     role="status">
+                    <span class="account-spinner"
+                          aria-hidden="true"></span>
+                    <strong>@T["Account.Delete.DeletingTitle"]</strong>
+                    <p>@T["Account.Delete.DeletingDescription"]</p>
+                </div>
+            }
+            else
+            {
+                <div class="account-operation-state account-operation-success"
+                     role="status">
+                    <span class="account-success-icon">
+                        <AppIcon Name="check" />
+                    </span>
+                    <strong>@T["Account.Delete.SuccessTitle"]</strong>
+                    <p>@T["Account.Delete.SuccessDescription"]</p>
+                </div>
+            }
+        </div>
+
+        @if (_stage == DialogStage.Settings)
+        {
+            <footer class="ui-dialog-footer">
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="CloseAsync">
+                    @T["Action.Close"]
+                </button>
+            </footer>
+        }
+        else if (_stage == DialogStage.Confirm)
+        {
+            <footer class="ui-dialog-footer">
+                <button class="secondary-button"
+                        type="button"
+                        @onclick="BackToSettings">
+                    @T["Action.Cancel"]
+                </button>
+
+                <button class="danger-button"
+                        type="button"
+                        disabled="@(!_confirmed)"
+                        @onclick="DeleteAccountAsync">
+                    <AppIcon Name="trash" />
+                    @T["Account.Delete.PermanentAction"]
+                </button>
+            </footer>
+        }
+    </section>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ClaimsPrincipal User { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private CancellationTokenSource? _cancellationTokenSource;
+    private DialogStage _stage = DialogStage.Settings;
+    private bool _confirmed;
+    private string? _error;
+
+    private string Email =>
+        User.FindFirst(ClaimTypes.Email)?.Value ??
+        User.Identity?.Name ??
+        T["Account.Settings.UnknownUser"];
+
+    private string Initial =>
+        Email.Length == 0
+            ? "U"
+            : char.ToUpperInvariant(Email[0]).ToString();
+
+    private string DialogTitle => _stage switch
+    {
+        DialogStage.Settings => T["Account.Settings.Title"],
+        DialogStage.Confirm => T["Account.Delete.ConfirmTitle"],
+        DialogStage.Deleting => T["Account.Delete.DeletingTitle"],
+        _ => T["Account.Delete.SuccessTitle"]
+    };
+
+    private string DialogDescription => _stage switch
+    {
+        DialogStage.Settings => T["Account.Settings.Description"],
+        DialogStage.Confirm => T["Account.Delete.ConfirmDescription"],
+        DialogStage.Deleting => T["Account.Delete.DeletingDescription"],
+        _ => T["Account.Delete.SuccessDescription"]
+    };
+
+    private void OpenConfirmation()
+    {
+        _confirmed = false;
+        _error = null;
+        _stage = DialogStage.Confirm;
+    }
+
+    private void BackToSettings()
+    {
+        _confirmed = false;
+        _error = null;
+        _stage = DialogStage.Settings;
+    }
+
+    private async Task DeleteAccountAsync()
+    {
+        if (!_confirmed || _stage != DialogStage.Confirm)
+        {
+            return;
+        }
+
+        _error = null;
+        _stage = DialogStage.Deleting;
+
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        try
+        {
+            var result = await AuthenticationApiClient.DeleteAccountAsync(
+                User,
+                _cancellationTokenSource.Token);
+
+            if (!result.Succeeded)
+            {
+                _error = T["Account.Delete.Error"];
+                _stage = DialogStage.Confirm;
+                return;
+            }
+
+            _stage = DialogStage.Deleted;
+
+            await Task.Delay(
+                TimeSpan.FromSeconds(2),
+                _cancellationTokenSource.Token);
+
+            Navigation.NavigateTo(
+                "/authentication/account-deleted",
+                forceLoad: true);
+        }
+        catch (HttpRequestException)
+        {
+            _error = T["Account.Delete.Error"];
+            _stage = DialogStage.Confirm;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private Task CloseFromBackdrop()
+        => _stage is DialogStage.Settings or DialogStage.Confirm
+            ? CloseAsync()
+            : Task.CompletedTask;
+
+    private async Task CloseAsync()
+    {
+        if (_stage is DialogStage.Deleting or DialogStage.Deleted)
+        {
+            return;
+        }
+
+        await OnClose.InvokeAsync();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        return ValueTask.CompletedTask;
+    }
+
+    private enum DialogStage
+    {
+        Settings,
+        Confirm,
+        Deleting,
+        Deleted
+    }
+}

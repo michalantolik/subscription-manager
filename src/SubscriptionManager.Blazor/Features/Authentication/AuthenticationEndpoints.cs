@@ -28,6 +28,10 @@ public static class AuthenticationEndpoints
             "/authentication/session-expired",
             SessionExpiredAsync);
 
+        endpoints.MapGet(
+            "/authentication/account-deleted",
+            AccountDeletedAsync);
+
         return endpoints;
     }
 
@@ -59,7 +63,10 @@ public static class AuthenticationEndpoints
             string.IsNullOrWhiteSpace(password) ||
             string.IsNullOrWhiteSpace(confirmPassword))
         {
-            return RedirectToRegister([AuthenticationErrorCodes.Required]);
+            return RedirectToRegister(
+            [
+                AuthenticationErrorCodes.Required
+            ]);
         }
 
         if (!string.Equals(
@@ -67,7 +74,10 @@ public static class AuthenticationEndpoints
                 confirmPassword,
                 StringComparison.Ordinal))
         {
-            return RedirectToRegister([AuthenticationErrorCodes.PasswordMismatch]);
+            return RedirectToRegister(
+            [
+                AuthenticationErrorCodes.PasswordMismatch
+            ]);
         }
 
         AuthenticationOperationResult registerResult;
@@ -83,13 +93,17 @@ public static class AuthenticationEndpoints
         }
         catch (HttpRequestException)
         {
-            return RedirectToRegister([AuthenticationErrorCodes.ServiceUnavailable]);
+            return RedirectToRegister(
+            [
+                AuthenticationErrorCodes.ServiceUnavailable
+            ]);
         }
 
         if (!registerResult.Succeeded)
         {
             return RedirectToRegister(
-                registerResult.Errors.Select(error => error.Code));
+                registerResult.Errors.Select(
+                    error => error.Code));
         }
 
         return Results.LocalRedirect(
@@ -144,11 +158,14 @@ public static class AuthenticationEndpoints
         }
 
         if (!loginResult.Succeeded ||
-            string.IsNullOrWhiteSpace(loginResult.AccessToken))
+            string.IsNullOrWhiteSpace(
+                loginResult.AccessToken))
         {
-            var errorCode = AuthenticationErrorCodes.Normalize(
-                    loginResult.Errors.Select(error => error.Code))
-                .First();
+            var errorCode =
+                AuthenticationErrorCodes.Normalize(
+                        loginResult.Errors.Select(
+                            error => error.Code))
+                    .First();
 
             return RedirectToLogin(
                 returnUrl,
@@ -196,7 +213,6 @@ public static class AuthenticationEndpoints
         return Results.LocalRedirect(returnUrl);
     }
 
-
     private static async Task<IResult> SessionExpiredAsync(
         HttpContext context,
         string? returnUrl)
@@ -209,6 +225,17 @@ public static class AuthenticationEndpoints
         return RedirectToLogin(
             safeReturnUrl,
             AuthenticationErrorCodes.SessionExpired);
+    }
+
+    private static async Task<IResult> AccountDeletedAsync(
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        await context.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return Results.LocalRedirect(
+            "/login?status=account-deleted");
     }
 
     private static async Task<IResult> LogoutAsync(
@@ -269,7 +296,9 @@ public static class AuthenticationEndpoints
     private static string NormalizeLanguageCode(
         string? languageCode)
     {
-        return languageCode?.Trim().ToLowerInvariant() switch
+        return languageCode?
+            .Trim()
+            .ToLowerInvariant() switch
         {
             "en" or "en-us" => "en",
             "de" or "de-de" => "de",

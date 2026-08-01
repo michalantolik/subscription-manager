@@ -92,6 +92,14 @@
                     </div>
                 }
 
+                @if (Status == "account-deleted")
+                {
+                    <div class="ui-alert ui-alert-success"
+                         role="status">
+                        @T["Account.Delete.LoginConfirmation"]
+                    </div>
+                }
+
                 <div class="ui-form-actions">
                     <a class="secondary-button"
                        href="/register">
@@ -119,6 +127,9 @@
 
     [SupplyParameterFromQuery(Name = "returnUrl")]
     private string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "status")]
+    private string? Status { get; set; }
 
 
     private string ErrorMessage => Error switch
