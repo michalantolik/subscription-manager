@@ -203,6 +203,19 @@
                         }
                     </div>
 
+                    <button class="catalog-custom-action"
+                            type="button"
+                            @onclick="OpenCustomService">
+                        <span class="catalog-custom-icon">
+                            <AppIcon Name="plus" />
+                        </span>
+                        <span>
+                            <strong>@T["Catalog.Custom.Title"]</strong>
+                            <small>@T["Catalog.Custom.Description"]</small>
+                        </span>
+                        <AppIcon Name="chevron" />
+                    </button>
+
                     <div class="catalog-meta">
                         <span>@T["Catalog.Available", FilteredServices.Count]</span>
                         <span>@T["Catalog.Hint"]</span>
@@ -214,7 +227,7 @@
                             var selected = _selectedService?.Id == service.Id;
                             <button type="button" class="catalog-item @(selected ? "selected" : null)" role="option" aria-selected="@selected" @onclick="() => SelectService(service)">
                                 <span class="catalog-logo">@Initials(service.Name)</span>
-                                <span class="catalog-copy"><strong>@service.Name</strong><small>@CategoryLabel(service.Category)</small></span>
+                                <span class="catalog-copy"><strong>@service.Name</strong><small>@ServiceCategoryLabel(service)</small></span>
                                 <span class="catalog-check"><AppIcon Name="check" /></span>
                             </button>
                         }
@@ -230,6 +243,68 @@
                     <button class="secondary-button" type="button" @onclick="CloseDialog">@T["Action.Cancel"]</button>
                     <button class="primary-action" type="button" disabled="@(_selectedService is null)" @onclick="ContinueToCreate">@T["Action.Next"] <AppIcon Name="chevron" /></button>
                 </footer>
+            }
+            else if (_dialog == DialogKind.CustomService)
+            {
+                <EditForm Model="_customServiceForm"
+                          OnValidSubmit="CreateCustomServiceAsync"
+                          class="modal-form">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-content">
+                        <button class="form-back"
+                                type="button"
+                                @onclick="OpenCatalog">
+                            <AppIcon Name="chevron" />
+                            @T["Catalog.Back"]
+                        </button>
+
+                        <div class="form-grid">
+                            <label class="form-field wide">
+                                <span>@T["CustomService.Name"]</span>
+                                <InputText class="form-control"
+                                           @bind-Value="_customServiceForm.Name" />
+                                <ValidationMessage For="() => _customServiceForm.Name" />
+                            </label>
+
+                            <label class="form-field wide">
+                                <span>@T["CustomService.Category"]</span>
+                                <InputText class="form-control"
+                                           @bind-Value="_customServiceForm.Category" />
+                                <ValidationMessage For="() => _customServiceForm.Category" />
+                            </label>
+
+                            <label class="form-field wide">
+                                <span>@T["CustomService.ManagementUrl"]</span>
+                                <InputText class="form-control"
+                                           type="url"
+                                           @bind-Value="_customServiceForm.ManagementUrl" />
+                                <small class="form-hint">@T["CustomService.ManagementUrlHint"]</small>
+                                <ValidationMessage For="() => _customServiceForm.ManagementUrl" />
+                            </label>
+
+                            @if (!string.IsNullOrWhiteSpace(_dialogError))
+                            {
+                                <div class="dialog-error wide">@_dialogError</div>
+                            }
+                        </div>
+                    </div>
+
+                    <footer class="modal-footer">
+                        <button class="secondary-button"
+                                type="button"
+                                disabled="@_saving"
+                                @onclick="OpenCatalog">
+                            @T["Action.Back"]
+                        </button>
+                        <button class="primary-action"
+                                type="submit"
+                                disabled="@_saving">
+                            @T["CustomService.Continue"]
+                            <AppIcon Name="chevron" />
+                        </button>
+                    </footer>
+                </EditForm>
             }
             else if (_dialog is DialogKind.Create or DialogKind.Edit)
             {
@@ -293,6 +368,7 @@
     private DialogKind _dialog;
     private SubscriptionResponse? _selected;
     private DigitalServiceResponse? _selectedService;
+    private CreateDigitalServiceFormModel _customServiceForm = new();
     private SubscriptionFormModel _form = new();
     private EndSubscriptionModel _endModel = new();
     private const string AllCategories = "__all";
@@ -300,13 +376,13 @@
     private List<SubscriptionResponse> Active => _subscriptions.Where(x => x.IsActive).ToList();
     private SubscriptionResponse? MostExpensive => Active.MaxBy(x => x.MonthlyEquivalentAmount);
     private IReadOnlyList<string> Categories => new[] { AllCategories }.Concat(_subscriptions.Select(CategoryKeyFor).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x)).ToArray();
-    private IReadOnlyList<DigitalServiceResponse> FilteredServices => _digitalServices.Where(x => string.IsNullOrWhiteSpace(_catalogSearch) || x.Name.Contains(_catalogSearch, StringComparison.CurrentCultureIgnoreCase) || CategoryLabel(x.Category).Contains(_catalogSearch, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+    private IReadOnlyList<DigitalServiceResponse> FilteredServices => _digitalServices.Where(x => string.IsNullOrWhiteSpace(_catalogSearch) || x.Name.Contains(_catalogSearch, StringComparison.CurrentCultureIgnoreCase) || ServiceCategoryLabel(x).Contains(_catalogSearch, StringComparison.CurrentCultureIgnoreCase)).ToArray();
     private IEnumerable<SubscriptionResponse> Filtered => _subscriptions.Where(MatchesStatus).Where(x => _category == AllCategories || string.Equals(CategoryKeyFor(x), _category, StringComparison.OrdinalIgnoreCase)).Where(x => string.IsNullOrWhiteSpace(_search) || x.Name.Contains(_search, StringComparison.CurrentCultureIgnoreCase) || CategoryFor(x).Contains(_search, StringComparison.CurrentCultureIgnoreCase)).OrderByDescending(x => x.IsActive).ThenBy(x => x.Name);
     private IEnumerable<CategorySummary> CategorySummaries => Active.GroupBy(CategoryFor, StringComparer.CurrentCultureIgnoreCase).Select((group, index) => new CategorySummary(group.Key, Tone(index), group.Sum(x => x.MonthlyEquivalentAmount))).OrderByDescending(x => x.Amount);
 
-    private string DialogTitle => _dialog switch { DialogKind.Catalog => T["Catalog.Title"], DialogKind.Create => T["Dialog.CreateTitle"], DialogKind.Edit => T["Dialog.EditTitle"], DialogKind.End => T["Dialog.EndTitle"], DialogKind.Delete => T["Dialog.DeleteTitle"], _ => string.Empty };
-    private string DialogDescription => _dialog switch { DialogKind.Catalog => T["Catalog.Description"], DialogKind.Create => T["Dialog.CreateDescription"], DialogKind.Edit => T["Dialog.EditDescription"], DialogKind.End => T["Dialog.EndDescription"], DialogKind.Delete => T["Dialog.DeleteDescription"], _ => string.Empty };
-    private string DialogIcon => _dialog == DialogKind.Edit ? "edit" : _dialog == DialogKind.Delete ? "trash" : "subscriptions";
+    private string DialogTitle => _dialog switch { DialogKind.Catalog => T["Catalog.Title"], DialogKind.CustomService => T["CustomService.Title"], DialogKind.Create => T["Dialog.CreateTitle"], DialogKind.Edit => T["Dialog.EditTitle"], DialogKind.End => T["Dialog.EndTitle"], DialogKind.Delete => T["Dialog.DeleteTitle"], _ => string.Empty };
+    private string DialogDescription => _dialog switch { DialogKind.Catalog => T["Catalog.Description"], DialogKind.CustomService => T["CustomService.Description"], DialogKind.Create => T["Dialog.CreateDescription"], DialogKind.Edit => T["Dialog.EditDescription"], DialogKind.End => T["Dialog.EndDescription"], DialogKind.Delete => T["Dialog.DeleteDescription"], _ => string.Empty };
+    private string DialogIcon => _dialog == DialogKind.Edit ? "edit" : _dialog == DialogKind.Delete ? "trash" : _dialog == DialogKind.CustomService ? "plus" : "subscriptions";
 
     protected override async Task OnInitializedAsync()
     {
@@ -348,12 +424,49 @@
     }
 
     private void OpenCatalog() { _selected = null; _selectedService = null; _catalogSearch = string.Empty; _dialogError = null; _dialog = DialogKind.Catalog; }
+    private void OpenCustomService() { _selectedService = null; _customServiceForm = new CreateDigitalServiceFormModel(); _dialogError = null; _dialog = DialogKind.CustomService; }
     private void SelectService(DigitalServiceResponse service) => _selectedService = service;
     private void ContinueToCreate()
     {
         if (_selectedService is null) return;
         _form = new SubscriptionFormModel { DigitalServiceId = _selectedService.Id, Name = _selectedService.Name };
         _dialog = DialogKind.Create;
+    }
+
+    private async Task CreateCustomServiceAsync()
+    {
+        _saving = true;
+        _dialogError = null;
+
+        try
+        {
+            var digitalServiceId =
+                await DigitalServicesApiClient.CreateAsync(
+                    _customServiceForm,
+                    _user);
+
+            _form = new SubscriptionFormModel
+            {
+                DigitalServiceId = digitalServiceId,
+                Name = _customServiceForm.Name.Trim()
+            };
+
+            _dialog = DialogKind.Create;
+        }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            SessionExpirationNavigation.RedirectToLogin(Navigation);
+        }
+        catch
+        {
+            _dialogError = T["CustomService.Error"];
+        }
+        finally
+        {
+            _saving = false;
+        }
     }
     private void OpenEdit(SubscriptionResponse subscription) { _selected = subscription; _form = new SubscriptionFormModel { DigitalServiceId = subscription.DigitalServiceId, Name = subscription.Name, Amount = subscription.Amount, Currency = subscription.Currency, BillingPeriod = subscription.BillingPeriod, StartDate = subscription.StartDate }; _dialogError = null; _dialog = DialogKind.Edit; }
     private void OpenEnd(SubscriptionResponse subscription) { _selected = subscription; _endModel = new EndSubscriptionModel { EndDate = DateOnly.FromDateTime(DateTime.Today) }; _dialogError = null; _dialog = DialogKind.End; }
@@ -473,9 +586,10 @@
     private void CloseDialogAfterSave() { _dialog = DialogKind.None; _selected = null; _selectedService = null; _dialogError = null; }
     private bool MatchesStatus(SubscriptionResponse x) => _status == StatusFilter.All || (_status == StatusFilter.Active ? x.IsActive : !x.IsActive);
     private DigitalServiceResponse? ServiceFor(SubscriptionResponse x) => x.DigitalServiceId is null ? null : _digitalServices.FirstOrDefault(service => service.Id == x.DigitalServiceId);
-    private string CategoryKeyFor(SubscriptionResponse x) => ServiceFor(x)?.Category ?? T["Category.Other"];
+    private string CategoryKeyFor(SubscriptionResponse x) => ServiceFor(x) is { } service ? ServiceCategoryLabel(service) : T["Category.Other"];
     private string CategoryFor(SubscriptionResponse x) => CategoryLabel(CategoryKeyFor(x));
     private string? ManagementUrlFor(SubscriptionResponse x) => ServiceFor(x)?.ManagementUrl;
+    private string ServiceCategoryLabel(DigitalServiceResponse service) => !service.IsPredefined && !string.IsNullOrWhiteSpace(service.CustomCategoryName) ? service.CustomCategoryName : CategoryLabel(service.Category);
     private string CategoryLabel(string category)
     {
         if (category == AllCategories)
@@ -496,6 +610,6 @@
     private static string Tone(int index) => new[] { "orange", "violet", "green", "blue" }[index % 4];
 
     private enum StatusFilter { Active, All, Ended }
-    private enum DialogKind { None, Catalog, Create, Edit, End, Delete }
+    private enum DialogKind { None, Catalog, CustomService, Create, Edit, End, Delete }
     private sealed record CategorySummary(string Name, string Tone, decimal Amount);
 }

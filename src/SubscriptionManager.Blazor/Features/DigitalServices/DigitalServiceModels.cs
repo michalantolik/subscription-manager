@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using SubscriptionManager.Blazor.Features.Authentication;
@@ -9,9 +10,25 @@ public sealed record DigitalServiceResponse(
     string Key,
     string Name,
     string Category,
+    string? CustomCategoryName,
     string? IconKey,
     string? ManagementUrl,
     bool IsPredefined);
+
+public sealed class CreateDigitalServiceFormModel
+{
+    [Required]
+    [StringLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(200)]
+    public string Category { get; set; } = string.Empty;
+
+    [Url]
+    [StringLength(500)]
+    public string? ManagementUrl { get; set; }
+}
 
 public sealed class DigitalServicesApiClient(
     HttpClient httpClient)
@@ -38,5 +55,43 @@ public sealed class DigitalServicesApiClient(
                    .ReadFromJsonAsync<IReadOnlyList<DigitalServiceResponse>>(
                        cancellationToken)
                ?? [];
+    }
+
+    public async Task<Guid> CreateAsync(
+        CreateDigitalServiceFormModel model,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            "api/digital-services")
+        {
+            Content = JsonContent.Create(
+                new
+                {
+                    Key = $"custom-{Guid.NewGuid():N}",
+                    Name = model.Name.Trim(),
+                    Category = "Other",
+                    CustomCategoryName = model.Category.Trim(),
+                    IconKey = (string?)null,
+                    ManagementUrl =
+                        string.IsNullOrWhiteSpace(model.ManagementUrl)
+                            ? null
+                            : model.ManagementUrl.Trim()
+                })
+        };
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<Guid>(
+            cancellationToken);
     }
 }
