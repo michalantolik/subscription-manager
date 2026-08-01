@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Infrastructure.Identity;
 
 public sealed class IdentityService(
-    UserManager<ApplicationUser> userManager)
+    UserManager<ApplicationUser> userManager,
+    SubscriptionManagerDbContext dbContext)
     : IIdentityService
 {
     public async Task<CreateUserResult> CreateUserAsync(
@@ -175,15 +178,34 @@ public sealed class IdentityService(
             ]);
         }
 
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync(
+                cancellationToken);
+
+        await dbContext.Subscriptions
+            .Where(subscription =>
+                subscription.OwnerId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await dbContext.DigitalServices
+            .Where(digitalService =>
+                !digitalService.IsPredefined &&
+                digitalService.OwnerId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+
         var result = await userManager.DeleteAsync(user);
 
-        if (result.Succeeded)
+        if (!result.Succeeded)
         {
-            return DeleteUserResult.Success();
+            await transaction.RollbackAsync(cancellationToken);
+
+            return DeleteUserResult.Failure(
+                result.Errors.Select(MapError));
         }
 
-        return DeleteUserResult.Failure(
-            result.Errors.Select(MapError));
+        await transaction.CommitAsync(cancellationToken);
+
+        return DeleteUserResult.Success();
     }
 
     private static AuthenticateUserResult AuthenticationFailed()

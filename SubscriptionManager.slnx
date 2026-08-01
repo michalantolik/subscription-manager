@@ -4,6 +4,7 @@
     <Project Path="tests/SubscriptionManager.Application.Tests/SubscriptionManager.Application.Tests.csproj" />
     <Project Path="tests/SubscriptionManager.Blazor.Tests/SubscriptionManager.Blazor.Tests.csproj" />
     <Project Path="tests/SubscriptionManager.Domain.Tests/SubscriptionManager.Domain.Tests.csproj" Id="85124548-6cfe-45a9-aa49-bc221c941b38" />
+    <Project Path="tests/SubscriptionManager.Infrastructure.Tests/SubscriptionManager.Infrastructure.Tests.csproj" />
   </Folder>
   <Project Path="src/SubscriptionManager.Api/SubscriptionManager.Api.csproj" Id="2ff4c55b-5e86-4cad-9507-1147038c44b5" />
   <Project Path="src/SubscriptionManager.Application/SubscriptionManager.Application.csproj" Id="a635a043-0b4b-43c0-ba90-40d16fc7b438" />
