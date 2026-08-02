@@ -1,7 +1,9 @@
+using SubscriptionManager.Blazor.Features.Currencies;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SubscriptionManager.Blazor.Features.Authentication;
 
@@ -99,7 +101,13 @@ public sealed class AuthenticationApiClient(
     HttpClient httpClient)
 {
     private static readonly JsonSerializerOptions JsonOptions =
-        new(JsonSerializerDefaults.Web);
+        new(JsonSerializerDefaults.Web)
+        {
+            Converters =
+            {
+                new JsonStringEnumConverter()
+            }
+        };
 
     public async Task<AuthenticationOperationResult> RegisterAsync(
         string email,
@@ -256,6 +264,70 @@ public sealed class AuthenticationApiClient(
             cancellationToken);
     }
 
+    public async Task<Currency?> GetBaseCurrencyAsync(
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "api/auth/account/base-currency");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        var result = await response.Content
+            .ReadFromJsonAsync<BaseCurrencyResponse>(
+                JsonOptions,
+                cancellationToken);
+
+        return result?.BaseCurrency;
+    }
+
+    public async Task<AuthenticationOperationResult> UpdateBaseCurrencyAsync(
+        Currency baseCurrency,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Put,
+            "api/auth/account/base-currency")
+        {
+            Content = JsonContent.Create(
+                new
+                {
+                    BaseCurrency = baseCurrency
+                },
+                options: JsonOptions)
+        };
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return AuthenticationOperationResult.Success();
+        }
+
+        return await ReadFailureAsync(
+            response,
+            cancellationToken);
+    }
+
     public async Task<AuthenticationOperationResult> DeleteAccountAsync(
         ClaimsPrincipal user,
         CancellationToken cancellationToken = default)
@@ -349,6 +421,9 @@ public sealed class AuthenticationApiClient(
 
     private sealed record LoginResponse(
         string AccessToken);
+
+    private sealed record BaseCurrencyResponse(
+        Currency BaseCurrency);
 
     private sealed record ValidationProblemResponse(
         IReadOnlyDictionary<string, string[]> Errors);

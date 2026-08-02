@@ -17,7 +17,7 @@ public class SubscriptionTests
             ownerId,
             "Netflix",
             49m,
-            "PLN",
+            Currency.PLN,
             BillingPeriod.Monthly,
             startDate);
 
@@ -30,7 +30,7 @@ public class SubscriptionTests
         Assert.Null(subscription.IconKey);
         Assert.Null(subscription.ManagementUrl);
         Assert.Equal(49m, subscription.Amount);
-        Assert.Equal("PLN", subscription.Currency);
+        Assert.Equal(Currency.PLN, subscription.Currency);
         Assert.Equal(BillingPeriod.Monthly, subscription.BillingPeriod);
         Assert.Equal(startDate, subscription.StartDate);
         Assert.Null(subscription.EndDate);
@@ -40,7 +40,10 @@ public class SubscriptionTests
     [Fact]
     public void AssignDigitalService_ShouldStoreServiceSnapshot()
     {
-        var subscription = CreateSubscription(name: "Temporary name");
+        var subscription =
+            CreateSubscription(
+                name: "Temporary name");
+
         var digitalServiceId = Guid.NewGuid();
 
         subscription.AssignDigitalService(
@@ -53,12 +56,18 @@ public class SubscriptionTests
         Assert.Equal(
             digitalServiceId,
             subscription.DigitalServiceId);
-        Assert.Equal("Temporary name", subscription.Name);
+
+        Assert.Equal(
+            "Temporary name",
+            subscription.Name);
+
         Assert.Equal(
             DigitalServiceCategory.Video,
             subscription.Category);
+
         Assert.Null(subscription.CustomCategoryName);
         Assert.Equal("netflix", subscription.IconKey);
+
         Assert.Equal(
             "https://www.netflix.com/account",
             subscription.ManagementUrl);
@@ -80,6 +89,7 @@ public class SubscriptionTests
         Assert.Equal(
             DigitalServiceCategory.Other,
             subscription.Category);
+
         Assert.Equal(
             "Streaming",
             subscription.CustomCategoryName);
@@ -90,15 +100,18 @@ public class SubscriptionTests
     {
         var subscription = CreateSubscription();
 
-        var exception = Assert.Throws<ArgumentException>(() =>
-            subscription.AssignDigitalService(
-                Guid.Empty,
-                DigitalServiceCategory.Video,
-                null,
-                "netflix",
-                "https://www.netflix.com/account"));
+        var exception =
+            Assert.Throws<ArgumentException>(
+                () => subscription.AssignDigitalService(
+                    Guid.Empty,
+                    DigitalServiceCategory.Video,
+                    null,
+                    "netflix",
+                    "https://www.netflix.com/account"));
 
-        Assert.Equal("digitalServiceId", exception.ParamName);
+        Assert.Equal(
+            "digitalServiceId",
+            exception.ParamName);
     }
 
     [Fact]
@@ -106,17 +119,19 @@ public class SubscriptionTests
     {
         var subscription = CreateSubscription();
 
-        var exception = Assert.Throws<ArgumentException>(() =>
-            subscription.AssignDigitalService(
-                Guid.NewGuid(),
-                DigitalServiceCategory.Video,
-                "Streaming",
-                "netflix",
-                "https://www.netflix.com/account"));
+        var exception =
+            Assert.Throws<ArgumentException>(
+                () => subscription.AssignDigitalService(
+                    Guid.NewGuid(),
+                    DigitalServiceCategory.Video,
+                    "Streaming",
+                    "netflix",
+                    "https://www.netflix.com/account"));
 
-        Assert.Equal("customCategoryName", exception.ParamName);
+        Assert.Equal(
+            "customCategoryName",
+            exception.ParamName);
     }
-
 
     [Fact]
     public void ClearDigitalService_ShouldRemoveServiceSnapshot()
@@ -143,24 +158,22 @@ public class SubscriptionTests
     [Fact]
     public void Constructor_ShouldTrimName_WhenNameContainsLeadingOrTrailingWhitespace()
     {
-        var subscription = CreateSubscription(name: "  Netflix  ");
+        var subscription =
+            CreateSubscription(
+                name: "  Netflix  ");
 
-        Assert.Equal("Netflix", subscription.Name);
-    }
-
-    [Fact]
-    public void Constructor_ShouldNormalizeCurrency_WhenCurrencyContainsLowercaseLetters()
-    {
-        var subscription = CreateSubscription(currency: "pln");
-
-        Assert.Equal("PLN", subscription.Currency);
+        Assert.Equal(
+            "Netflix",
+            subscription.Name);
     }
 
     [Fact]
     public void Constructor_ShouldThrowArgumentException_WhenIdentifierIsEmpty()
     {
-        var exception = Assert.Throws<ArgumentException>(() =>
-            CreateSubscription(id: Guid.Empty));
+        var exception =
+            Assert.Throws<ArgumentException>(
+                () => CreateSubscription(
+                    id: Guid.Empty));
 
         Assert.Equal("id", exception.ParamName);
     }
@@ -168,10 +181,14 @@ public class SubscriptionTests
     [Fact]
     public void Constructor_ShouldThrowArgumentException_WhenOwnerIdentifierIsEmpty()
     {
-        var exception = Assert.Throws<ArgumentException>(() =>
-            CreateSubscription(ownerId: Guid.Empty));
+        var exception =
+            Assert.Throws<ArgumentException>(
+                () => CreateSubscription(
+                    ownerId: Guid.Empty));
 
-        Assert.Equal("ownerId", exception.ParamName);
+        Assert.Equal(
+            "ownerId",
+            exception.ParamName);
     }
 
     [Theory]
@@ -181,8 +198,9 @@ public class SubscriptionTests
     public void Constructor_ShouldThrowArgumentException_WhenNameIsInvalid(
         string name)
     {
-        Assert.Throws<ArgumentException>(() =>
-            CreateSubscription(name: name));
+        Assert.Throws<ArgumentException>(
+            () => CreateSubscription(
+                name: name));
     }
 
     [Fact]
@@ -192,8 +210,9 @@ public class SubscriptionTests
             'a',
             Subscription.MaxNameLength + 1);
 
-        Assert.Throws<ArgumentException>(() =>
-            CreateSubscription(name: name));
+        Assert.Throws<ArgumentException>(
+            () => CreateSubscription(
+                name: name));
     }
 
     [Theory]
@@ -203,29 +222,25 @@ public class SubscriptionTests
     public void Constructor_ShouldThrowArgumentOutOfRangeException_WhenAmountIsNotGreaterThanZero(
         decimal amount)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            CreateSubscription(amount: amount));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => CreateSubscription(
+                amount: amount));
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    [InlineData("PL")]
-    [InlineData("PLNN")]
-    [InlineData("P1N")]
-    [InlineData("12!")]
-    public void Constructor_ShouldThrowArgumentException_WhenCurrencyIsInvalid(
-        string currency)
+    [Fact]
+    public void Constructor_ShouldThrowArgumentOutOfRangeException_WhenCurrencyIsInvalid()
     {
-        Assert.Throws<ArgumentException>(() =>
-            CreateSubscription(currency: currency));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => CreateSubscription(
+                currency: (Currency)999));
     }
 
     [Fact]
     public void Constructor_ShouldThrowArgumentOutOfRangeException_WhenBillingPeriodIsInvalid()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            CreateSubscription(billingPeriod: (BillingPeriod)999));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => CreateSubscription(
+                billingPeriod: (BillingPeriod)999));
     }
 
     [Fact]
@@ -236,43 +251,60 @@ public class SubscriptionTests
         subscription.Update(
             "Spotify",
             65m,
-            "EUR",
+            Currency.EUR,
             BillingPeriod.Yearly);
 
-        Assert.Equal("Spotify", subscription.Name);
-        Assert.Equal(65m, subscription.Amount);
-        Assert.Equal("EUR", subscription.Currency);
-        Assert.Equal(BillingPeriod.Yearly, subscription.BillingPeriod);
+        Assert.Equal(
+            "Spotify",
+            subscription.Name);
+
+        Assert.Equal(
+            65m,
+            subscription.Amount);
+
+        Assert.Equal(
+            Currency.EUR,
+            subscription.Currency);
+
+        Assert.Equal(
+            BillingPeriod.Yearly,
+            subscription.BillingPeriod);
     }
 
     [Fact]
-    public void Update_ShouldNormalizeArguments_WhenArgumentsAreValid()
+    public void Update_ShouldTrimName_WhenNameContainsLeadingOrTrailingWhitespace()
     {
         var subscription = CreateSubscription();
 
         subscription.Update(
             "  Spotify  ",
             65m,
-            "eur",
+            Currency.EUR,
             BillingPeriod.Yearly);
 
-        Assert.Equal("Spotify", subscription.Name);
-        Assert.Equal("EUR", subscription.Currency);
+        Assert.Equal(
+            "Spotify",
+            subscription.Name);
+
+        Assert.Equal(
+            Currency.EUR,
+            subscription.Currency);
     }
 
     [Fact]
     public void Update_ShouldThrowArgumentException_WhenNameExceedsMaximumLength()
     {
         var subscription = CreateSubscription();
+
         var name = new string(
             'a',
             Subscription.MaxNameLength + 1);
 
-        Assert.Throws<ArgumentException>(() =>
-            subscription.Update(
+        Assert.Throws<ArgumentException>(
+            () => subscription.Update(
                 name,
                 65m,
-                "EUR",
+                Currency.EUR,
                 BillingPeriod.Yearly));
     }
 
@@ -284,7 +316,10 @@ public class SubscriptionTests
 
         subscription.End(endDate);
 
-        Assert.Equal(endDate, subscription.EndDate);
+        Assert.Equal(
+            endDate,
+            subscription.EndDate);
+
         Assert.False(subscription.IsActive);
     }
 
@@ -293,10 +328,12 @@ public class SubscriptionTests
     {
         var subscription = CreateSubscription();
 
-        subscription.End(new DateOnly(2026, 2, 1));
+        subscription.End(
+            new DateOnly(2026, 2, 1));
 
-        Assert.Throws<InvalidOperationException>(() =>
-            subscription.End(new DateOnly(2026, 3, 1)));
+        Assert.Throws<InvalidOperationException>(
+            () => subscription.End(
+                new DateOnly(2026, 3, 1)));
     }
 
     [Fact]
@@ -304,8 +341,9 @@ public class SubscriptionTests
     {
         var subscription = CreateSubscription();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            subscription.End(new DateOnly(2025, 12, 31)));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => subscription.End(
+                new DateOnly(2025, 12, 31)));
     }
 
     [Theory]
@@ -318,9 +356,10 @@ public class SubscriptionTests
         decimal amount,
         decimal expectedMonthlyAmount)
     {
-        var subscription = CreateSubscription(
-            amount: amount,
-            billingPeriod: billingPeriod);
+        var subscription =
+            CreateSubscription(
+                amount: amount,
+                billingPeriod: billingPeriod);
 
         Assert.Equal(
             expectedMonthlyAmount,
@@ -337,9 +376,10 @@ public class SubscriptionTests
         decimal amount,
         decimal expectedYearlyAmount)
     {
-        var subscription = CreateSubscription(
-            amount: amount,
-            billingPeriod: billingPeriod);
+        var subscription =
+            CreateSubscription(
+                amount: amount,
+                billingPeriod: billingPeriod);
 
         Assert.Equal(
             expectedYearlyAmount,
@@ -351,8 +391,9 @@ public class SubscriptionTests
         Guid? ownerId = null,
         string name = "Netflix",
         decimal amount = 49m,
-        string currency = "PLN",
-        BillingPeriod billingPeriod = BillingPeriod.Monthly)
+        Currency currency = Currency.PLN,
+        BillingPeriod billingPeriod =
+            BillingPeriod.Monthly)
     {
         return new Subscription(
             id ?? Guid.NewGuid(),

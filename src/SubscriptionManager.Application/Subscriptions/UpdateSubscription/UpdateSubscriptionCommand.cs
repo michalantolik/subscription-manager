@@ -6,6 +6,6 @@ public sealed record UpdateSubscriptionCommand(
     Guid SubscriptionId,
     string Name,
     decimal Amount,
-    string Currency,
+    Currency Currency,
     BillingPeriod BillingPeriod,
     Guid? DigitalServiceId = null);

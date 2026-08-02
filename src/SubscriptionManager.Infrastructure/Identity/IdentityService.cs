@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Infrastructure.Identity;
@@ -13,38 +14,100 @@ public sealed class IdentityService(
     public async Task<CreateUserResult> CreateUserAsync(
         string email,
         string password,
+        Currency baseCurrency,
         CancellationToken cancellationToken = default)
     {
+        if (!Enum.IsDefined(baseCurrency))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(baseCurrency),
+                "The base currency is not supported.");
+        }
+
         var user = new ApplicationUser
         {
             Id = Guid.NewGuid(),
             UserName = email,
-            Email = email
+            Email = email,
+            BaseCurrency = baseCurrency
         };
 
-        var result = await userManager.CreateAsync(user, password);
+        var result =
+            await userManager.CreateAsync(
+                user,
+                password);
 
         if (result.Succeeded)
         {
-            return CreateUserResult.Success(user.Id);
+            return CreateUserResult.Success(
+                user.Id);
         }
 
         return CreateUserResult.Failure(
             result.Errors.Select(MapError));
     }
 
+    public async Task<Currency?> GetBaseCurrencyAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user =>
+                (Currency?)user.BaseCurrency)
+            .SingleOrDefaultAsync(
+                cancellationToken);
+    }
+
+    public async Task<bool> UpdateBaseCurrencyAsync(
+        Guid userId,
+        Currency baseCurrency,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(baseCurrency))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(baseCurrency),
+                "The base currency is not supported.");
+        }
+
+        var user =
+            await dbContext.Users
+                .SingleOrDefaultAsync(
+                    currentUser =>
+                        currentUser.Id == userId,
+                    cancellationToken);
+
+        if (user is null)
+        {
+            return false;
+        }
+
+        user.BaseCurrency = baseCurrency;
+
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+
+        return true;
+    }
+
     public async Task<string?> GenerateEmailConfirmationTokenAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByIdAsync(userId.ToString());
+        var user =
+            await userManager.FindByIdAsync(
+                userId.ToString());
 
         if (user is null)
         {
             return null;
         }
 
-        return await userManager.GenerateEmailConfirmationTokenAsync(user);
+        return await userManager
+            .GenerateEmailConfirmationTokenAsync(
+                user);
     }
 
     public async Task<ConfirmEmailResult> ConfirmEmailAsync(
@@ -52,7 +115,9 @@ public sealed class IdentityService(
         string confirmationToken,
         CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByIdAsync(userId.ToString());
+        var user =
+            await userManager.FindByIdAsync(
+                userId.ToString());
 
         if (user is null)
         {
@@ -64,9 +129,10 @@ public sealed class IdentityService(
             ]);
         }
 
-        var result = await userManager.ConfirmEmailAsync(
-            user,
-            confirmationToken);
+        var result =
+            await userManager.ConfirmEmailAsync(
+                user,
+                confirmationToken);
 
         if (result.Succeeded)
         {
@@ -82,7 +148,9 @@ public sealed class IdentityService(
         string password,
         CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByEmailAsync(email);
+        var user =
+            await userManager.FindByEmailAsync(
+                email);
 
         if (user is null)
         {
@@ -99,30 +167,37 @@ public sealed class IdentityService(
             ]);
         }
 
-        var passwordIsValid = await userManager.CheckPasswordAsync(
-            user,
-            password);
+        var passwordIsValid =
+            await userManager.CheckPasswordAsync(
+                user,
+                password);
 
         if (!passwordIsValid)
         {
             return AuthenticationFailed();
         }
 
-        return AuthenticateUserResult.Success(user.Id);
+        return AuthenticateUserResult.Success(
+            user.Id);
     }
 
     public async Task<PasswordResetToken?> GeneratePasswordResetTokenAsync(
         string email,
         CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByEmailAsync(email);
+        var user =
+            await userManager.FindByEmailAsync(
+                email);
 
         if (user is null)
         {
             return null;
         }
 
-        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var token =
+            await userManager
+                .GeneratePasswordResetTokenAsync(
+                    user);
 
         return new PasswordResetToken(
             user.Id,
@@ -136,7 +211,9 @@ public sealed class IdentityService(
         string newPassword,
         CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByIdAsync(userId.ToString());
+        var user =
+            await userManager.FindByIdAsync(
+                userId.ToString());
 
         if (user is null)
         {
@@ -148,10 +225,11 @@ public sealed class IdentityService(
             ]);
         }
 
-        var result = await userManager.ResetPasswordAsync(
-            user,
-            resetToken,
-            newPassword);
+        var result =
+            await userManager.ResetPasswordAsync(
+                user,
+                resetToken,
+                newPassword);
 
         if (result.Succeeded)
         {
@@ -166,7 +244,9 @@ public sealed class IdentityService(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByIdAsync(userId.ToString());
+        var user =
+            await userManager.FindByIdAsync(
+                userId.ToString());
 
         if (user is null)
         {
@@ -179,31 +259,38 @@ public sealed class IdentityService(
         }
 
         await using var transaction =
-            await dbContext.Database.BeginTransactionAsync(
-                cancellationToken);
+            await dbContext.Database
+                .BeginTransactionAsync(
+                    cancellationToken);
 
         await dbContext.Subscriptions
             .Where(subscription =>
                 subscription.OwnerId == userId)
-            .ExecuteDeleteAsync(cancellationToken);
+            .ExecuteDeleteAsync(
+                cancellationToken);
 
         await dbContext.DigitalServices
             .Where(digitalService =>
                 !digitalService.IsPredefined &&
                 digitalService.OwnerId == userId)
-            .ExecuteDeleteAsync(cancellationToken);
+            .ExecuteDeleteAsync(
+                cancellationToken);
 
-        var result = await userManager.DeleteAsync(user);
+        var result =
+            await userManager.DeleteAsync(
+                user);
 
         if (!result.Succeeded)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(
+                cancellationToken);
 
             return DeleteUserResult.Failure(
                 result.Errors.Select(MapError));
         }
 
-        await transaction.CommitAsync(cancellationToken);
+        await transaction.CommitAsync(
+            cancellationToken);
 
         return DeleteUserResult.Success();
     }

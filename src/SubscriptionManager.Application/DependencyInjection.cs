@@ -8,9 +8,11 @@ using SubscriptionManager.Application.DigitalServices.UpdateDigitalService;
 using SubscriptionManager.Application.Identity.ConfirmEmail;
 using SubscriptionManager.Application.Identity.DeleteUser;
 using SubscriptionManager.Application.Identity.ForgotPassword;
+using SubscriptionManager.Application.Identity.GetBaseCurrency;
 using SubscriptionManager.Application.Identity.LoginUser;
 using SubscriptionManager.Application.Identity.RegisterUser;
 using SubscriptionManager.Application.Identity.ResetPassword;
+using SubscriptionManager.Application.Identity.UpdateBaseCurrency;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
 using SubscriptionManager.Application.Subscriptions.EndSubscription;
@@ -44,6 +46,8 @@ public static class DependencyInjection
         services.AddScoped<LoginUserHandler>();
         services.AddScoped<ForgotPasswordHandler>();
         services.AddScoped<ResetPasswordHandler>();
+        services.AddScoped<GetBaseCurrencyHandler>();
+        services.AddScoped<UpdateBaseCurrencyHandler>();
         services.AddScoped<DeleteUserHandler>();
 
         return services;

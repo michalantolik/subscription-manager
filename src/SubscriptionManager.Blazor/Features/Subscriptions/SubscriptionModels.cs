@@ -1,9 +1,9 @@
+using SubscriptionManager.Blazor.Features.Authentication;
+using SubscriptionManager.Blazor.Features.Currencies;
 using System.ComponentModel.DataAnnotations;
-using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using SubscriptionManager.Blazor.Features.Authentication;
 
 namespace SubscriptionManager.Blazor.Features.Subscriptions;
 
@@ -21,7 +21,7 @@ public sealed record SubscriptionResponse(
     Guid? DigitalServiceId,
     string Name,
     decimal Amount,
-    string Currency,
+    Currency Currency,
     BillingPeriod BillingPeriod,
     DateOnly StartDate,
     DateOnly? EndDate,
@@ -40,9 +40,8 @@ public sealed class SubscriptionFormModel
     [PositiveDecimal]
     public decimal Amount { get; set; }
 
-    [Required]
-    [StringLength(3, MinimumLength = 3)]
-    public string Currency { get; set; } = "PLN";
+    public Currency Currency { get; set; } =
+        Currency.PLN;
 
     public BillingPeriod BillingPeriod { get; set; } =
         BillingPeriod.Monthly;
@@ -142,7 +141,7 @@ public sealed class SubscriptionsApiClient(
                 {
                     model.Name,
                     model.Amount,
-                    Currency = model.Currency.ToUpperInvariant(),
+                    model.Currency,
                     model.BillingPeriod,
                     model.StartDate,
                     model.DigitalServiceId
@@ -180,7 +179,7 @@ public sealed class SubscriptionsApiClient(
                 {
                     model.Name,
                     model.Amount,
-                    Currency = model.Currency.ToUpperInvariant(),
+                    model.Currency,
                     model.BillingPeriod,
                     model.DigitalServiceId
                 },

@@ -15,7 +15,7 @@ public sealed class Subscription
         Guid ownerId,
         string name,
         decimal amount,
-        string currency,
+        Currency currency,
         BillingPeriod billingPeriod,
         DateOnly startDate)
     {
@@ -62,7 +62,7 @@ public sealed class Subscription
 
     public decimal Amount { get; private set; }
 
-    public string Currency { get; private set; } = string.Empty;
+    public Currency Currency { get; private set; }
 
     public BillingPeriod BillingPeriod { get; private set; }
 
@@ -127,7 +127,7 @@ public sealed class Subscription
     public void Update(
         string name,
         decimal amount,
-        string currency,
+        Currency currency,
         BillingPeriod billingPeriod)
     {
         SetName(name);
@@ -236,26 +236,16 @@ public sealed class Subscription
         Amount = amount;
     }
 
-    private void SetCurrency(string currency)
+    private void SetCurrency(Currency currency)
     {
-        if (string.IsNullOrWhiteSpace(currency))
+        if (!Enum.IsDefined(currency))
         {
-            throw new ArgumentException(
-                "Currency is required.",
-                nameof(currency));
+            throw new ArgumentOutOfRangeException(
+                nameof(currency),
+                "The currency is not supported.");
         }
 
-        var normalizedCurrency = currency.Trim();
-
-        if (normalizedCurrency.Length != 3 ||
-            !normalizedCurrency.All(char.IsLetter))
-        {
-            throw new ArgumentException(
-                "Currency must be a three-letter code.",
-                nameof(currency));
-        }
-
-        Currency = normalizedCurrency.ToUpperInvariant();
+        Currency = currency;
     }
 
     private void SetBillingPeriod(BillingPeriod billingPeriod)

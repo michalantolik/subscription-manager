@@ -20,20 +20,23 @@ public sealed class GetSubscriptionsHandlerTests
                 ownerId,
                 "Netflix",
                 49m,
-                "PLN",
+                Currency.PLN,
                 BillingPeriod.Monthly,
                 new DateOnly(2026, 1, 1)),
+
             new Subscription(
                 Guid.NewGuid(),
                 ownerId,
                 "Microsoft 365",
                 299m,
-                "PLN",
+                Currency.PLN,
                 BillingPeriod.Yearly,
                 new DateOnly(2026, 2, 1))
         };
 
-        var repository = new Mock<ISubscriptionRepository>();
+        var repository =
+            new Mock<ISubscriptionRepository>();
+
         var currentUser = new Mock<ICurrentUser>();
 
         currentUser
@@ -58,18 +61,36 @@ public sealed class GetSubscriptionsHandlerTests
             result,
             first =>
             {
-                Assert.Equal("Netflix", first.Name);
-                Assert.Equal(49m, first.Amount);
-                Assert.Equal("PLN", first.Currency);
+                Assert.Equal(
+                    "Netflix",
+                    first.Name);
+
+                Assert.Equal(
+                    49m,
+                    first.Amount);
+
+                Assert.Equal(
+                    Currency.PLN,
+                    first.Currency);
+
                 Assert.Equal(
                     BillingPeriod.Monthly,
                     first.BillingPeriod);
             },
             second =>
             {
-                Assert.Equal("Microsoft 365", second.Name);
-                Assert.Equal(299m, second.Amount);
-                Assert.Equal("PLN", second.Currency);
+                Assert.Equal(
+                    "Microsoft 365",
+                    second.Name);
+
+                Assert.Equal(
+                    299m,
+                    second.Amount);
+
+                Assert.Equal(
+                    Currency.PLN,
+                    second.Currency);
+
                 Assert.Equal(
                     BillingPeriod.Yearly,
                     second.BillingPeriod);
@@ -86,7 +107,10 @@ public sealed class GetSubscriptionsHandlerTests
     public async Task HandleAsync_ShouldReturnEmptyCollection_WhenCurrentUserHasNoSubscriptions()
     {
         var ownerId = Guid.NewGuid();
-        var repository = new Mock<ISubscriptionRepository>();
+
+        var repository =
+            new Mock<ISubscriptionRepository>();
+
         var currentUser = new Mock<ICurrentUser>();
 
         currentUser
@@ -97,7 +121,8 @@ public sealed class GetSubscriptionsHandlerTests
             .Setup(x => x.GetAllAsync(
                 ownerId,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Subscription>());
+            .ReturnsAsync(
+                Array.Empty<Subscription>());
 
         var handler = new GetSubscriptionsHandler(
             repository.Object,

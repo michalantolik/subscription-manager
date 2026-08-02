@@ -8,7 +8,8 @@ namespace SubscriptionManager.Infrastructure.Persistence.Configurations;
 internal sealed class SubscriptionConfiguration
     : IEntityTypeConfiguration<Subscription>
 {
-    public void Configure(EntityTypeBuilder<Subscription> builder)
+    public void Configure(
+        EntityTypeBuilder<Subscription> builder)
     {
         builder.ToTable("Subscriptions");
 
@@ -50,8 +51,9 @@ internal sealed class SubscriptionConfiguration
             .HasPrecision(18, 2);
 
         builder.Property(x => x.Currency)
-            .IsRequired()
-            .HasMaxLength(3);
+            .HasConversion<string>()
+            .HasMaxLength(3)
+            .IsRequired();
 
         builder.Property(x => x.BillingPeriod)
             .HasConversion<string>()

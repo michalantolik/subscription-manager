@@ -56,6 +56,115 @@
     font-size: 12px;
 }
 
+.account-preferences {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-4);
+}
+
+.account-preferences-heading h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.account-preferences-heading p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.account-currency-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--ui-space-3);
+}
+
+    .account-currency-controls label {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+        .account-currency-controls label > span {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+    .account-currency-controls select {
+        width: 100%;
+        min-height: 40px;
+        padding: 0 36px 0 12px;
+        color: var(--text);
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--ui-radius-md);
+        font: inherit;
+        font-size: 13px;
+    }
+
+        .account-currency-controls select:hover:not(:disabled) {
+            border-color: var(--border-strong);
+        }
+
+        .account-currency-controls select:focus {
+            border-color: var(--brand);
+            outline: 3px solid var(--brand-soft);
+        }
+
+        .account-currency-controls select:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+
+    .account-currency-controls .primary-button {
+        min-width: 92px;
+        min-height: 40px;
+    }
+
+.account-currency-loading {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.account-currency-spinner {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: account-spin .8s linear infinite;
+}
+
+.account-currency-message {
+    padding: 9px 11px;
+    border: 1px solid;
+    border-radius: var(--ui-radius-md);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.account-currency-message-success {
+    color: var(--brand-strong);
+    background: var(--brand-soft);
+    border-color: color-mix(in srgb, var(--brand) 24%, var(--border));
+}
+
+.account-currency-message-error {
+    color: var(--red);
+    background: var(--red-soft);
+    border-color: color-mix(in srgb, var(--red) 24%, var(--border));
+}
+
 .account-danger-zone {
     display: flex;
     align-items: flex-end;
@@ -65,19 +174,19 @@
     border-top: 1px solid var(--border);
 }
 
-.account-danger-zone h3 {
-    margin: 12px 0 0;
-    color: var(--text);
-    font-size: 15px;
-}
+    .account-danger-zone h3 {
+        margin: 12px 0 0;
+        color: var(--text);
+        font-size: 15px;
+    }
 
-.account-danger-zone p {
-    max-width: 310px;
-    margin: 6px 0 0;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.55;
-}
+    .account-danger-zone p {
+        max-width: 310px;
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+    }
 
 .account-delete-list {
     margin-top: 10px;
@@ -97,13 +206,13 @@
     cursor: pointer;
 }
 
-.account-confirm-checkbox input {
-    width: 17px;
-    height: 17px;
-    flex: 0 0 17px;
-    margin: 1px 0 0;
-    accent-color: var(--red);
-}
+    .account-confirm-checkbox input {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 17px;
+        margin: 1px 0 0;
+        accent-color: var(--red);
+    }
 
 .account-operation-state {
     min-height: 230px;
@@ -115,17 +224,17 @@
     text-align: center;
 }
 
-.account-operation-state strong {
-    font-size: 16px;
-}
+    .account-operation-state strong {
+        font-size: 16px;
+    }
 
-.account-operation-state p {
-    max-width: 330px;
-    margin: 0;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.55;
-}
+    .account-operation-state p {
+        max-width: 330px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+    }
 
 .account-spinner {
     width: 38px;
@@ -147,28 +256,40 @@
     border-radius: 50%;
 }
 
-.account-success-icon ::deep .app-icon {
-    width: 24px;
-    height: 24px;
-}
+    .account-success-icon ::deep .app-icon {
+        width: 24px;
+        height: 24px;
+    }
 
 @keyframes account-spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 600px) {
+    .account-currency-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+        .account-currency-controls .primary-button {
+            width: 100%;
+        }
+
     .account-danger-zone {
         align-items: stretch;
         flex-direction: column;
     }
 
-    .account-danger-zone .danger-button {
-        width: 100%;
-    }
+        .account-danger-zone .danger-button {
+            width: 100%;
+        }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .account-spinner {
+    .account-spinner,
+    .account-currency-spinner {
         animation-duration: 1.5s;
     }
 }

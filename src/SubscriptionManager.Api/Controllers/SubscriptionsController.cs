@@ -164,7 +164,7 @@ public sealed class SubscriptionsController : ControllerBase
 public sealed record UpdateSubscriptionRequest(
     string Name,
     decimal Amount,
-    string Currency,
+    Currency Currency,
     BillingPeriod BillingPeriod,
     Guid? DigitalServiceId = null);
 

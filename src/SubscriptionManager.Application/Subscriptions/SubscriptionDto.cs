@@ -12,7 +12,7 @@ public sealed record SubscriptionDto(
     string? IconKey,
     string? ManagementUrl,
     decimal Amount,
-    string Currency,
+    Currency Currency,
     BillingPeriod BillingPeriod,
     DateOnly StartDate,
     DateOnly? EndDate,

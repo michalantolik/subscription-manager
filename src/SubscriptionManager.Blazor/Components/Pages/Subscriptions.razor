@@ -1,6 +1,10 @@
 @page "/subscriptions"
+
 @attribute [Authorize]
+
+@using SubscriptionManager.Blazor.Features.Currencies
 @using SubscriptionManager.Blazor.Features.DigitalServices
+
 @inject SubscriptionsApiClient ApiClient
 @inject DigitalServicesApiClient DigitalServicesApiClient
 @inject Localizer T
@@ -16,7 +20,9 @@
             <p>@T["Subscriptions.Description"]</p>
         </div>
 
-        <button class="primary-action page-primary-action" type="button" @onclick="OpenCatalog">
+        <button class="primary-action page-primary-action"
+                type="button"
+                @onclick="OpenCatalog">
             <AppIcon Name="plus" />
             @T["Subscriptions.Add"]
         </button>
@@ -24,11 +30,15 @@
 
     @if (_loading)
     {
-        <div class="panel loading-panel">@T["Status.Loading"]</div>
+        <div class="panel loading-panel">
+            @T["Status.Loading"]
+        </div>
     }
     else if (!string.IsNullOrWhiteSpace(_pageError))
     {
-        <div class="panel error-panel">@_pageError</div>
+        <div class="panel error-panel">
+            @_pageError
+        </div>
     }
     else
     {
@@ -41,25 +51,56 @@
 
             <article class="panel subscription-metric">
                 <span>@T["Subscriptions.Monthly"]</span>
-                <strong>@Money(Active.Sum(x => x.MonthlyEquivalentAmount))</strong>
-                <small>@T["Subscriptions.AverageMonthly", Money(Active.Count == 0 ? 0 : Active.Average(x => x.MonthlyEquivalentAmount))]</small>
+                <strong>
+                    @Money(
+                        Active.Sum(x =>
+                            x.MonthlyEquivalentAmount))
+                </strong>
+                <small>
+                    @T[
+                        "Subscriptions.AverageMonthly",
+                        Money(
+                            Active.Count == 0
+                                ? 0
+                                : Active.Average(x =>
+                                    x.MonthlyEquivalentAmount))]
+                </small>
             </article>
 
             <article class="panel subscription-metric">
                 <span>@T["Subscriptions.Yearly"]</span>
-                <strong>@Money(Active.Sum(x => x.YearlyEquivalentAmount))</strong>
-                <small>@T["Subscriptions.AverageYearly", Money(Active.Count == 0 ? 0 : Active.Average(x => x.YearlyEquivalentAmount))]</small>
+                <strong>
+                    @Money(
+                        Active.Sum(x =>
+                            x.YearlyEquivalentAmount))
+                </strong>
+                <small>
+                    @T[
+                        "Subscriptions.AverageYearly",
+                        Money(
+                            Active.Count == 0
+                                ? 0
+                                : Active.Average(x =>
+                                    x.YearlyEquivalentAmount))]
+                </small>
             </article>
 
             <article class="panel subscription-metric">
                 <span>@T["Subscriptions.MostExpensive"]</span>
+
                 <div class="subscription-metric-value">
-                    <strong>@Money(MostExpensive?.MonthlyEquivalentAmount ?? 0)</strong>
+                    <strong>
+                        @Money(
+                            MostExpensive?
+                                .MonthlyEquivalentAmount ?? 0)
+                    </strong>
+
                     @if (MostExpensive is not null)
                     {
                         <small>@T["PerMonth"]</small>
                     }
                 </div>
+
                 <small>@(MostExpensive?.Name ?? "—")</small>
             </article>
         </div>
@@ -74,10 +115,17 @@
 
                     <div class="subscription-search">
                         <AppIcon Name="search" />
-                        <input @bind="_search" @bind:event="oninput" placeholder="@T["Subscriptions.Search"]" />
+
+                        <input @bind="_search"
+                               @bind:event="oninput"
+                               placeholder="@T["Subscriptions.Search"]" />
+
                         @if (!string.IsNullOrWhiteSpace(_search))
                         {
-                            <button type="button" class="search-clear" title="@T["Action.Clear"]" @onclick="ClearSearch">
+                            <button type="button"
+                                    class="search-clear"
+                                    title="@T["Action.Clear"]"
+                                    @onclick="ClearSearch">
                                 <AppIcon Name="close" />
                             </button>
                         }
@@ -86,15 +134,29 @@
 
                 <div class="subscription-filters">
                     <div class="subscription-filter-group subscription-status-filters">
-                        <button class="subscription-filter @(_status == StatusFilter.Active ? "active" : null)" @onclick="() => _status = StatusFilter.Active">@T["Filter.Active"]</button>
-                        <button class="subscription-filter @(_status == StatusFilter.All ? "active" : null)" @onclick="() => _status = StatusFilter.All">@T["Filter.All"]</button>
-                        <button class="subscription-filter @(_status == StatusFilter.Ended ? "active" : null)" @onclick="() => _status = StatusFilter.Ended">@T["Filter.Ended"]</button>
+                        <button class="subscription-filter @(_status == StatusFilter.Active ? "active" : null)"
+                                @onclick="() => _status = StatusFilter.Active">
+                            @T["Filter.Active"]
+                        </button>
+
+                        <button class="subscription-filter @(_status == StatusFilter.All ? "active" : null)"
+                                @onclick="() => _status = StatusFilter.All">
+                            @T["Filter.All"]
+                        </button>
+
+                        <button class="subscription-filter @(_status == StatusFilter.Ended ? "active" : null)"
+                                @onclick="() => _status = StatusFilter.Ended">
+                            @T["Filter.Ended"]
+                        </button>
                     </div>
 
                     <div class="subscription-filter-group subscription-category-filters">
                         @foreach (var category in Categories)
                         {
-                            <button class="subscription-filter @(_category == category ? "active" : null)" @onclick="() => _category = category">@CategoryLabel(category)</button>
+                            <button class="subscription-filter @(_category == category ? "active" : null)"
+                                    @onclick="() => _category = category">
+                                @CategoryLabel(category)
+                            </button>
                         }
                     </div>
                 </div>
@@ -113,48 +175,111 @@
                         @foreach (var subscription in Filtered)
                         {
                             <article class="subscription-row">
-                                <div class="service-logo @(subscription.IsActive ? "green" : "red")">@Initials(subscription.Name)</div>
+                                <div class="service-logo @(subscription.IsActive ? "green" : "red")">
+                                    @Initials(subscription.Name)
+                                </div>
 
                                 <div class="subscription-copy">
                                     <strong>@subscription.Name</strong>
-                                    <small>@CategoryFor(subscription) · @Billing(subscription.BillingPeriod)</small>
+                                    <small>
+                                        @CategoryFor(subscription) ·
+                                        @Billing(subscription.BillingPeriod)
+                                    </small>
                                 </div>
 
                                 <div class="subscription-next">
-                                    <span>@(subscription.IsActive ? T["Date.Start"] : T["Field.EndDate"])</span>
-                                    <strong>@(subscription.IsActive ? FormatDate(subscription.StartDate) : subscription.EndDate is null ? "—" : FormatDate(subscription.EndDate.Value))</strong>
+                                    <span>
+                                        @(subscription.IsActive
+                                            ? T["Date.Start"]
+                                            : T["Field.EndDate"])
+                                    </span>
+
+                                    <strong>
+                                        @(subscription.IsActive
+                                            ? FormatDate(
+                                                subscription.StartDate)
+                                            : subscription.EndDate is null
+                                                ? "—"
+                                                : FormatDate(
+                                                    subscription.EndDate.Value))
+                                    </strong>
                                 </div>
 
                                 <div class="subscription-price">
-                                    <strong>@Money(subscription.Amount, subscription.Currency)</strong>
-                                    <small>/ @ShortBilling(subscription.BillingPeriod)</small>
-                                    @if (subscription.BillingPeriod != BillingPeriod.Monthly)
+                                    <strong>
+                                        @Money(
+                                            subscription.Amount,
+                                            subscription.Currency)
+                                    </strong>
+
+                                    <small>
+                                        /
+                                        @ShortBilling(
+                                            subscription.BillingPeriod)
+                                    </small>
+
+                                    @if (subscription.BillingPeriod !=
+                                         BillingPeriod.Monthly)
                                     {
-                                        <small class="subscription-monthly-equivalent">@Money(subscription.MonthlyEquivalentAmount, subscription.Currency) @T["PerMonth"]</small>
+                                        <small class="subscription-monthly-equivalent">
+                                            @Money(
+                                                subscription
+                                                    .MonthlyEquivalentAmount,
+                                                subscription.Currency)
+                                            @T["PerMonth"]
+                                        </small>
                                     }
                                 </div>
 
                                 <div class="subscription-actions">
-                                    @if (!string.IsNullOrWhiteSpace(ManagementUrlFor(subscription)))
+                                    @if (!string.IsNullOrWhiteSpace(
+                                             ManagementUrlFor(subscription)))
                                     {
-                                        <a class="icon-action" href="@ManagementUrlFor(subscription)" target="_blank" rel="noopener noreferrer" title="@T["Action.Manage"]"><AppIcon Name="external" /></a>
+                                        <a class="icon-action"
+                                           href="@ManagementUrlFor(subscription)"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           title="@T["Action.Manage"]">
+                                            <AppIcon Name="external" />
+                                        </a>
                                     }
                                     else
                                     {
-                                        <span class="icon-action disabled" title="@T["Action.Manage"]"><AppIcon Name="external" /></span>
+                                        <span class="icon-action disabled"
+                                              title="@T["Action.Manage"]">
+                                            <AppIcon Name="external" />
+                                        </span>
                                     }
 
                                     @if (subscription.IsActive)
                                     {
-                                        <button class="icon-action" type="button" title="@T["Action.End"]" @onclick="() => OpenEnd(subscription)"><AppIcon Name="end" /></button>
+                                        <button class="icon-action"
+                                                type="button"
+                                                title="@T["Action.End"]"
+                                                @onclick="() => OpenEnd(subscription)">
+                                            <AppIcon Name="end" />
+                                        </button>
                                     }
                                     else
                                     {
-                                        <span class="icon-action disabled"><AppIcon Name="reactivate" /></span>
+                                        <span class="icon-action disabled">
+                                            <AppIcon Name="reactivate" />
+                                        </span>
                                     }
 
-                                    <button class="icon-action" type="button" title="@T["Action.Edit"]" @onclick="() => OpenEdit(subscription)"><AppIcon Name="edit" /></button>
-                                    <button class="icon-action" type="button" title="@T["Action.Delete"]" @onclick="() => OpenDelete(subscription)"><AppIcon Name="trash" /></button>
+                                    <button class="icon-action"
+                                            type="button"
+                                            title="@T["Action.Edit"]"
+                                            @onclick="() => OpenEdit(subscription)">
+                                        <AppIcon Name="edit" />
+                                    </button>
+
+                                    <button class="icon-action"
+                                            type="button"
+                                            title="@T["Action.Delete"]"
+                                            @onclick="() => OpenDelete(subscription)">
+                                        <AppIcon Name="trash" />
+                                    </button>
                                 </div>
                             </article>
                         }
@@ -164,11 +289,18 @@
 
             <aside class="subscriptions-side">
                 <section class="panel category-card">
-                    <div class="card-heading"><h2>@T["Subscriptions.Categories"]</h2></div>
+                    <div class="card-heading">
+                        <h2>@T["Subscriptions.Categories"]</h2>
+                    </div>
+
                     @foreach (var summary in CategorySummaries)
                     {
                         <div class="category-summary">
-                            <span><i class="category-dot @summary.Tone"></i>@summary.Name</span>
+                            <span>
+                                <i class="category-dot @summary.Tone"></i>
+                                @summary.Name
+                            </span>
+
                             <strong>@Money(summary.Amount)</strong>
                         </div>
                     }
@@ -181,14 +313,28 @@
 @if (_dialog != DialogKind.None)
 {
     <div class="dialog-backdrop">
-        <section class="app-modal @(_dialog == DialogKind.Catalog ? "catalog-modal" : _dialog == DialogKind.Edit ? "edit-modal" : null)" role="dialog" aria-modal="true" aria-labelledby="subscription-dialog-title">
+        <section class="app-modal @(_dialog == DialogKind.Catalog ? "catalog-modal" : _dialog == DialogKind.Edit ? "edit-modal" : null)"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="subscription-dialog-title">
             <header class="modal-header">
-                <div class="modal-title-icon"><AppIcon Name="@DialogIcon" /></div>
+                <div class="modal-title-icon">
+                    <AppIcon Name="@DialogIcon" />
+                </div>
+
                 <div>
-                    <h2 id="subscription-dialog-title">@DialogTitle</h2>
+                    <h2 id="subscription-dialog-title">
+                        @DialogTitle
+                    </h2>
                     <p>@DialogDescription</p>
                 </div>
-                <button class="modal-close" type="button" title="@T["Action.Close"]" @onclick="CloseDialog"><AppIcon Name="close" /></button>
+
+                <button class="modal-close"
+                        type="button"
+                        title="@T["Action.Close"]"
+                        @onclick="CloseDialog">
+                    <AppIcon Name="close" />
+                </button>
             </header>
 
             @if (_dialog == DialogKind.Catalog)
@@ -196,10 +342,20 @@
                 <div class="catalog-content">
                     <div class="catalog-search">
                         <AppIcon Name="search" />
-                        <input autofocus @bind="_catalogSearch" @bind:event="oninput" placeholder="@T["Catalog.Search"]" />
-                        @if (!string.IsNullOrWhiteSpace(_catalogSearch))
+
+                        <input autofocus
+                               @bind="_catalogSearch"
+                               @bind:event="oninput"
+                               placeholder="@T["Catalog.Search"]" />
+
+                        @if (!string.IsNullOrWhiteSpace(
+                                 _catalogSearch))
                         {
-                            <button type="button" class="search-clear" @onclick="() => _catalogSearch = string.Empty"><AppIcon Name="close" /></button>
+                            <button type="button"
+                                    class="search-clear"
+                                    @onclick="() => _catalogSearch = string.Empty">
+                                <AppIcon Name="close" />
+                            </button>
                         }
                     </div>
 
@@ -209,39 +365,81 @@
                         <span class="catalog-custom-icon">
                             <AppIcon Name="plus" />
                         </span>
+
                         <span>
-                            <strong>@T["Catalog.Custom.Title"]</strong>
-                            <small>@T["Catalog.Custom.Description"]</small>
+                            <strong>
+                                @T["Catalog.Custom.Title"]
+                            </strong>
+                            <small>
+                                @T["Catalog.Custom.Description"]
+                            </small>
                         </span>
+
                         <AppIcon Name="chevron" />
                     </button>
 
                     <div class="catalog-meta">
-                        <span>@T["Catalog.Available", FilteredServices.Count]</span>
+                        <span>
+                            @T[
+                                "Catalog.Available",
+                                FilteredServices.Count]
+                        </span>
                         <span>@T["Catalog.Hint"]</span>
                     </div>
 
-                    <div class="catalog-grid" role="listbox">
+                    <div class="catalog-grid"
+                         role="listbox">
                         @foreach (var service in FilteredServices)
                         {
-                            var selected = _selectedService?.Id == service.Id;
-                            <button type="button" class="catalog-item @(selected ? "selected" : null)" role="option" aria-selected="@selected" @onclick="() => SelectService(service)">
-                                <span class="catalog-logo">@Initials(service.Name)</span>
-                                <span class="catalog-copy"><strong>@service.Name</strong><small>@ServiceCategoryLabel(service)</small></span>
-                                <span class="catalog-check"><AppIcon Name="check" /></span>
+                            var selected =
+                                _selectedService?.Id == service.Id;
+
+                            <button type="button"
+                                    class="catalog-item @(selected ? "selected" : null)"
+                                    role="option"
+                                    aria-selected="@selected"
+                                    @onclick="() => SelectService(service)">
+                                <span class="catalog-logo">
+                                    @Initials(service.Name)
+                                </span>
+
+                                <span class="catalog-copy">
+                                    <strong>@service.Name</strong>
+                                    <small>
+                                        @ServiceCategoryLabel(service)
+                                    </small>
+                                </span>
+
+                                <span class="catalog-check">
+                                    <AppIcon Name="check" />
+                                </span>
                             </button>
                         }
                     </div>
 
                     @if (FilteredServices.Count == 0)
                     {
-                        <div class="catalog-empty"><AppIcon Name="search" /><strong>@T["Catalog.Empty"]</strong></div>
+                        <div class="catalog-empty">
+                            <AppIcon Name="search" />
+                            <strong>@T["Catalog.Empty"]</strong>
+                        </div>
                     }
                 </div>
 
                 <footer class="modal-footer">
-                    <button class="secondary-button" type="button" @onclick="CloseDialog">@T["Action.Cancel"]</button>
-                    <button class="primary-action" type="button" disabled="@(_selectedService is null)" @onclick="ContinueToCreate">@T["Action.Next"] <AppIcon Name="chevron" /></button>
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDialog">
+                        @T["Action.Cancel"]
+                    </button>
+
+                    <button class="primary-action"
+                            type="button"
+                            disabled="@(_selectedService is null)"
+                            @onclick="ContinueToCreate">
+                        @T["Action.Next"]
+                        <AppIcon Name="chevron" />
+                    </button>
                 </footer>
             }
             else if (_dialog == DialogKind.CustomService)
@@ -261,31 +459,49 @@
 
                         <div class="form-grid">
                             <label class="form-field wide">
-                                <span>@T["CustomService.Name"]</span>
+                                <span>
+                                    @T["CustomService.Name"]
+                                </span>
+
                                 <InputText class="form-control"
                                            @bind-Value="_customServiceForm.Name" />
+
                                 <ValidationMessage For="() => _customServiceForm.Name" />
                             </label>
 
                             <label class="form-field wide">
-                                <span>@T["CustomService.Category"]</span>
+                                <span>
+                                    @T["CustomService.Category"]
+                                </span>
+
                                 <InputText class="form-control"
                                            @bind-Value="_customServiceForm.Category" />
+
                                 <ValidationMessage For="() => _customServiceForm.Category" />
                             </label>
 
                             <label class="form-field wide">
-                                <span>@T["CustomService.ManagementUrl"]</span>
+                                <span>
+                                    @T["CustomService.ManagementUrl"]
+                                </span>
+
                                 <InputText class="form-control"
                                            type="url"
                                            @bind-Value="_customServiceForm.ManagementUrl" />
-                                <small class="form-hint">@T["CustomService.ManagementUrlHint"]</small>
+
+                                <small class="form-hint">
+                                    @T["CustomService.ManagementUrlHint"]
+                                </small>
+
                                 <ValidationMessage For="() => _customServiceForm.ManagementUrl" />
                             </label>
 
-                            @if (!string.IsNullOrWhiteSpace(_dialogError))
+                            @if (!string.IsNullOrWhiteSpace(
+                                     _dialogError))
                             {
-                                <div class="dialog-error wide">@_dialogError</div>
+                                <div class="dialog-error wide">
+                                    @_dialogError
+                                </div>
                             }
                         </div>
                     </div>
@@ -297,6 +513,7 @@
                                 @onclick="OpenCatalog">
                             @T["Action.Back"]
                         </button>
+
                         <button class="primary-action"
                                 type="submit"
                                 disabled="@_saving">
@@ -306,43 +523,188 @@
                     </footer>
                 </EditForm>
             }
-            else if (_dialog is DialogKind.Create or DialogKind.Edit)
+            else if (_dialog is
+                     DialogKind.Create or
+                     DialogKind.Edit)
             {
-                <EditForm Model="_form" OnValidSubmit="SaveAsync" class="modal-form">
+                <EditForm Model="_form"
+                          OnValidSubmit="SaveAsync"
+                          class="modal-form">
                     <DataAnnotationsValidator />
+
                     <div class="modal-content">
                         @if (_dialog == DialogKind.Create)
                         {
-                            <button class="form-back" type="button" @onclick="OpenCatalog"><AppIcon Name="chevron" /> @T["Catalog.Back"]</button>
+                            <button class="form-back"
+                                    type="button"
+                                    @onclick="OpenCatalog">
+                                <AppIcon Name="chevron" />
+                                @T["Catalog.Back"]
+                            </button>
                         }
 
                         <div class="form-grid">
-                            <label class="form-field wide"><span>@T["Field.Name"]</span><InputText class="form-control" @bind-Value="_form.Name" /><ValidationMessage For="() => _form.Name" /></label>
-                            <label class="form-field"><span>@T["Field.Amount"]</span><InputNumber class="form-control" @bind-Value="_form.Amount" /><ValidationMessage For="() => _form.Amount" /></label>
-                            <label class="form-field"><span>@T["Field.Currency"]</span><InputText class="form-control" maxlength="3" @bind-Value="_form.Currency" /><ValidationMessage For="() => _form.Currency" /></label>
-                            <label class="form-field wide"><span>@T["Field.BillingPeriod"]</span><InputSelect class="form-control" @bind-Value="_form.BillingPeriod"><option value="@BillingPeriod.Monthly">@T["Billing.Monthly"]</option><option value="@BillingPeriod.Quarterly">@T["Billing.Quarterly"]</option><option value="@BillingPeriod.SemiAnnual">@T["Billing.SemiAnnual"]</option><option value="@BillingPeriod.Yearly">@T["Billing.Yearly"]</option></InputSelect></label>
+                            <label class="form-field wide">
+                                <span>@T["Field.Name"]</span>
+
+                                <InputText class="form-control"
+                                           @bind-Value="_form.Name" />
+
+                                <ValidationMessage For="() => _form.Name" />
+                            </label>
+
+                            <label class="form-field">
+                                <span>@T["Field.Amount"]</span>
+
+                                <InputNumber class="form-control"
+                                             @bind-Value="_form.Amount" />
+
+                                <ValidationMessage For="() => _form.Amount" />
+                            </label>
+
+                            <label class="form-field">
+                                <span>@T["Field.Currency"]</span>
+
+                                <InputSelect class="form-control"
+                                             @bind-Value="_form.Currency">
+                                    @foreach (
+                                        var currency in
+                                        Enum.GetValues<Currency>())
+                                    {
+                                        <option value="@currency">
+                                            @currency
+                                        </option>
+                                    }
+                                </InputSelect>
+                            </label>
+
+                            <label class="form-field wide">
+                                <span>
+                                    @T["Field.BillingPeriod"]
+                                </span>
+
+                                <InputSelect class="form-control"
+                                             @bind-Value="_form.BillingPeriod">
+                                    <option value="@BillingPeriod.Monthly">
+                                        @T["Billing.Monthly"]
+                                    </option>
+                                    <option value="@BillingPeriod.Quarterly">
+                                        @T["Billing.Quarterly"]
+                                    </option>
+                                    <option value="@BillingPeriod.SemiAnnual">
+                                        @T["Billing.SemiAnnual"]
+                                    </option>
+                                    <option value="@BillingPeriod.Yearly">
+                                        @T["Billing.Yearly"]
+                                    </option>
+                                </InputSelect>
+                            </label>
+
                             @if (_dialog == DialogKind.Create)
                             {
-                                <label class="form-field wide"><span>@T["Field.StartDate"]</span><InputDate class="form-control" @bind-Value="_form.StartDate" /></label>
+                                <label class="form-field wide">
+                                    <span>
+                                        @T["Field.StartDate"]
+                                    </span>
+
+                                    <InputDate class="form-control"
+                                               @bind-Value="_form.StartDate" />
+                                </label>
                             }
-                            @if (!string.IsNullOrWhiteSpace(_dialogError))
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                     _dialogError))
                             {
-                                <div class="dialog-error wide">@_dialogError</div>
+                                <div class="dialog-error wide">
+                                    @_dialogError
+                                </div>
                             }
                         </div>
                     </div>
-                    <footer class="modal-footer"><button class="secondary-button" type="button" @onclick="CloseDialog">@T["Action.Cancel"]</button><button class="primary-action" type="submit" disabled="@_saving">@(_dialog == DialogKind.Create ? T["Subscriptions.Add"] : T["Action.Save"])</button></footer>
+
+                    <footer class="modal-footer">
+                        <button class="secondary-button"
+                                type="button"
+                                @onclick="CloseDialog">
+                            @T["Action.Cancel"]
+                        </button>
+
+                        <button class="primary-action"
+                                type="submit"
+                                disabled="@_saving">
+                            @(_dialog == DialogKind.Create
+                                ? T["Subscriptions.Add"]
+                                : T["Action.Save"])
+                        </button>
+                    </footer>
                 </EditForm>
             }
             else if (_dialog == DialogKind.End)
             {
-                <div class="modal-content confirm-copy"><p><strong>@_selected?.Name</strong></p><p>@T["Dialog.EndDescription"]</p><label class="form-field"><span>@T["Field.EndDate"]</span><InputDate class="form-control" @bind-Value="_endModel.EndDate" /></label>@if (!string.IsNullOrWhiteSpace(_dialogError)){<div class="dialog-error">@_dialogError</div>}</div>
-                <footer class="modal-footer"><button class="secondary-button" type="button" @onclick="CloseDialog">@T["Action.Cancel"]</button><button class="primary-action" type="button" disabled="@_saving" @onclick="EndAsync">@T["Action.End"]</button></footer>
+                <div class="modal-content confirm-copy">
+                    <p><strong>@_selected?.Name</strong></p>
+                    <p>@T["Dialog.EndDescription"]</p>
+
+                    <label class="form-field">
+                        <span>@T["Field.EndDate"]</span>
+
+                        <InputDate class="form-control"
+                                   @bind-Value="_endModel.EndDate" />
+                    </label>
+
+                    @if (!string.IsNullOrWhiteSpace(
+                             _dialogError))
+                    {
+                        <div class="dialog-error">
+                            @_dialogError
+                        </div>
+                    }
+                </div>
+
+                <footer class="modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDialog">
+                        @T["Action.Cancel"]
+                    </button>
+
+                    <button class="primary-action"
+                            type="button"
+                            disabled="@_saving"
+                            @onclick="EndAsync">
+                        @T["Action.End"]
+                    </button>
+                </footer>
             }
             else if (_dialog == DialogKind.Delete)
             {
-                <div class="modal-content confirm-copy"><p><strong>@_selected?.Name</strong></p><p>@T["Dialog.DeleteDescription"]</p>@if (!string.IsNullOrWhiteSpace(_dialogError)){<div class="dialog-error">@_dialogError</div>}</div>
-                <footer class="modal-footer"><button class="secondary-button" type="button" @onclick="CloseDialog">@T["Action.Cancel"]</button><button class="danger-button" type="button" disabled="@_saving" @onclick="DeleteAsync">@T["Action.Delete"]</button></footer>
+                <div class="modal-content confirm-copy">
+                    <p><strong>@_selected?.Name</strong></p>
+                    <p>@T["Dialog.DeleteDescription"]</p>
+
+                    @if (!string.IsNullOrWhiteSpace(
+                             _dialogError))
+                    {
+                        <div class="dialog-error">
+                            @_dialogError
+                        </div>
+                    }
+                </div>
+
+                <footer class="modal-footer">
+                    <button class="secondary-button"
+                            type="button"
+                            @onclick="CloseDialog">
+                        @T["Action.Cancel"]
+                    </button>
+
+                    <button class="danger-button"
+                            type="button"
+                            disabled="@_saving"
+                            @onclick="DeleteAsync">
+                        @T["Action.Delete"]
+                    </button>
+                </footer>
             }
         </section>
     </div>
@@ -350,39 +712,161 @@
 
 @code {
     [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+    private Task<AuthenticationState> AuthenticationStateTask
+    {
+        get;
+        set;
+    } = default!;
 
     private System.Security.Claims.ClaimsPrincipal _user =
         new(new System.Security.Claims.ClaimsIdentity());
 
     private IReadOnlyList<SubscriptionResponse> _subscriptions = [];
     private IReadOnlyList<DigitalServiceResponse> _digitalServices = [];
+
     private bool _loading = true;
     private bool _saving;
+
     private string? _pageError;
     private string? _dialogError;
     private string _search = string.Empty;
     private string _catalogSearch = string.Empty;
     private string _category = AllCategories;
+
     private StatusFilter _status = StatusFilter.Active;
     private DialogKind _dialog;
+
     private SubscriptionResponse? _selected;
     private DigitalServiceResponse? _selectedService;
+
     private CreateDigitalServiceFormModel _customServiceForm = new();
     private SubscriptionFormModel _form = new();
     private EndSubscriptionModel _endModel = new();
+
     private const string AllCategories = "__all";
 
-    private List<SubscriptionResponse> Active => _subscriptions.Where(x => x.IsActive).ToList();
-    private SubscriptionResponse? MostExpensive => Active.MaxBy(x => x.MonthlyEquivalentAmount);
-    private IReadOnlyList<string> Categories => new[] { AllCategories }.Concat(_subscriptions.Select(CategoryKeyFor).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x)).ToArray();
-    private IReadOnlyList<DigitalServiceResponse> FilteredServices => _digitalServices.Where(x => string.IsNullOrWhiteSpace(_catalogSearch) || x.Name.Contains(_catalogSearch, StringComparison.CurrentCultureIgnoreCase) || ServiceCategoryLabel(x).Contains(_catalogSearch, StringComparison.CurrentCultureIgnoreCase)).ToArray();
-    private IEnumerable<SubscriptionResponse> Filtered => _subscriptions.Where(MatchesStatus).Where(x => _category == AllCategories || string.Equals(CategoryKeyFor(x), _category, StringComparison.OrdinalIgnoreCase)).Where(x => string.IsNullOrWhiteSpace(_search) || x.Name.Contains(_search, StringComparison.CurrentCultureIgnoreCase) || CategoryFor(x).Contains(_search, StringComparison.CurrentCultureIgnoreCase)).OrderByDescending(x => x.IsActive).ThenBy(x => x.Name);
-    private IEnumerable<CategorySummary> CategorySummaries => Active.GroupBy(CategoryFor, StringComparer.CurrentCultureIgnoreCase).Select((group, index) => new CategorySummary(group.Key, Tone(index), group.Sum(x => x.MonthlyEquivalentAmount))).OrderByDescending(x => x.Amount);
+    private List<SubscriptionResponse> Active =>
+        _subscriptions
+            .Where(x => x.IsActive)
+            .ToList();
 
-    private string DialogTitle => _dialog switch { DialogKind.Catalog => T["Catalog.Title"], DialogKind.CustomService => T["CustomService.Title"], DialogKind.Create => T["Dialog.CreateTitle"], DialogKind.Edit => T["Dialog.EditTitle"], DialogKind.End => T["Dialog.EndTitle"], DialogKind.Delete => T["Dialog.DeleteTitle"], _ => string.Empty };
-    private string DialogDescription => _dialog switch { DialogKind.Catalog => T["Catalog.Description"], DialogKind.CustomService => T["CustomService.Description"], DialogKind.Create => T["Dialog.CreateDescription"], DialogKind.Edit => T["Dialog.EditDescription"], DialogKind.End => T["Dialog.EndDescription"], DialogKind.Delete => T["Dialog.DeleteDescription"], _ => string.Empty };
-    private string DialogIcon => _dialog == DialogKind.Edit ? "edit" : _dialog == DialogKind.Delete ? "trash" : _dialog == DialogKind.CustomService ? "plus" : "subscriptions";
+    private SubscriptionResponse? MostExpensive =>
+        Active.MaxBy(x => x.MonthlyEquivalentAmount);
+
+    private IReadOnlyList<string> Categories =>
+        new[] { AllCategories }
+            .Concat(
+                _subscriptions
+                    .Select(CategoryKeyFor)
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x))
+                    .Distinct(
+                        StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x))
+            .ToArray();
+
+    private IReadOnlyList<DigitalServiceResponse> FilteredServices =>
+        _digitalServices
+            .Where(x =>
+                string.IsNullOrWhiteSpace(_catalogSearch) ||
+                x.Name.Contains(
+                    _catalogSearch,
+                    StringComparison.CurrentCultureIgnoreCase) ||
+                ServiceCategoryLabel(x).Contains(
+                    _catalogSearch,
+                    StringComparison.CurrentCultureIgnoreCase))
+            .ToArray();
+
+    private IEnumerable<SubscriptionResponse> Filtered =>
+        _subscriptions
+            .Where(MatchesStatus)
+            .Where(x =>
+                _category == AllCategories ||
+                string.Equals(
+                    CategoryKeyFor(x),
+                    _category,
+                    StringComparison.OrdinalIgnoreCase))
+            .Where(x =>
+                string.IsNullOrWhiteSpace(_search) ||
+                x.Name.Contains(
+                    _search,
+                    StringComparison.CurrentCultureIgnoreCase) ||
+                CategoryFor(x).Contains(
+                    _search,
+                    StringComparison.CurrentCultureIgnoreCase))
+            .OrderByDescending(x => x.IsActive)
+            .ThenBy(x => x.Name);
+
+    private IEnumerable<CategorySummary> CategorySummaries =>
+        Active
+            .GroupBy(
+                CategoryFor,
+                StringComparer.CurrentCultureIgnoreCase)
+            .Select(
+                (group, index) =>
+                    new CategorySummary(
+                        group.Key,
+                        Tone(index),
+                        group.Sum(x =>
+                            x.MonthlyEquivalentAmount)))
+            .OrderByDescending(x => x.Amount);
+
+    private string DialogTitle =>
+        _dialog switch
+        {
+            DialogKind.Catalog =>
+                T["Catalog.Title"],
+
+            DialogKind.CustomService =>
+                T["CustomService.Title"],
+
+            DialogKind.Create =>
+                T["Dialog.CreateTitle"],
+
+            DialogKind.Edit =>
+                T["Dialog.EditTitle"],
+
+            DialogKind.End =>
+                T["Dialog.EndTitle"],
+
+            DialogKind.Delete =>
+                T["Dialog.DeleteTitle"],
+
+            _ => string.Empty
+        };
+
+    private string DialogDescription =>
+        _dialog switch
+        {
+            DialogKind.Catalog =>
+                T["Catalog.Description"],
+
+            DialogKind.CustomService =>
+                T["CustomService.Description"],
+
+            DialogKind.Create =>
+                T["Dialog.CreateDescription"],
+
+            DialogKind.Edit =>
+                T["Dialog.EditDescription"],
+
+            DialogKind.End =>
+                T["Dialog.EndDescription"],
+
+            DialogKind.Delete =>
+                T["Dialog.DeleteDescription"],
+
+            _ => string.Empty
+        };
+
+    private string DialogIcon =>
+        _dialog == DialogKind.Edit
+            ? "edit"
+            : _dialog == DialogKind.Delete
+                ? "trash"
+                : _dialog == DialogKind.CustomService
+                    ? "plus"
+                    : "subscriptions";
 
     protected override async Task OnInitializedAsync()
     {
@@ -402,16 +886,19 @@
         try
         {
             _digitalServices =
-                await DigitalServicesApiClient.GetAllAsync(_user);
+                await DigitalServicesApiClient.GetAllAsync(
+                    _user);
 
             _subscriptions =
-                await ApiClient.GetAllAsync(_user);
+                await ApiClient.GetAllAsync(
+                    _user);
         }
         catch (HttpRequestException exception)
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            SessionExpirationNavigation.RedirectToLogin(Navigation);
+            SessionExpirationNavigation.RedirectToLogin(
+                Navigation);
         }
         catch
         {
@@ -423,13 +910,44 @@
         }
     }
 
-    private void OpenCatalog() { _selected = null; _selectedService = null; _catalogSearch = string.Empty; _dialogError = null; _dialog = DialogKind.Catalog; }
-    private void OpenCustomService() { _selectedService = null; _customServiceForm = new CreateDigitalServiceFormModel(); _dialogError = null; _dialog = DialogKind.CustomService; }
-    private void SelectService(DigitalServiceResponse service) => _selectedService = service;
+    private void OpenCatalog()
+    {
+        _selected = null;
+        _selectedService = null;
+        _catalogSearch = string.Empty;
+        _dialogError = null;
+        _dialog = DialogKind.Catalog;
+    }
+
+    private void OpenCustomService()
+    {
+        _selectedService = null;
+        _customServiceForm =
+            new CreateDigitalServiceFormModel();
+
+        _dialogError = null;
+        _dialog = DialogKind.CustomService;
+    }
+
+    private void SelectService(
+        DigitalServiceResponse service)
+    {
+        _selectedService = service;
+    }
+
     private void ContinueToCreate()
     {
-        if (_selectedService is null) return;
-        _form = new SubscriptionFormModel { DigitalServiceId = _selectedService.Id, Name = _selectedService.Name };
+        if (_selectedService is null)
+        {
+            return;
+        }
+
+        _form = new SubscriptionFormModel
+        {
+            DigitalServiceId = _selectedService.Id,
+            Name = _selectedService.Name
+        };
+
         _dialog = DialogKind.Create;
     }
 
@@ -457,7 +975,8 @@
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            SessionExpirationNavigation.RedirectToLogin(Navigation);
+            SessionExpirationNavigation.RedirectToLogin(
+                Navigation);
         }
         catch
         {
@@ -468,11 +987,71 @@
             _saving = false;
         }
     }
-    private void OpenEdit(SubscriptionResponse subscription) { _selected = subscription; _form = new SubscriptionFormModel { DigitalServiceId = subscription.DigitalServiceId, Name = subscription.Name, Amount = subscription.Amount, Currency = subscription.Currency, BillingPeriod = subscription.BillingPeriod, StartDate = subscription.StartDate }; _dialogError = null; _dialog = DialogKind.Edit; }
-    private void OpenEnd(SubscriptionResponse subscription) { _selected = subscription; _endModel = new EndSubscriptionModel { EndDate = DateOnly.FromDateTime(DateTime.Today) }; _dialogError = null; _dialog = DialogKind.End; }
-    private void OpenDelete(SubscriptionResponse subscription) { _selected = subscription; _dialogError = null; _dialog = DialogKind.Delete; }
-    private void CloseDialog() { if (_saving) return; _dialog = DialogKind.None; _selected = null; _selectedService = null; _dialogError = null; }
-    private void ClearSearch() => _search = string.Empty;
+
+    private void OpenEdit(
+        SubscriptionResponse subscription)
+    {
+        _selected = subscription;
+
+        _form = new SubscriptionFormModel
+        {
+            DigitalServiceId =
+                subscription.DigitalServiceId,
+
+            Name = subscription.Name,
+            Amount = subscription.Amount,
+            Currency = subscription.Currency,
+
+            BillingPeriod =
+                subscription.BillingPeriod,
+
+            StartDate = subscription.StartDate
+        };
+
+        _dialogError = null;
+        _dialog = DialogKind.Edit;
+    }
+
+    private void OpenEnd(
+        SubscriptionResponse subscription)
+    {
+        _selected = subscription;
+
+        _endModel = new EndSubscriptionModel
+        {
+            EndDate =
+                DateOnly.FromDateTime(DateTime.Today)
+        };
+
+        _dialogError = null;
+        _dialog = DialogKind.End;
+    }
+
+    private void OpenDelete(
+        SubscriptionResponse subscription)
+    {
+        _selected = subscription;
+        _dialogError = null;
+        _dialog = DialogKind.Delete;
+    }
+
+    private void CloseDialog()
+    {
+        if (_saving)
+        {
+            return;
+        }
+
+        _dialog = DialogKind.None;
+        _selected = null;
+        _selectedService = null;
+        _dialogError = null;
+    }
+
+    private void ClearSearch()
+    {
+        _search = string.Empty;
+    }
 
     private async Task SaveAsync()
     {
@@ -483,7 +1062,9 @@
         {
             if (_dialog == DialogKind.Create)
             {
-                await ApiClient.CreateAsync(_form, _user);
+                await ApiClient.CreateAsync(
+                    _form,
+                    _user);
             }
             else if (_selected is not null)
             {
@@ -494,13 +1075,15 @@
             }
 
             CloseDialogAfterSave();
+
             await LoadAsync();
         }
         catch (HttpRequestException exception)
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            SessionExpirationNavigation.RedirectToLogin(Navigation);
+            SessionExpirationNavigation.RedirectToLogin(
+                Navigation);
         }
         catch
         {
@@ -530,13 +1113,15 @@
                 _user);
 
             CloseDialogAfterSave();
+
             await LoadAsync();
         }
         catch (HttpRequestException exception)
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            SessionExpirationNavigation.RedirectToLogin(Navigation);
+            SessionExpirationNavigation.RedirectToLogin(
+                Navigation);
         }
         catch
         {
@@ -565,13 +1150,15 @@
                 _user);
 
             CloseDialogAfterSave();
+
             await LoadAsync();
         }
         catch (HttpRequestException exception)
             when (exception.StatusCode ==
                   System.Net.HttpStatusCode.Unauthorized)
         {
-            SessionExpirationNavigation.RedirectToLogin(Navigation);
+            SessionExpirationNavigation.RedirectToLogin(
+                Navigation);
         }
         catch
         {
@@ -583,14 +1170,66 @@
         }
     }
 
-    private void CloseDialogAfterSave() { _dialog = DialogKind.None; _selected = null; _selectedService = null; _dialogError = null; }
-    private bool MatchesStatus(SubscriptionResponse x) => _status == StatusFilter.All || (_status == StatusFilter.Active ? x.IsActive : !x.IsActive);
-    private DigitalServiceResponse? ServiceFor(SubscriptionResponse x) => x.DigitalServiceId is null ? null : _digitalServices.FirstOrDefault(service => service.Id == x.DigitalServiceId);
-    private string CategoryKeyFor(SubscriptionResponse x) => ServiceFor(x) is { } service ? ServiceCategoryLabel(service) : T["Category.Other"];
-    private string CategoryFor(SubscriptionResponse x) => CategoryLabel(CategoryKeyFor(x));
-    private string? ManagementUrlFor(SubscriptionResponse x) => ServiceFor(x)?.ManagementUrl;
-    private string ServiceCategoryLabel(DigitalServiceResponse service) => !service.IsPredefined && !string.IsNullOrWhiteSpace(service.CustomCategoryName) ? service.CustomCategoryName : CategoryLabel(service.Category);
-    private string CategoryLabel(string category)
+    private void CloseDialogAfterSave()
+    {
+        _dialog = DialogKind.None;
+        _selected = null;
+        _selectedService = null;
+        _dialogError = null;
+    }
+
+    private bool MatchesStatus(
+        SubscriptionResponse subscription)
+    {
+        return _status == StatusFilter.All ||
+               (_status == StatusFilter.Active
+                   ? subscription.IsActive
+                   : !subscription.IsActive);
+    }
+
+    private DigitalServiceResponse? ServiceFor(
+        SubscriptionResponse subscription)
+    {
+        return subscription.DigitalServiceId is null
+            ? null
+            : _digitalServices.FirstOrDefault(service =>
+                service.Id ==
+                subscription.DigitalServiceId);
+    }
+
+    private string CategoryKeyFor(
+        SubscriptionResponse subscription)
+    {
+        return ServiceFor(subscription) is { } service
+            ? ServiceCategoryLabel(service)
+            : T["Category.Other"];
+    }
+
+    private string CategoryFor(
+        SubscriptionResponse subscription)
+    {
+        return CategoryLabel(
+            CategoryKeyFor(subscription));
+    }
+
+    private string? ManagementUrlFor(
+        SubscriptionResponse subscription)
+    {
+        return ServiceFor(subscription)?.ManagementUrl;
+    }
+
+    private string ServiceCategoryLabel(
+        DigitalServiceResponse service)
+    {
+        return !service.IsPredefined &&
+               !string.IsNullOrWhiteSpace(
+                   service.CustomCategoryName)
+            ? service.CustomCategoryName
+            : CategoryLabel(service.Category);
+    }
+
+    private string CategoryLabel(
+        string category)
     {
         if (category == AllCategories)
         {
@@ -600,16 +1239,106 @@
         var key = $"Category.{category}";
         var value = T[key];
 
-        return value == key ? category : value;
+        return value == key
+            ? category
+            : value;
     }
-    private string Money(decimal value, string? currency = null) { var displayedCurrency = currency ?? Active.FirstOrDefault()?.Currency ?? "PLN"; return string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:N2} {1}", value, displayedCurrency); }
-    private static string Initials(string name) => string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => char.ToUpperInvariant(part[0])));
-    private string Billing(BillingPeriod period) => T[$"Billing.{period}"];
-    private string ShortBilling(BillingPeriod period) => period switch { BillingPeriod.Monthly => T["Billing.Short.Monthly"], BillingPeriod.Quarterly => T["Billing.Short.Quarterly"], BillingPeriod.SemiAnnual => T["Billing.Short.SemiAnnual"], BillingPeriod.Yearly => T["Billing.Short.Yearly"], _ => string.Empty };
-    private static string FormatDate(DateOnly date) => date.ToString("d MMMM", System.Globalization.CultureInfo.CurrentCulture);
-    private static string Tone(int index) => new[] { "orange", "violet", "green", "blue" }[index % 4];
 
-    private enum StatusFilter { Active, All, Ended }
-    private enum DialogKind { None, Catalog, CustomService, Create, Edit, End, Delete }
-    private sealed record CategorySummary(string Name, string Tone, decimal Amount);
+    private string Money(
+        decimal value,
+        Currency? currency = null)
+    {
+        var displayedCurrency =
+            currency ??
+            Active.FirstOrDefault()?.Currency ??
+            Currency.PLN;
+
+        return string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            "{0:N2} {1}",
+            value,
+            displayedCurrency);
+    }
+
+    private static string Initials(
+        string name)
+    {
+        return string.Concat(
+            name.Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries)
+                .Take(2)
+                .Select(part =>
+                    char.ToUpperInvariant(part[0])));
+    }
+
+    private string Billing(
+        BillingPeriod period)
+    {
+        return T[$"Billing.{period}"];
+    }
+
+    private string ShortBilling(
+        BillingPeriod period)
+    {
+        return period switch
+        {
+            BillingPeriod.Monthly =>
+                T["Billing.Short.Monthly"],
+
+            BillingPeriod.Quarterly =>
+                T["Billing.Short.Quarterly"],
+
+            BillingPeriod.SemiAnnual =>
+                T["Billing.Short.SemiAnnual"],
+
+            BillingPeriod.Yearly =>
+                T["Billing.Short.Yearly"],
+
+            _ => string.Empty
+        };
+    }
+
+    private static string FormatDate(
+        DateOnly date)
+    {
+        return date.ToString(
+            "d MMMM",
+            System.Globalization.CultureInfo.CurrentCulture);
+    }
+
+    private static string Tone(
+        int index)
+    {
+        return new[]
+        {
+            "orange",
+            "violet",
+            "green",
+            "blue"
+        }[index % 4];
+    }
+
+    private enum StatusFilter
+    {
+        Active,
+        All,
+        Ended
+    }
+
+    private enum DialogKind
+    {
+        None,
+        Catalog,
+        CustomService,
+        Create,
+        Edit,
+        End,
+        Delete
+    }
+
+    private sealed record CategorySummary(
+        string Name,
+        string Tone,
+        decimal Amount);
 }

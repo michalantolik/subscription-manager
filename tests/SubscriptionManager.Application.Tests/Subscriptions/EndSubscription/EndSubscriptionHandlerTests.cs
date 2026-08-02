@@ -20,7 +20,7 @@ public sealed class EndSubscriptionHandlerTests
             ownerId,
             "Netflix",
             49m,
-            "PLN",
+            Currency.PLN,
             BillingPeriod.Monthly,
             new DateOnly(2026, 1, 1));
 
@@ -43,7 +43,9 @@ public sealed class EndSubscriptionHandlerTests
             currentUser.Object);
 
         var result = await handler.HandleAsync(
-            new EndSubscriptionCommand(subscriptionId, endDate));
+            new EndSubscriptionCommand(
+                subscriptionId,
+                endDate));
 
         Assert.True(result);
         Assert.False(subscription.IsActive);
@@ -57,7 +59,8 @@ public sealed class EndSubscriptionHandlerTests
             Times.Once);
 
         repository.Verify(
-            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
+            x => x.SaveChangesAsync(
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -100,7 +103,8 @@ public sealed class EndSubscriptionHandlerTests
             Times.Once);
 
         repository.Verify(
-            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
+            x => x.SaveChangesAsync(
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -114,8 +118,8 @@ public sealed class EndSubscriptionHandlerTests
             repository.Object,
             currentUser.Object);
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            handler.HandleAsync(null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => handler.HandleAsync(null!));
 
         repository.Verify(
             x => x.GetByIdAsync(
@@ -125,7 +129,8 @@ public sealed class EndSubscriptionHandlerTests
             Times.Never);
 
         repository.Verify(
-            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
+            x => x.SaveChangesAsync(
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

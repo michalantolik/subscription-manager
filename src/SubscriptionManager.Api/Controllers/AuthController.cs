@@ -4,9 +4,12 @@ using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Identity.ConfirmEmail;
 using SubscriptionManager.Application.Identity.DeleteUser;
 using SubscriptionManager.Application.Identity.ForgotPassword;
+using SubscriptionManager.Application.Identity.GetBaseCurrency;
 using SubscriptionManager.Application.Identity.LoginUser;
 using SubscriptionManager.Application.Identity.RegisterUser;
 using SubscriptionManager.Application.Identity.ResetPassword;
+using SubscriptionManager.Application.Identity.UpdateBaseCurrency;
+using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Api.Controllers;
 
@@ -18,6 +21,8 @@ public sealed class AuthController(
     LoginUserHandler loginUserHandler,
     ForgotPasswordHandler forgotPasswordHandler,
     ResetPasswordHandler resetPasswordHandler,
+    GetBaseCurrencyHandler getBaseCurrencyHandler,
+    UpdateBaseCurrencyHandler updateBaseCurrencyHandler,
     DeleteUserHandler deleteUserHandler,
     ICurrentUser currentUser)
     : ControllerBase
@@ -141,7 +146,53 @@ public sealed class AuthController(
     public ActionResult<CurrentUserResponse> GetCurrentUser()
     {
         return Ok(
-            new CurrentUserResponse(currentUser.UserId));
+            new CurrentUserResponse(
+                currentUser.UserId));
+    }
+
+    [Authorize]
+    [HttpGet("account/base-currency")]
+    public async Task<ActionResult<BaseCurrencyResponse>>
+        GetBaseCurrencyAsync(
+            CancellationToken cancellationToken)
+    {
+        var baseCurrency =
+            await getBaseCurrencyHandler.HandleAsync(
+                currentUser.UserId,
+                cancellationToken);
+
+        if (baseCurrency is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(
+            new BaseCurrencyResponse(
+                baseCurrency.Value));
+    }
+
+    [Authorize]
+    [HttpPut("account/base-currency")]
+    public async Task<IActionResult> UpdateBaseCurrencyAsync(
+        UpdateBaseCurrencyRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command =
+            new UpdateBaseCurrencyCommand(
+                currentUser.UserId,
+                request.BaseCurrency);
+
+        var updated =
+            await updateBaseCurrencyHandler.HandleAsync(
+                command,
+                cancellationToken);
+
+        if (!updated)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
     }
 
     [Authorize]
@@ -176,7 +227,8 @@ public sealed class AuthController(
                     .Select(error => error.Description)
                     .ToArray());
 
-        return new ValidationProblemDetails(validationErrors);
+        return new ValidationProblemDetails(
+            validationErrors);
     }
 }
 
@@ -210,3 +262,9 @@ public sealed record ResetPasswordRequest(
 
 public sealed record CurrentUserResponse(
     Guid UserId);
+
+public sealed record BaseCurrencyResponse(
+    Currency BaseCurrency);
+
+public sealed record UpdateBaseCurrencyRequest(
+    Currency BaseCurrency);

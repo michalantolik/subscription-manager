@@ -14,9 +14,13 @@ public sealed class CreateSubscriptionHandlerTests
     public async Task HandleAsync_ShouldCreateManualSubscriptionForCurrentUser()
     {
         var ownerId = Guid.NewGuid();
-        var subscriptionRepository = new Mock<ISubscriptionRepository>();
+
+        var subscriptionRepository =
+            new Mock<ISubscriptionRepository>();
+
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
+
         var currentUser = new Mock<ICurrentUser>();
 
         currentUser
@@ -30,7 +34,8 @@ public sealed class CreateSubscriptionHandlerTests
                 It.IsAny<Subscription>(),
                 It.IsAny<CancellationToken>()))
             .Callback<Subscription, CancellationToken>(
-                (subscription, _) => addedSubscription = subscription)
+                (subscription, _) =>
+                    addedSubscription = subscription)
             .Returns(Task.CompletedTask);
 
         var handler = new CreateSubscriptionHandler(
@@ -42,7 +47,7 @@ public sealed class CreateSubscriptionHandlerTests
             new CreateSubscriptionCommand(
                 "  Netflix  ",
                 49m,
-                "pln",
+                Currency.PLN,
                 BillingPeriod.Monthly,
                 new DateOnly(2026, 1, 1)));
 
@@ -57,10 +62,14 @@ public sealed class CreateSubscriptionHandlerTests
         Assert.Null(addedSubscription.IconKey);
         Assert.Null(addedSubscription.ManagementUrl);
         Assert.Equal(49m, addedSubscription.Amount);
-        Assert.Equal("PLN", addedSubscription.Currency);
+        Assert.Equal(
+            Currency.PLN,
+            addedSubscription.Currency);
+
         Assert.Equal(
             BillingPeriod.Monthly,
             addedSubscription.BillingPeriod);
+
         Assert.Equal(
             new DateOnly(2026, 1, 1),
             addedSubscription.StartDate);
@@ -91,19 +100,23 @@ public sealed class CreateSubscriptionHandlerTests
         var digitalServiceId = Guid.NewGuid();
         var createdAt = DateTimeOffset.UtcNow;
 
-        var digitalService = DigitalService.CreatePredefined(
-            digitalServiceId,
-            "netflix",
-            "Netflix",
-            DigitalServiceCategory.Video,
-            "netflix",
-            "https://www.netflix.com/account",
-            10,
-            createdAt);
+        var digitalService =
+            DigitalService.CreatePredefined(
+                digitalServiceId,
+                "netflix",
+                "Netflix",
+                DigitalServiceCategory.Video,
+                "netflix",
+                "https://www.netflix.com/account",
+                10,
+                createdAt);
 
-        var subscriptionRepository = new Mock<ISubscriptionRepository>();
+        var subscriptionRepository =
+            new Mock<ISubscriptionRepository>();
+
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
+
         var currentUser = new Mock<ICurrentUser>();
 
         currentUser
@@ -124,7 +137,8 @@ public sealed class CreateSubscriptionHandlerTests
                 It.IsAny<Subscription>(),
                 It.IsAny<CancellationToken>()))
             .Callback<Subscription, CancellationToken>(
-                (subscription, _) => addedSubscription = subscription)
+                (subscription, _) =>
+                    addedSubscription = subscription)
             .Returns(Task.CompletedTask);
 
         var handler = new CreateSubscriptionHandler(
@@ -136,7 +150,7 @@ public sealed class CreateSubscriptionHandlerTests
             new CreateSubscriptionCommand(
                 "Personal Netflix",
                 49m,
-                "pln",
+                Currency.PLN,
                 BillingPeriod.Monthly,
                 new DateOnly(2026, 1, 1),
                 digitalServiceId));
@@ -145,15 +159,26 @@ public sealed class CreateSubscriptionHandlerTests
         Assert.NotNull(addedSubscription);
         Assert.Equal(result, addedSubscription.Id);
         Assert.Equal(ownerId, addedSubscription.OwnerId);
+
         Assert.Equal(
             digitalServiceId,
             addedSubscription.DigitalServiceId);
-        Assert.Equal("Personal Netflix", addedSubscription.Name);
+
+        Assert.Equal(
+            "Personal Netflix",
+            addedSubscription.Name);
+
         Assert.Equal(
             DigitalServiceCategory.Video,
             addedSubscription.Category);
-        Assert.Null(addedSubscription.CustomCategoryName);
-        Assert.Equal("netflix", addedSubscription.IconKey);
+
+        Assert.Null(
+            addedSubscription.CustomCategoryName);
+
+        Assert.Equal(
+            "netflix",
+            addedSubscription.IconKey);
+
         Assert.Equal(
             "https://www.netflix.com/account",
             addedSubscription.ManagementUrl);
@@ -183,9 +208,12 @@ public sealed class CreateSubscriptionHandlerTests
         var ownerId = Guid.NewGuid();
         var digitalServiceId = Guid.NewGuid();
 
-        var subscriptionRepository = new Mock<ISubscriptionRepository>();
+        var subscriptionRepository =
+            new Mock<ISubscriptionRepository>();
+
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
+
         var currentUser = new Mock<ICurrentUser>();
 
         currentUser
@@ -204,15 +232,16 @@ public sealed class CreateSubscriptionHandlerTests
             digitalServiceRepository.Object,
             currentUser.Object);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-            handler.HandleAsync(
-                new CreateSubscriptionCommand(
-                    "Netflix",
-                    49m,
-                    "PLN",
-                    BillingPeriod.Monthly,
-                    new DateOnly(2026, 1, 1),
-                    digitalServiceId)));
+        var exception =
+            await Assert.ThrowsAsync<ArgumentException>(
+                () => handler.HandleAsync(
+                    new CreateSubscriptionCommand(
+                        "Netflix",
+                        49m,
+                        Currency.PLN,
+                        BillingPeriod.Monthly,
+                        new DateOnly(2026, 1, 1),
+                        digitalServiceId)));
 
         Assert.Equal(
             "DigitalServiceId",
@@ -233,9 +262,12 @@ public sealed class CreateSubscriptionHandlerTests
     [Fact]
     public async Task HandleAsync_ShouldThrow_WhenCommandIsNull()
     {
-        var subscriptionRepository = new Mock<ISubscriptionRepository>();
+        var subscriptionRepository =
+            new Mock<ISubscriptionRepository>();
+
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
+
         var currentUser = new Mock<ICurrentUser>();
 
         var handler = new CreateSubscriptionHandler(
@@ -243,8 +275,8 @@ public sealed class CreateSubscriptionHandlerTests
             digitalServiceRepository.Object,
             currentUser.Object);
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            handler.HandleAsync(null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => handler.HandleAsync(null!));
 
         digitalServiceRepository.Verify(
             x => x.GetAvailableByIdAsync(

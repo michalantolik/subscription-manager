@@ -19,7 +19,7 @@ public sealed class GetSubscriptionByIdHandlerTests
             ownerId,
             "Netflix",
             49m,
-            "PLN",
+            Currency.PLN,
             BillingPeriod.Monthly,
             new DateOnly(2026, 1, 1));
 
@@ -41,14 +41,18 @@ public sealed class GetSubscriptionByIdHandlerTests
             repository.Object,
             currentUser.Object);
 
-        var result = await handler.HandleAsync(subscriptionId);
+        var result = await handler.HandleAsync(
+            subscriptionId);
 
         Assert.NotNull(result);
         Assert.Equal(subscriptionId, result.Id);
         Assert.Equal("Netflix", result.Name);
         Assert.Equal(49m, result.Amount);
-        Assert.Equal("PLN", result.Currency);
-        Assert.Equal(BillingPeriod.Monthly, result.BillingPeriod);
+        Assert.Equal(Currency.PLN, result.Currency);
+
+        Assert.Equal(
+            BillingPeriod.Monthly,
+            result.BillingPeriod);
 
         repository.Verify(
             x => x.GetByIdAsync(
@@ -82,7 +86,8 @@ public sealed class GetSubscriptionByIdHandlerTests
             repository.Object,
             currentUser.Object);
 
-        var result = await handler.HandleAsync(subscriptionId);
+        var result = await handler.HandleAsync(
+            subscriptionId);
 
         Assert.Null(result);
 

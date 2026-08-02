@@ -12,6 +12,218 @@ namespace SubscriptionManager.Infrastructure.Tests.Identity;
 public sealed class IdentityServiceTests
 {
     [Fact]
+    public async Task GetBaseCurrencyAsync_ShouldReturnUserBaseCurrency_WhenUserExists()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com",
+            BaseCurrency = Currency.EUR
+        };
+
+        var createResult =
+            await userManager.CreateAsync(user);
+
+        Assert.True(createResult.Succeeded);
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.GetBaseCurrencyAsync(
+                user.Id);
+
+        Assert.Equal(
+            Currency.EUR,
+            result);
+    }
+
+    [Fact]
+    public async Task GetBaseCurrencyAsync_ShouldReturnNull_WhenUserDoesNotExist()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.GetBaseCurrencyAsync(
+                Guid.NewGuid());
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task UpdateBaseCurrencyAsync_ShouldUpdateBaseCurrency_WhenUserExists()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com",
+            BaseCurrency = Currency.PLN
+        };
+
+        var createResult =
+            await userManager.CreateAsync(user);
+
+        Assert.True(createResult.Succeeded);
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.UpdateBaseCurrencyAsync(
+                user.Id,
+                Currency.EUR);
+
+        Assert.True(result);
+
+        var baseCurrency =
+            await dbContext.Users
+                .AsNoTracking()
+                .Where(currentUser =>
+                    currentUser.Id == user.Id)
+                .Select(currentUser =>
+                    currentUser.BaseCurrency)
+                .SingleAsync();
+
+        Assert.Equal(
+            Currency.EUR,
+            baseCurrency);
+    }
+
+    [Fact]
+    public async Task UpdateBaseCurrencyAsync_ShouldReturnFalse_WhenUserDoesNotExist()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.UpdateBaseCurrencyAsync(
+                Guid.NewGuid(),
+                Currency.EUR);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task UpdateBaseCurrencyAsync_ShouldThrow_WhenBaseCurrencyIsInvalid()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            identityService.UpdateBaseCurrencyAsync(
+                Guid.NewGuid(),
+                (Currency)999));
+    }
+
+    [Fact]
     public async Task DeleteUserAsync_ShouldDeleteUserAndOwnedData()
     {
         await using var connection =
@@ -19,20 +231,8 @@ public sealed class IdentityServiceTests
 
         await connection.OpenAsync();
 
-        var services = new ServiceCollection();
-
-        services.AddLogging();
-
-        services.AddDbContext<SubscriptionManagerDbContext>(
-            options => options.UseSqlite(connection));
-
-        services
-            .AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<SubscriptionManagerDbContext>();
-
         await using var serviceProvider =
-            services.BuildServiceProvider();
+            CreateServiceProvider(connection);
 
         await using var scope =
             serviceProvider.CreateAsyncScope();
@@ -52,14 +252,16 @@ public sealed class IdentityServiceTests
         {
             Id = userId,
             UserName = "user@example.com",
-            Email = "user@example.com"
+            Email = "user@example.com",
+            BaseCurrency = Currency.PLN
         };
 
         var otherUser = new ApplicationUser
         {
             Id = otherUserId,
             UserName = "other@example.com",
-            Email = "other@example.com"
+            Email = "other@example.com",
+            BaseCurrency = Currency.EUR
         };
 
         var createUserResult =
@@ -114,7 +316,7 @@ public sealed class IdentityServiceTests
                 userId,
                 "User subscription",
                 29.99m,
-                "PLN",
+                Currency.PLN,
                 BillingPeriod.Monthly,
                 DateOnly.FromDateTime(DateTime.UtcNow));
 
@@ -131,7 +333,7 @@ public sealed class IdentityServiceTests
                 otherUserId,
                 "Other user subscription",
                 49.99m,
-                "PLN",
+                Currency.PLN,
                 BillingPeriod.Monthly,
                 DateOnly.FromDateTime(DateTime.UtcNow));
 
@@ -159,7 +361,8 @@ public sealed class IdentityServiceTests
                 dbContext);
 
         var result =
-            await identityService.DeleteUserAsync(userId);
+            await identityService.DeleteUserAsync(
+                userId);
 
         Assert.True(result.Succeeded);
         Assert.Empty(result.Errors);
@@ -198,13 +401,15 @@ public sealed class IdentityServiceTests
             await dbContext.DigitalServices
                 .AsNoTracking()
                 .AnyAsync(digitalService =>
-                    digitalService.Id == predefinedService.Id));
+                    digitalService.Id ==
+                    predefinedService.Id));
 
         Assert.True(
             await dbContext.DigitalServices
                 .AsNoTracking()
                 .AnyAsync(digitalService =>
-                    digitalService.Id == otherUserCustomService.Id));
+                    digitalService.Id ==
+                    otherUserCustomService.Id));
     }
 
     [Fact]
@@ -215,20 +420,8 @@ public sealed class IdentityServiceTests
 
         await connection.OpenAsync();
 
-        var services = new ServiceCollection();
-
-        services.AddLogging();
-
-        services.AddDbContext<SubscriptionManagerDbContext>(
-            options => options.UseSqlite(connection));
-
-        services
-            .AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<SubscriptionManagerDbContext>();
-
         await using var serviceProvider =
-            services.BuildServiceProvider();
+            CreateServiceProvider(connection);
 
         await using var scope =
             serviceProvider.CreateAsyncScope();
@@ -254,9 +447,31 @@ public sealed class IdentityServiceTests
 
         var error = Assert.Single(result.Errors);
 
-        Assert.Equal("UserNotFound", error.Code);
+        Assert.Equal(
+            "UserNotFound",
+            error.Code);
+
         Assert.Equal(
             "The user was not found.",
             error.Description);
+    }
+
+    private static ServiceProvider CreateServiceProvider(
+        SqliteConnection connection)
+    {
+        var services = new ServiceCollection();
+
+        services.AddLogging();
+
+        services.AddDbContext<SubscriptionManagerDbContext>(
+            options =>
+                options.UseSqlite(connection));
+
+        services
+            .AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<SubscriptionManagerDbContext>();
+
+        return services.BuildServiceProvider();
     }
 }

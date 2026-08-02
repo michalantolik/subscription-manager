@@ -5,7 +5,7 @@ namespace SubscriptionManager.Application.Subscriptions.CreateSubscription;
 public sealed record CreateSubscriptionCommand(
     string Name,
     decimal Amount,
-    string Currency,
+    Currency Currency,
     BillingPeriod BillingPeriod,
     DateOnly StartDate,
     Guid? DigitalServiceId = null);

@@ -1,10 +1,22 @@
-﻿namespace SubscriptionManager.Application.Common.Identity;
+﻿using SubscriptionManager.Domain.Subscriptions;
+
+namespace SubscriptionManager.Application.Common.Identity;
 
 public interface IIdentityService
 {
     Task<CreateUserResult> CreateUserAsync(
         string email,
         string password,
+        Currency baseCurrency,
+        CancellationToken cancellationToken = default);
+
+    Task<Currency?> GetBaseCurrencyAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> UpdateBaseCurrencyAsync(
+        Guid userId,
+        Currency baseCurrency,
         CancellationToken cancellationToken = default);
 
     Task<string?> GenerateEmailConfirmationTokenAsync(
@@ -45,7 +57,8 @@ public sealed record CreateUserResult(
     Guid? UserId,
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
-    public static CreateUserResult Success(Guid userId)
+    public static CreateUserResult Success(
+        Guid userId)
         => new(true, userId, []);
 
     public static CreateUserResult Failure(
@@ -70,7 +83,8 @@ public sealed record AuthenticateUserResult(
     Guid? UserId,
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
-    public static AuthenticateUserResult Success(Guid userId)
+    public static AuthenticateUserResult Success(
+        Guid userId)
         => new(true, userId, []);
 
     public static AuthenticateUserResult Failure(
