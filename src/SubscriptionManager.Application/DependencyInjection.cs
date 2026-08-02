@@ -5,6 +5,7 @@ using SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
 using SubscriptionManager.Application.DigitalServices.GetDigitalServiceById;
 using SubscriptionManager.Application.DigitalServices.GetDigitalServices;
 using SubscriptionManager.Application.DigitalServices.UpdateDigitalService;
+using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.Identity.ConfirmEmail;
 using SubscriptionManager.Application.Identity.DeleteUser;
 using SubscriptionManager.Application.Identity.ForgotPassword;
@@ -27,12 +28,19 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(
         this IServiceCollection services)
     {
+        services.AddSingleton<TimeProvider>(
+            TimeProvider.System);
+
         services.AddScoped<CreateDigitalServiceHandler>();
         services.AddScoped<GetDigitalServicesHandler>();
         services.AddScoped<GetDigitalServiceByIdHandler>();
         services.AddScoped<UpdateDigitalServiceHandler>();
         services.AddScoped<DeactivateDigitalServiceHandler>();
         services.AddScoped<DeleteDigitalServiceHandler>();
+
+        services.AddScoped<
+            IExchangeRateService,
+            ExchangeRateService>();
 
         services.AddScoped<CreateSubscriptionHandler>();
         services.AddScoped<GetSubscriptionsHandler>();

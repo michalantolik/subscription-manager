@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.ExchangeRates;
 using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Identity;
 
@@ -16,11 +17,17 @@ public sealed class SubscriptionManagerDbContext
     {
     }
 
-    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<Subscription> Subscriptions =>
+        Set<Subscription>();
 
-    public DbSet<DigitalService> DigitalServices => Set<DigitalService>();
+    public DbSet<DigitalService> DigitalServices =>
+        Set<DigitalService>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public DbSet<ExchangeRate> ExchangeRates =>
+        Set<ExchangeRate>();
+
+    protected override void OnModelCreating(
+        ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 

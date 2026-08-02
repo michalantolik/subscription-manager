@@ -6,9 +6,11 @@ using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
+using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Infrastructure.Authentication;
 using SubscriptionManager.Infrastructure.Email;
+using SubscriptionManager.Infrastructure.ExchangeRates;
 using SubscriptionManager.Infrastructure.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
 using SubscriptionManager.Infrastructure.Persistence.Repositories;
@@ -67,6 +69,21 @@ public static class DependencyInjection
         services.AddScoped<
             ISubscriptionRepository,
             SubscriptionRepository>();
+
+        services.AddScoped<
+            IExchangeRateRepository,
+            ExchangeRateRepository>();
+
+        services.AddHttpClient<
+            IExchangeRateProvider,
+            NbpExchangeRateProvider>(httpClient =>
+            {
+                httpClient.BaseAddress =
+                    new Uri("https://api.nbp.pl/");
+
+                httpClient.Timeout =
+                    TimeSpan.FromSeconds(10);
+            });
 
         return services;
     }
