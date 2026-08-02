@@ -5,6 +5,7 @@ using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
 using SubscriptionManager.Application.Subscriptions.EndSubscription;
 using SubscriptionManager.Application.Subscriptions.GetSubscriptionById;
+using SubscriptionManager.Application.Subscriptions.GetSubscriptionCostSummary;
 using SubscriptionManager.Application.Subscriptions.GetSubscriptions;
 using SubscriptionManager.Application.Subscriptions.UpdateSubscription;
 using SubscriptionManager.Domain.Subscriptions;
@@ -22,6 +23,8 @@ public sealed class SubscriptionsController : ControllerBase
     private readonly CreateSubscriptionHandler _createSubscriptionHandler;
     private readonly GetSubscriptionsHandler _getSubscriptionsHandler;
     private readonly GetSubscriptionByIdHandler _getSubscriptionByIdHandler;
+    private readonly GetSubscriptionCostSummaryHandler
+        _getSubscriptionCostSummaryHandler;
     private readonly UpdateSubscriptionHandler _updateSubscriptionHandler;
     private readonly EndSubscriptionHandler _endSubscriptionHandler;
     private readonly DeleteSubscriptionHandler _deleteSubscriptionHandler;
@@ -30,6 +33,7 @@ public sealed class SubscriptionsController : ControllerBase
         CreateSubscriptionHandler createSubscriptionHandler,
         GetSubscriptionsHandler getSubscriptionsHandler,
         GetSubscriptionByIdHandler getSubscriptionByIdHandler,
+        GetSubscriptionCostSummaryHandler getSubscriptionCostSummaryHandler,
         UpdateSubscriptionHandler updateSubscriptionHandler,
         EndSubscriptionHandler endSubscriptionHandler,
         DeleteSubscriptionHandler deleteSubscriptionHandler)
@@ -37,19 +41,35 @@ public sealed class SubscriptionsController : ControllerBase
         _createSubscriptionHandler = createSubscriptionHandler;
         _getSubscriptionsHandler = getSubscriptionsHandler;
         _getSubscriptionByIdHandler = getSubscriptionByIdHandler;
+        _getSubscriptionCostSummaryHandler =
+            getSubscriptionCostSummaryHandler;
         _updateSubscriptionHandler = updateSubscriptionHandler;
         _endSubscriptionHandler = endSubscriptionHandler;
         _deleteSubscriptionHandler = deleteSubscriptionHandler;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<SubscriptionDto>>> GetAsync(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyCollection<SubscriptionDto>>>
+        GetAsync(
+            CancellationToken cancellationToken)
     {
-        var subscriptions = await _getSubscriptionsHandler.HandleAsync(
-            cancellationToken);
+        var subscriptions =
+            await _getSubscriptionsHandler.HandleAsync(
+                cancellationToken);
 
         return Ok(subscriptions);
+    }
+
+    [HttpGet("cost-summary")]
+    public async Task<ActionResult<SubscriptionCostSummaryDto>>
+        GetCostSummaryAsync(
+            CancellationToken cancellationToken)
+    {
+        var summary =
+            await _getSubscriptionCostSummaryHandler.HandleAsync(
+                cancellationToken);
+
+        return Ok(summary);
     }
 
     [HttpGet("{id:guid}", Name = GetSubscriptionByIdRouteName)]
@@ -57,9 +77,10 @@ public sealed class SubscriptionsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var subscription = await _getSubscriptionByIdHandler.HandleAsync(
-            id,
-            cancellationToken);
+        var subscription =
+            await _getSubscriptionByIdHandler.HandleAsync(
+                id,
+                cancellationToken);
 
         if (subscription is null)
         {
@@ -74,9 +95,10 @@ public sealed class SubscriptionsController : ControllerBase
         CreateSubscriptionCommand command,
         CancellationToken cancellationToken)
     {
-        var subscriptionId = await _createSubscriptionHandler.HandleAsync(
-            command,
-            cancellationToken);
+        var subscriptionId =
+            await _createSubscriptionHandler.HandleAsync(
+                command,
+                cancellationToken);
 
         return CreatedAtRoute(
             GetSubscriptionByIdRouteName,
@@ -90,17 +112,19 @@ public sealed class SubscriptionsController : ControllerBase
         UpdateSubscriptionRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateSubscriptionCommand(
-            id,
-            request.Name,
-            request.Amount,
-            request.Currency,
-            request.BillingPeriod,
-            request.DigitalServiceId);
+        var command =
+            new UpdateSubscriptionCommand(
+                id,
+                request.Name,
+                request.Amount,
+                request.Currency,
+                request.BillingPeriod,
+                request.DigitalServiceId);
 
-        var updated = await _updateSubscriptionHandler.HandleAsync(
-            command,
-            cancellationToken);
+        var updated =
+            await _updateSubscriptionHandler.HandleAsync(
+                command,
+                cancellationToken);
 
         if (!updated)
         {
@@ -116,13 +140,15 @@ public sealed class SubscriptionsController : ControllerBase
         EndSubscriptionRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new EndSubscriptionCommand(
-            id,
-            request.EndDate);
+        var command =
+            new EndSubscriptionCommand(
+                id,
+                request.EndDate);
 
-        var ended = await _endSubscriptionHandler.HandleAsync(
-            command,
-            cancellationToken);
+        var ended =
+            await _endSubscriptionHandler.HandleAsync(
+                command,
+                cancellationToken);
 
         if (!ended)
         {
@@ -137,11 +163,13 @@ public sealed class SubscriptionsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var command = new DeleteSubscriptionCommand(id);
+        var command =
+            new DeleteSubscriptionCommand(id);
 
-        var deleted = await _deleteSubscriptionHandler.HandleAsync(
-            command,
-            cancellationToken);
+        var deleted =
+            await _deleteSubscriptionHandler.HandleAsync(
+                command,
+                cancellationToken);
 
         if (!deleted)
         {
@@ -151,12 +179,14 @@ public sealed class SubscriptionsController : ControllerBase
         return NoContent();
     }
 
-    private ObjectResult SubscriptionNotFound(Guid id)
+    private ObjectResult SubscriptionNotFound(
+        Guid id)
     {
         return Problem(
             statusCode: StatusCodes.Status404NotFound,
             title: "Subscription not found.",
-            detail: $"Subscription with id '{id}' was not found.",
+            detail:
+                $"Subscription with id '{id}' was not found.",
             instance: HttpContext.Request.Path);
     }
 }

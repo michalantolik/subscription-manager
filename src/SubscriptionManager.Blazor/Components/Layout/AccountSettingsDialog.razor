@@ -2,6 +2,7 @@
 @using SubscriptionManager.Blazor.Features.Authentication
 @using SubscriptionManager.Blazor.Features.Currencies
 @inject AuthenticationApiClient AuthenticationApiClient
+@inject AppState State
 @inject Localizer T
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
@@ -339,6 +340,8 @@
 
             _savedBaseCurrency = _baseCurrency;
             _baseCurrencySaved = true;
+
+            State.NotifyBaseCurrencyChanged();
         }
         catch (HttpRequestException)
         {

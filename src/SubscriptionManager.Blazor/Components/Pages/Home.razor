@@ -1,10 +1,12 @@
 @page "/"
 
 @attribute [Authorize]
+@implements IDisposable
 
 @using SubscriptionManager.Blazor.Features.Currencies
 
 @inject SubscriptionsApiClient ApiClient
+@inject AppState State
 @inject Localizer T
 @inject NavigationManager Navigation
 
@@ -31,7 +33,7 @@
             @T["Status.Loading"]
         </div>
     }
-    else if (_error)
+    else if (_error || _summary is null)
     {
         <div class="panel error-panel">
             @T["Error.Load"]
@@ -42,9 +44,11 @@
         <div class="metrics-grid">
             <article class="metric-tile">
                 <span>@T["Subscriptions.Active"]</span>
-                <strong>@Active.Count</strong>
+                <strong>@_summary.ActiveCount</strong>
                 <small>
-                    @T["Subscriptions.OfAll", _subscriptions.Count]
+                    @T[
+                        "Subscriptions.OfAll",
+                        _summary.TotalCount]
                 </small>
             </article>
 
@@ -52,17 +56,13 @@
                 <span>@T["Subscriptions.Monthly"]</span>
                 <strong>
                     @Money(
-                        Active.Sum(x =>
-                            x.MonthlyEquivalentAmount))
+                        _summary.MonthlyCost)
                 </strong>
                 <small>
                     @T[
                         "Subscriptions.AverageMonthly",
                         Money(
-                            Active.Count == 0
-                                ? 0
-                                : Active.Average(x =>
-                                    x.MonthlyEquivalentAmount))]
+                            _summary.AverageMonthlyCost)]
                 </small>
             </article>
 
@@ -70,17 +70,13 @@
                 <span>@T["Subscriptions.Yearly"]</span>
                 <strong>
                     @Money(
-                        Active.Sum(x =>
-                            x.YearlyEquivalentAmount))
+                        _summary.YearlyCost)
                 </strong>
                 <small>
                     @T[
                         "Subscriptions.AverageYearly",
                         Money(
-                            Active.Count == 0
-                                ? 0
-                                : Active.Average(x =>
-                                    x.YearlyEquivalentAmount))]
+                            _summary.AverageYearlyCost)]
                 </small>
             </article>
 
@@ -89,9 +85,11 @@
                 <strong>
                     @Money(
                         MostExpensive?
-                            .MonthlyEquivalentAmount ?? 0)
+                            .MonthlyCost ?? 0m)
                 </strong>
-                <small>@(MostExpensive?.Name ?? "—")</small>
+                <small>
+                    @(MostExpensive?.Name ?? "—")
+                </small>
             </article>
         </div>
 
@@ -110,10 +108,7 @@
 
                 @foreach (
                     var subscription in
-                    Active
-                        .OrderByDescending(x =>
-                            x.MonthlyEquivalentAmount)
-                        .Take(5))
+                    _summary.TopSubscriptions)
                 {
                     <div class="compact-subscription-row">
                         <span class="service-avatar">
@@ -130,14 +125,12 @@
 
                         <b>
                             @Money(
-                                subscription
-                                    .MonthlyEquivalentAmount,
-                                subscription.Currency)
+                                subscription.MonthlyCost)
                         </b>
                     </div>
                 }
 
-                @if (Active.Count == 0)
+                @if (_summary.ActiveCount == 0)
                 {
                     <div class="empty-inline">
                         @T["Empty.Description"]
@@ -149,15 +142,14 @@
                 <div class="panel-heading">
                     <div>
                         <h2>@T["Subscriptions.Monthly"]</h2>
-                        <p>@T["Subscriptions.Description"]</p>
+                        <p>@SummaryDescription</p>
                     </div>
                 </div>
 
                 <div class="summary-ring">
                     <strong>
                         @Money(
-                            Active.Sum(x =>
-                                x.MonthlyEquivalentAmount))
+                            _summary.MonthlyCost)
                     </strong>
                     <span>@T["PerMonth"]</span>
                 </div>
@@ -174,29 +166,49 @@
         set;
     } = default!;
 
-    private IReadOnlyList<SubscriptionResponse> _subscriptions = [];
+    private SubscriptionCostSummaryResponse? _summary;
 
     private bool _loading = true;
     private bool _error;
 
-    private List<SubscriptionResponse> Active =>
-        _subscriptions
-            .Where(x => x.IsActive)
-            .ToList();
+    private SubscriptionCostSummaryItemResponse? MostExpensive =>
+        _summary?.TopSubscriptions.FirstOrDefault();
 
-    private SubscriptionResponse? MostExpensive =>
-        Active.MaxBy(x =>
-            x.MonthlyEquivalentAmount);
+    private string SummaryDescription
+    {
+        get
+        {
+            if (_summary?.ExchangeRateEffectiveDate is not { } date)
+            {
+                return T["Subscriptions.Description"];
+            }
+
+            return T[
+                "Subscriptions.ExchangeRatesAsOf",
+                FormatDate(date)];
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        State.BaseCurrencyChanged +=
+            OnBaseCurrencyChanged;
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = false;
+
         try
         {
             var authenticationState =
                 await AuthenticationStateTask;
 
-            _subscriptions =
-                await ApiClient.GetAllAsync(
+            _summary =
+                await ApiClient.GetCostSummaryAsync(
                     authenticationState.User);
         }
         catch (HttpRequestException exception)
@@ -216,20 +228,34 @@
         }
     }
 
-    private string Money(
-        decimal value,
-        Currency? currency = null)
+    private void OnBaseCurrencyChanged()
     {
-        var displayedCurrency =
-            currency ??
-            Active.FirstOrDefault()?.Currency ??
+        _ = InvokeAsync(
+            async () =>
+            {
+                await LoadAsync();
+                StateHasChanged();
+            });
+    }
+
+    public void Dispose()
+    {
+        State.BaseCurrencyChanged -=
+            OnBaseCurrencyChanged;
+    }
+
+    private string Money(
+        decimal value)
+    {
+        var currency =
+            _summary?.BaseCurrency ??
             Currency.PLN;
 
         return string.Format(
             System.Globalization.CultureInfo.CurrentCulture,
             "{0:N2} {1}",
             value,
-            displayedCurrency);
+            currency);
     }
 
     private static string Initials(
@@ -240,13 +266,21 @@
                     ' ',
                     StringSplitOptions.RemoveEmptyEntries)
                 .Take(2)
-                .Select(x =>
-                    char.ToUpperInvariant(x[0])));
+                .Select(part =>
+                    char.ToUpperInvariant(part[0])));
     }
 
     private string Billing(
         BillingPeriod period)
     {
         return T[$"Billing.{period}"];
+    }
+
+    private static string FormatDate(
+        DateOnly date)
+    {
+        return date.ToString(
+            "d",
+            System.Globalization.CultureInfo.CurrentCulture);
     }
 }

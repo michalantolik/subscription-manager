@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using SubscriptionManager.Application.ExchangeRates;
 
 namespace SubscriptionManager.Api.ExceptionHandling;
 
@@ -15,6 +16,14 @@ internal sealed class ApiExceptionHandler(
     {
         var problemDetails = exception switch
         {
+            ExchangeRatesUnavailableException => new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Exchange rates are unavailable.",
+                Detail =
+                    "Subscription costs could not be converted at this time.",
+                Instance = httpContext.Request.Path
+            },
             ArgumentException => new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
@@ -32,7 +41,16 @@ internal sealed class ApiExceptionHandler(
             _ => CreateInternalServerError(httpContext)
         };
 
-        if (problemDetails.Status >= StatusCodes.Status500InternalServerError)
+        if (exception is ExchangeRatesUnavailableException)
+        {
+            logger.LogWarning(
+                exception,
+                "Exchange rates were unavailable while processing {HttpMethod} {RequestPath}.",
+                httpContext.Request.Method,
+                httpContext.Request.Path);
+        }
+        else if (problemDetails.Status >=
+                 StatusCodes.Status500InternalServerError)
         {
             logger.LogError(
                 exception,
@@ -41,7 +59,8 @@ internal sealed class ApiExceptionHandler(
                 httpContext.Request.Path);
         }
 
-        httpContext.Response.StatusCode = problemDetails.Status!.Value;
+        httpContext.Response.StatusCode =
+            problemDetails.Status!.Value;
 
         await problemDetailsService.WriteAsync(
             new ProblemDetailsContext

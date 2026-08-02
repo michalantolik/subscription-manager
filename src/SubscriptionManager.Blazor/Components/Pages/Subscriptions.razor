@@ -1,12 +1,14 @@
 @page "/subscriptions"
 
 @attribute [Authorize]
+@implements IDisposable
 
 @using SubscriptionManager.Blazor.Features.Currencies
 @using SubscriptionManager.Blazor.Features.DigitalServices
 
 @inject SubscriptionsApiClient ApiClient
 @inject DigitalServicesApiClient DigitalServicesApiClient
+@inject AppState State
 @inject Localizer T
 @inject NavigationManager Navigation
 
@@ -17,7 +19,7 @@
         <div>
             <p class="eyebrow">@T["Subscriptions.Eyebrow"]</p>
             <h1>@T["Subscriptions.Title"]</h1>
-            <p>@T["Subscriptions.Description"]</p>
+            <p>@SummaryDescription</p>
         </div>
 
         <button class="primary-action page-primary-action"
@@ -40,30 +42,31 @@
             @_pageError
         </div>
     }
+    else if (_summary is null)
+    {
+        <div class="panel error-panel">
+            @T["Error.Load"]
+        </div>
+    }
     else
     {
         <div class="subscription-metrics">
             <article class="panel subscription-metric">
                 <span>@T["Subscriptions.Active"]</span>
-                <strong>@Active.Count</strong>
-                <small>@T["Subscriptions.OfAll", _subscriptions.Count]</small>
+                <strong>@_summary.ActiveCount</strong>
+                <small>@T["Subscriptions.OfAll", _summary.TotalCount]</small>
             </article>
 
             <article class="panel subscription-metric">
                 <span>@T["Subscriptions.Monthly"]</span>
                 <strong>
                     @Money(
-                        Active.Sum(x =>
-                            x.MonthlyEquivalentAmount))
+                        _summary.MonthlyCost)
                 </strong>
                 <small>
                     @T[
                         "Subscriptions.AverageMonthly",
-                        Money(
-                            Active.Count == 0
-                                ? 0
-                                : Active.Average(x =>
-                                    x.MonthlyEquivalentAmount))]
+                        Money(_summary.AverageMonthlyCost)]
                 </small>
             </article>
 
@@ -71,17 +74,12 @@
                 <span>@T["Subscriptions.Yearly"]</span>
                 <strong>
                     @Money(
-                        Active.Sum(x =>
-                            x.YearlyEquivalentAmount))
+                        _summary.YearlyCost)
                 </strong>
                 <small>
                     @T[
                         "Subscriptions.AverageYearly",
-                        Money(
-                            Active.Count == 0
-                                ? 0
-                                : Active.Average(x =>
-                                    x.YearlyEquivalentAmount))]
+                        Money(_summary.AverageYearlyCost)]
                 </small>
             </article>
 
@@ -92,7 +90,7 @@
                     <strong>
                         @Money(
                             MostExpensive?
-                                .MonthlyEquivalentAmount ?? 0)
+                                .MonthlyCost ?? 0)
                     </strong>
 
                     @if (MostExpensive is not null)
@@ -723,6 +721,7 @@
 
     private IReadOnlyList<SubscriptionResponse> _subscriptions = [];
     private IReadOnlyList<DigitalServiceResponse> _digitalServices = [];
+    private SubscriptionCostSummaryResponse? _summary;
 
     private bool _loading = true;
     private bool _saving;
@@ -745,13 +744,8 @@
 
     private const string AllCategories = "__all";
 
-    private List<SubscriptionResponse> Active =>
-        _subscriptions
-            .Where(x => x.IsActive)
-            .ToList();
-
-    private SubscriptionResponse? MostExpensive =>
-        Active.MaxBy(x => x.MonthlyEquivalentAmount);
+    private SubscriptionCostSummaryItemResponse? MostExpensive =>
+        _summary?.TopSubscriptions.FirstOrDefault();
 
     private IReadOnlyList<string> Categories =>
         new[] { AllCategories }
@@ -798,18 +792,31 @@
             .ThenBy(x => x.Name);
 
     private IEnumerable<CategorySummary> CategorySummaries =>
-        Active
-            .GroupBy(
-                CategoryFor,
-                StringComparer.CurrentCultureIgnoreCase)
+        (_summary?.Categories ?? [])
             .Select(
-                (group, index) =>
+                (summary, index) =>
                     new CategorySummary(
-                        group.Key,
+                        string.IsNullOrWhiteSpace(
+                            summary.CustomCategoryName)
+                            ? CategoryLabel(summary.Category)
+                            : summary.CustomCategoryName!,
                         Tone(index),
-                        group.Sum(x =>
-                            x.MonthlyEquivalentAmount)))
-            .OrderByDescending(x => x.Amount);
+                        summary.MonthlyCost));
+
+    private string SummaryDescription
+    {
+        get
+        {
+            if (_summary?.ExchangeRateEffectiveDate is not { } date)
+            {
+                return T["Subscriptions.Description"];
+            }
+
+            return T[
+                "Subscriptions.ExchangeRatesAsOf",
+                FormatExchangeRateDate(date)];
+        }
+    }
 
     private string DialogTitle =>
         _dialog switch
@@ -875,7 +882,20 @@
 
         _user = authenticationState.User;
 
+        State.BaseCurrencyChanged +=
+            OnBaseCurrencyChanged;
+
         await LoadAsync();
+    }
+
+    private void OnBaseCurrencyChanged()
+    {
+        _ = InvokeAsync(
+            async () =>
+            {
+                await LoadAsync();
+                StateHasChanged();
+            });
     }
 
     private async Task LoadAsync()
@@ -891,6 +911,10 @@
 
             _subscriptions =
                 await ApiClient.GetAllAsync(
+                    _user);
+
+            _summary =
+                await ApiClient.GetCostSummaryAsync(
                     _user);
         }
         catch (HttpRequestException exception)
@@ -1250,7 +1274,7 @@
     {
         var displayedCurrency =
             currency ??
-            Active.FirstOrDefault()?.Currency ??
+            _summary?.BaseCurrency ??
             Currency.PLN;
 
         return string.Format(
@@ -1307,6 +1331,14 @@
             System.Globalization.CultureInfo.CurrentCulture);
     }
 
+    private static string FormatExchangeRateDate(
+        DateOnly date)
+    {
+        return date.ToString(
+            "d",
+            System.Globalization.CultureInfo.CurrentCulture);
+    }
+
     private static string Tone(
         int index)
     {
@@ -1317,6 +1349,12 @@
             "green",
             "blue"
         }[index % 4];
+    }
+
+    public void Dispose()
+    {
+        State.BaseCurrencyChanged -=
+            OnBaseCurrencyChanged;
     }
 
     private enum StatusFilter

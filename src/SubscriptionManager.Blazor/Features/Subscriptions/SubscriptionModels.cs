@@ -29,6 +29,31 @@ public sealed record SubscriptionResponse(
     decimal MonthlyEquivalentAmount,
     decimal YearlyEquivalentAmount);
 
+public sealed record SubscriptionCostSummaryResponse(
+    Currency BaseCurrency,
+    DateOnly? ExchangeRateEffectiveDate,
+    int ActiveCount,
+    int TotalCount,
+    decimal MonthlyCost,
+    decimal YearlyCost,
+    decimal AverageMonthlyCost,
+    decimal AverageYearlyCost,
+    IReadOnlyList<SubscriptionCostSummaryItemResponse>
+        TopSubscriptions,
+    IReadOnlyList<SubscriptionCategoryCostSummaryResponse>
+        Categories);
+
+public sealed record SubscriptionCostSummaryItemResponse(
+    Guid Id,
+    string Name,
+    BillingPeriod BillingPeriod,
+    decimal MonthlyCost);
+
+public sealed record SubscriptionCategoryCostSummaryResponse(
+    string Category,
+    string? CustomCategoryName,
+    decimal MonthlyCost);
+
 public sealed class SubscriptionFormModel
 {
     public Guid? DigitalServiceId { get; set; }
@@ -100,6 +125,34 @@ public sealed class SubscriptionsApiClient(
                        JsonOptions,
                        cancellationToken)
                ?? [];
+    }
+
+    public async Task<SubscriptionCostSummaryResponse>
+        GetCostSummaryAsync(
+            ClaimsPrincipal user,
+            CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "api/subscriptions/cost-summary");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+                   .ReadFromJsonAsync<
+                       SubscriptionCostSummaryResponse>(
+                       JsonOptions,
+                       cancellationToken)
+               ?? throw new InvalidOperationException(
+                   "The subscription cost summary response was empty.");
     }
 
     public async Task<SubscriptionResponse?> GetByIdAsync(

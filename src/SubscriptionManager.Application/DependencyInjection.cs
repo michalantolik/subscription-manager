@@ -18,6 +18,7 @@ using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
 using SubscriptionManager.Application.Subscriptions.EndSubscription;
 using SubscriptionManager.Application.Subscriptions.GetSubscriptionById;
+using SubscriptionManager.Application.Subscriptions.GetSubscriptionCostSummary;
 using SubscriptionManager.Application.Subscriptions.GetSubscriptions;
 using SubscriptionManager.Application.Subscriptions.UpdateSubscription;
 
@@ -45,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<CreateSubscriptionHandler>();
         services.AddScoped<GetSubscriptionsHandler>();
         services.AddScoped<GetSubscriptionByIdHandler>();
+        services.AddScoped<GetSubscriptionCostSummaryHandler>();
         services.AddScoped<UpdateSubscriptionHandler>();
         services.AddScoped<EndSubscriptionHandler>();
         services.AddScoped<DeleteSubscriptionHandler>();
