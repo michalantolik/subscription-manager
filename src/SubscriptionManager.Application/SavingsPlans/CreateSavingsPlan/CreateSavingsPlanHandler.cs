@@ -111,6 +111,8 @@ public sealed class CreateSavingsPlanHandler
                 command.Strategy,
                 NormalizeAdditionalPreference(
                     command.AdditionalPreference),
+                NormalizeLanguageCode(
+                    command.LanguageCode),
                 baseCurrency.Value,
                 currentMonthlyCost,
                 protectedSubscriptionIds,
@@ -203,6 +205,9 @@ public sealed class CreateSavingsPlanHandler
                 $"Additional preference cannot exceed {MaximumAdditionalPreferenceLength} characters.",
                 nameof(command.AdditionalPreference));
         }
+
+        _ = NormalizeLanguageCode(
+            command.LanguageCode);
     }
 
     private static void ValidateTarget(
@@ -357,6 +362,23 @@ public sealed class CreateSavingsPlanHandler
             additionalPreference)
             ? null
             : additionalPreference.Trim();
+    }
+
+    private static string NormalizeLanguageCode(
+        string languageCode)
+    {
+        return languageCode?
+            .Trim()
+            .ToLowerInvariant() switch
+        {
+            "pl" => "pl",
+            "en" => "en",
+            "de" => "de",
+
+            _ => throw new ArgumentException(
+                "Language code must be 'pl', 'en' or 'de'.",
+                nameof(languageCode))
+        };
     }
 
     private static InvalidOperationException InvalidAgentResult()

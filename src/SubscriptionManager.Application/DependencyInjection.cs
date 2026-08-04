@@ -14,6 +14,7 @@ using SubscriptionManager.Application.Identity.LoginUser;
 using SubscriptionManager.Application.Identity.RegisterUser;
 using SubscriptionManager.Application.Identity.ResetPassword;
 using SubscriptionManager.Application.Identity.UpdateBaseCurrency;
+using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
 using SubscriptionManager.Application.Subscriptions.EndSubscription;
@@ -50,6 +51,8 @@ public static class DependencyInjection
         services.AddScoped<UpdateSubscriptionHandler>();
         services.AddScoped<EndSubscriptionHandler>();
         services.AddScoped<DeleteSubscriptionHandler>();
+
+        services.AddScoped<CreateSavingsPlanHandler>();
 
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<ConfirmEmailHandler>();

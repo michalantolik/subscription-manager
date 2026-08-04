@@ -5,4 +5,5 @@ public sealed record CreateSavingsPlanCommand(
     decimal TargetAmount,
     IReadOnlyCollection<Guid> ProtectedSubscriptionIds,
     SavingsPlanStrategy Strategy,
-    string? AdditionalPreference);
+    string? AdditionalPreference,
+    string LanguageCode);

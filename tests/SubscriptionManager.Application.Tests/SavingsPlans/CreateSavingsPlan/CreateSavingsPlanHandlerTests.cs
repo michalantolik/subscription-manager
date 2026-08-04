@@ -117,7 +117,8 @@ public sealed class CreateSavingsPlanHandlerTests
                 50m,
                 [spotify.Id],
                 SavingsPlanStrategy.Balanced,
-                "Keep music services.");
+                "Keep music services.",
+                "en");
 
         var result =
             await handler.HandleAsync(command);
@@ -167,6 +168,10 @@ public sealed class CreateSavingsPlanHandlerTests
         Assert.Equal(
             100m,
             capturedRequest.CurrentMonthlyCost);
+
+        Assert.Equal(
+            "en",
+            capturedRequest.LanguageCode);
 
         Assert.Contains(
             capturedRequest.Subscriptions,
@@ -273,7 +278,8 @@ public sealed class CreateSavingsPlanHandlerTests
                 50m,
                 [spotify.Id],
                 SavingsPlanStrategy.Balanced,
-                null);
+                null,
+                "en");
 
         var exception =
             await Assert.ThrowsAsync<InvalidOperationException>(

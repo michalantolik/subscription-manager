@@ -7,6 +7,7 @@ public sealed record SavingsPlanAgentRequest(
     decimal TargetAmount,
     SavingsPlanStrategy Strategy,
     string? AdditionalPreference,
+    string LanguageCode,
     Currency BaseCurrency,
     decimal CurrentMonthlyCost,
     IReadOnlyCollection<Guid> ProtectedSubscriptionIds,
