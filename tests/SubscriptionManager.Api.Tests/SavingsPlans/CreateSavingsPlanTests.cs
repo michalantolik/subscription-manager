@@ -1,0 +1,322 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using SubscriptionManager.Api.Tests.Authentication;
+using SubscriptionManager.Application.SavingsPlans;
+using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
+using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Persistence;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace SubscriptionManager.Api.Tests.SavingsPlans;
+
+public sealed class CreateSavingsPlanTests
+    : IClassFixture<CustomWebApplicationFactory>
+{
+    private static readonly JsonSerializerOptions JsonOptions =
+        new(JsonSerializerDefaults.Web)
+        {
+            Converters =
+            {
+                new JsonStringEnumConverter()
+            }
+        };
+
+    private readonly CustomWebApplicationFactory _factory;
+
+    public CreateSavingsPlanTests(
+        CustomWebApplicationFactory factory)
+    {
+        _factory = factory;
+    }
+
+    [Fact]
+    public async Task PostAsync_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        using var client =
+            _factory.CreateUnauthenticatedClient();
+
+        var request =
+            CreateRequest();
+
+        var response =
+            await client.PostAsJsonAsync(
+                "/api/savings-plans",
+                request,
+                JsonOptions);
+
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostAsync_ShouldReturnCalculatedSavingsPlan()
+    {
+        await using var factory =
+            _factory.WithWebHostBuilder(
+                builder =>
+                {
+                    builder.ConfigureTestServices(
+                        services =>
+                        {
+                            services.RemoveAll<
+                                ISavingsPlanAgent>();
+
+                            services.AddScoped<
+                                ISavingsPlanAgent,
+                                SuccessfulSavingsPlanAgent>();
+                        });
+                });
+
+        var userId =
+            Guid.NewGuid();
+
+        await SeedAsync(
+            factory.Services,
+            userId);
+
+        using var client =
+            factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            TestAuthenticationHandler.UserIdHeaderName,
+            userId.ToString());
+
+        var response =
+            await client.PostAsJsonAsync(
+                "/api/savings-plans",
+                CreateRequest(),
+                JsonOptions);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
+        var plan =
+            await response.Content
+                .ReadFromJsonAsync<SavingsPlanDto>(
+                    JsonOptions);
+
+        Assert.NotNull(plan);
+
+        Assert.Equal(
+            Currency.PLN,
+            plan.BaseCurrency);
+
+        Assert.Equal(
+            100m,
+            plan.CurrentMonthlyCost);
+
+        var recommended =
+            Assert.IsType<SavingsPlanScenarioDto>(
+                plan.Recommended);
+
+        Assert.Equal(
+            40m,
+            recommended.ProjectedMonthlyCost);
+
+        Assert.Equal(
+            60m,
+            recommended.MonthlySavings);
+
+        Assert.Equal(
+            720m,
+            recommended.YearlySavings);
+
+        Assert.True(
+            recommended.TargetReached);
+
+        var subscription =
+            Assert.Single(
+                recommended.Subscriptions);
+
+        Assert.Equal(
+            "Netflix",
+            subscription.Name);
+
+        Assert.Equal(
+            60m,
+            subscription.MonthlyCost);
+
+        Assert.Null(
+            plan.Alternative);
+    }
+
+    [Fact]
+    public async Task PostAsync_ShouldReturnServiceUnavailable_WhenAgentIsUnavailable()
+    {
+        await using var factory =
+            _factory.WithWebHostBuilder(
+                builder =>
+                {
+                    builder.ConfigureTestServices(
+                        services =>
+                        {
+                            services.RemoveAll<
+                                ISavingsPlanAgent>();
+
+                            services.AddScoped<
+                                ISavingsPlanAgent,
+                                UnavailableSavingsPlanAgent>();
+                        });
+                });
+
+        var userId =
+            Guid.NewGuid();
+
+        await SeedAsync(
+            factory.Services,
+            userId);
+
+        using var client =
+            factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            TestAuthenticationHandler.UserIdHeaderName,
+            userId.ToString());
+
+        var response =
+            await client.PostAsJsonAsync(
+                "/api/savings-plans",
+                CreateRequest(),
+                JsonOptions);
+
+        Assert.Equal(
+            HttpStatusCode.ServiceUnavailable,
+            response.StatusCode);
+
+        var problem =
+            await response.Content
+                .ReadFromJsonAsync<ProblemDetails>(
+                    JsonOptions);
+
+        Assert.NotNull(problem);
+
+        Assert.Equal(
+            StatusCodes.Status503ServiceUnavailable,
+            problem.Status);
+
+        Assert.Equal(
+            "Savings plan is unavailable.",
+            problem.Title);
+
+        Assert.Equal(
+            "The savings plan could not be generated at this time. Please try again later.",
+            problem.Detail);
+    }
+
+    private static CreateSavingsPlanCommand CreateRequest()
+    {
+        return new CreateSavingsPlanCommand(
+            SavingsPlanGoalType.MonthlyBudget,
+            50m,
+            [],
+            SavingsPlanStrategy.Balanced,
+            null,
+            "en");
+    }
+
+    private static async Task SeedAsync(
+        IServiceProvider services,
+        Guid userId)
+    {
+        await using var scope =
+            services.CreateAsyncScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<
+                    SubscriptionManagerDbContext>();
+
+        dbContext.Users.Add(
+            new ApplicationUser
+            {
+                Id = userId,
+                UserName = $"{userId}@example.com",
+                Email = $"{userId}@example.com",
+                BaseCurrency = Currency.PLN
+            });
+
+        dbContext.Subscriptions.AddRange(
+            CreateSubscription(
+                userId,
+                "Netflix",
+                60m,
+                DigitalServiceCategory.Video),
+            CreateSubscription(
+                userId,
+                "Spotify",
+                40m,
+                DigitalServiceCategory.Music));
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static Subscription CreateSubscription(
+        Guid ownerId,
+        string name,
+        decimal amount,
+        DigitalServiceCategory category)
+    {
+        var subscription =
+            new Subscription(
+                Guid.NewGuid(),
+                ownerId,
+                name,
+                amount,
+                Currency.PLN,
+                BillingPeriod.Monthly,
+                new DateOnly(2026, 1, 1));
+
+        subscription.AssignDigitalService(
+            Guid.NewGuid(),
+            category,
+            null,
+            null,
+            null);
+
+        return subscription;
+    }
+
+    private sealed class SuccessfulSavingsPlanAgent
+        : ISavingsPlanAgent
+    {
+        public Task<SavingsPlanAgentResult> CreatePlanAsync(
+            SavingsPlanAgentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var netflix =
+                request.Subscriptions.Single(
+                    subscription =>
+                        subscription.Name == "Netflix");
+
+            return Task.FromResult(
+                new SavingsPlanAgentResult(
+                    new SavingsPlanAgentScenario(
+                        [netflix.Id],
+                        "Ending Netflix reaches the selected budget."),
+                    null));
+        }
+    }
+
+    private sealed class UnavailableSavingsPlanAgent
+        : ISavingsPlanAgent
+    {
+        public Task<SavingsPlanAgentResult> CreatePlanAsync(
+            SavingsPlanAgentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromException<SavingsPlanAgentResult>(
+                new SavingsPlanUnavailableException(
+                    "Technical provider details."));
+        }
+    }
+}

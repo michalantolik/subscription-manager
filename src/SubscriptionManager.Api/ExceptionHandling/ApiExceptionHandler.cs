@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.ExchangeRates;
+using SubscriptionManager.Application.SavingsPlans;
 
 namespace SubscriptionManager.Api.ExceptionHandling;
 
@@ -22,6 +23,14 @@ internal sealed class ApiExceptionHandler(
                 Title = "Exchange rates are unavailable.",
                 Detail =
                     "Subscription costs could not be converted at this time.",
+                Instance = httpContext.Request.Path
+            },
+            SavingsPlanUnavailableException => new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Savings plan is unavailable.",
+                Detail =
+                    "The savings plan could not be generated at this time. Please try again later.",
                 Instance = httpContext.Request.Path
             },
             ArgumentException => new ProblemDetails
@@ -46,6 +55,14 @@ internal sealed class ApiExceptionHandler(
             logger.LogWarning(
                 exception,
                 "Exchange rates were unavailable while processing {HttpMethod} {RequestPath}.",
+                httpContext.Request.Method,
+                httpContext.Request.Path);
+        }
+        else if (exception is SavingsPlanUnavailableException)
+        {
+            logger.LogWarning(
+                exception,
+                "The savings plan provider was unavailable while processing {HttpMethod} {RequestPath}.",
                 httpContext.Request.Method,
                 httpContext.Request.Path);
         }

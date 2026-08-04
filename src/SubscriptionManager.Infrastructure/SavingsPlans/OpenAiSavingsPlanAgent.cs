@@ -1,6 +1,8 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using Microsoft.Extensions.AI;
 using SubscriptionManager.Application.SavingsPlans;
+using System.ClientModel;
 
 namespace SubscriptionManager.Infrastructure.SavingsPlans;
 
@@ -36,13 +38,39 @@ public sealed class OpenAiSavingsPlanAgent(
                 Seed = 12345
             };
 
-        var response =
-            await chatClient.GetResponseAsync<SavingsPlanAgentResult>(
-                BuildMessages(request),
-                options,
-                cancellationToken: cancellationToken);
+        try
+        {
+            var response =
+                await chatClient
+                    .GetResponseAsync<SavingsPlanAgentResult>(
+                        BuildMessages(request),
+                        options,
+                        cancellationToken:
+                            cancellationToken);
 
-        return response.Result;
+            return response.Result;
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException exception)
+        {
+            throw CreateUnavailableException(
+                exception);
+        }
+        catch (Exception exception)
+            when (exception is
+                ClientResultException or
+                HttpRequestException or
+                TimeoutException or
+                InvalidOperationException or
+                JsonException)
+        {
+            throw CreateUnavailableException(
+                exception);
+        }
     }
 
     private static List<ChatMessage> BuildMessages(
@@ -128,5 +156,14 @@ public sealed class OpenAiSavingsPlanAgent(
             "de" => "German",
             _ => "English"
         };
+    }
+
+    private static SavingsPlanUnavailableException
+        CreateUnavailableException(
+            Exception exception)
+    {
+        return new SavingsPlanUnavailableException(
+            "The savings plan could not be generated at this time.",
+            exception);
     }
 }

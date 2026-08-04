@@ -99,8 +99,8 @@ public static class DependencyInjection
 
                 if (string.IsNullOrWhiteSpace(options.ApiKey))
                 {
-                    throw new InvalidOperationException(
-                        "SavingsPlanAi:ApiKey is missing. Configure it using user secrets.");
+                    throw new SavingsPlanUnavailableException(
+                        "The savings plan AI provider is not configured.");
                 }
 
                 var openAiOptions =
