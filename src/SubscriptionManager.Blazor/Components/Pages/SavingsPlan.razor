@@ -2,8 +2,18 @@
 
 @attribute [Authorize]
 
+@using System.Globalization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using SubscriptionManager.Blazor.Features.Authentication
+@using SubscriptionManager.Blazor.Features.Currencies
+@using SubscriptionManager.Blazor.Features.SavingsPlans
+@using SubscriptionManager.Blazor.Features.Subscriptions
+
 @inject Localizer T
 @inject NavigationManager Navigation
+@inject SavingsPlansApiClient SavingsPlansApiClient
+@inject SubscriptionsApiClient SubscriptionsApiClient
 
 <PageTitle>Subscription Manager — @T["Navigation.SavingsPlan"]</PageTitle>
 
@@ -23,26 +33,63 @@
         </div>
     </div>
 
-    @if (_stage is not PlanStage.Results)
+    @if (_isLoading)
     {
-        <div class="savings-overview ui-card" aria-label="@T["SavingsPlan.CurrentSummary"]">
-            <div>
-                <span>@T["SavingsPlan.CurrentMonthlyCost"]</span>
-                <strong>@Money(CurrentMonthlyCost)</strong>
+        <section class="ui-card ui-empty-state" aria-live="polite">
+            <div class="ui-empty-state-content">
+                <span class="ui-empty-state-icon"><AppIcon Name="subscriptions" /></span>
+                <h3>@T["SavingsPlan.Loading.Title"]</h3>
+                <p>@T["SavingsPlan.Loading.Description"]</p>
             </div>
-            <div>
-                <span>@T["SavingsPlan.ActiveSubscriptions"]</span>
-                <strong>@Subscriptions.Count</strong>
-            </div>
-            <div>
-                <span>@T["SavingsPlan.BaseCurrency"]</span>
-                <strong>PLN</strong>
-            </div>
-        </div>
+        </section>
     }
-
-    @if (_stage is PlanStage.Analyzing)
+    else if (_loadError)
     {
+        <section class="ui-card ui-empty-state" role="alert">
+            <div class="ui-empty-state-content">
+                <span class="ui-empty-state-icon"><AppIcon Name="report" /></span>
+                <h3>@T["SavingsPlan.Error.Load"]</h3>
+                <button class="ui-button ui-button-primary" type="button" @onclick="LoadAsync">
+                    @T["SavingsPlan.Retry"]
+                </button>
+            </div>
+        </section>
+    }
+    else if (Subscriptions.Count == 0)
+    {
+        <section class="ui-card ui-empty-state">
+            <div class="ui-empty-state-content">
+                <span class="ui-empty-state-icon"><AppIcon Name="subscriptions" /></span>
+                <h3>@T["SavingsPlan.Empty.Title"]</h3>
+                <p>@T["SavingsPlan.Empty.Description"]</p>
+                <button class="ui-button ui-button-primary" type="button" @onclick="GoToSubscriptions">
+                    @T["Navigation.Subscriptions"]
+                </button>
+            </div>
+        </section>
+    }
+    else
+    {
+        @if (_stage is not PlanStage.Results)
+        {
+            <div class="savings-overview ui-card" aria-label="@T["SavingsPlan.CurrentSummary"]">
+                <div>
+                    <span>@T["SavingsPlan.CurrentMonthlyCost"]</span>
+                    <strong>@Money(CurrentMonthlyCost)</strong>
+                </div>
+                <div>
+                    <span>@T["SavingsPlan.ActiveSubscriptions"]</span>
+                    <strong>@Subscriptions.Count</strong>
+                </div>
+                <div>
+                    <span>@T["SavingsPlan.BaseCurrency"]</span>
+                    <strong>@_baseCurrency</strong>
+                </div>
+            </div>
+        }
+
+        @if (_stage is PlanStage.Analyzing)
+        {
         <section class="savings-analysis ui-card" aria-live="polite">
             <span class="savings-analysis-mark">
                 <AppIcon Name="spark" />
@@ -75,13 +122,13 @@
 
             <small>@T["SavingsPlan.Analysis.NoChanges"]</small>
         </section>
-    }
-    else if (_stage is PlanStage.Results)
-    {
+        }
+        else if (_stage is PlanStage.Results)
+        {
         @ResultsContent()
-    }
-    else
-    {
+        }
+        else
+        {
         <nav class="savings-stepper" aria-label="@T["SavingsPlan.Steps.Label"]">
             @foreach (var step in FormSteps)
             {
@@ -108,7 +155,88 @@
             <main class="savings-form-card ui-card">
                 @if (_stage is PlanStage.Goal)
                 {
-                    @GoalContent()
+                    <div class="savings-card-heading">
+                        <span class="savings-heading-icon"><AppIcon Name="target" /></span>
+                        <div>
+                            <span class="savings-section-number">@T["SavingsPlan.Step", 1, 3]</span>
+                            <h2>@T["SavingsPlan.Goal.Title"]</h2>
+                            <p>@T["SavingsPlan.Goal.Description"]</p>
+                        </div>
+                    </div>
+
+                    <div class="savings-choice-grid">
+                        <button type="button"
+                                class="savings-choice-card @(_goalKind == SavingsPlanGoalType.MonthlyBudget ? "selected" : null)"
+                                aria-pressed="@(_goalKind == SavingsPlanGoalType.MonthlyBudget)"
+                                @onclick="() => SelectGoal(SavingsPlanGoalType.MonthlyBudget)">
+                            <span class="savings-choice-icon"><AppIcon Name="budget" /></span>
+                            <span>
+                                <strong>@T["SavingsPlan.Goal.Budget.Title"]</strong>
+                                <small>@T["SavingsPlan.Goal.Budget.Description"]</small>
+                            </span>
+                            <span class="savings-radio-mark">
+                                @if (_goalKind == SavingsPlanGoalType.MonthlyBudget)
+                                {
+                                    <i></i>
+                                }
+                            </span>
+                        </button>
+
+                        <button type="button"
+                                class="savings-choice-card @(_goalKind == SavingsPlanGoalType.MonthlySavings ? "selected" : null)"
+                                aria-pressed="@(_goalKind == SavingsPlanGoalType.MonthlySavings)"
+                                @onclick="() => SelectGoal(SavingsPlanGoalType.MonthlySavings)">
+                            <span class="savings-choice-icon"><AppIcon Name="report" /></span>
+                            <span>
+                                <strong>@T["SavingsPlan.Goal.Savings.Title"]</strong>
+                                <small>@T["SavingsPlan.Goal.Savings.Description"]</small>
+                            </span>
+                            <span class="savings-radio-mark">
+                                @if (_goalKind == SavingsPlanGoalType.MonthlySavings)
+                                {
+                                    <i></i>
+                                }
+                            </span>
+                        </button>
+                    </div>
+
+                    <label class="ui-field savings-amount-field">
+                        <span class="ui-label">
+                            @(_goalKind == SavingsPlanGoalType.MonthlyBudget
+                                ? T["SavingsPlan.Goal.Budget.Label"]
+                                : T["SavingsPlan.Goal.Savings.Label"])
+                        </span>
+                        <span class="savings-money-input">
+                            <input class="ui-control"
+                                   type="number"
+                                   min="1"
+                                   step="0.01"
+                                   @bind="_targetAmount"
+                                   @bind:event="oninput" />
+                            <strong>@_baseCurrency</strong>
+                        </span>
+                        <small class="ui-help">
+                            @(_goalKind == SavingsPlanGoalType.MonthlyBudget
+                                ? T["SavingsPlan.Goal.Budget.Hint", Money(CurrentMonthlyCost)]
+                                : T["SavingsPlan.Goal.Savings.Hint", Money(CurrentMonthlyCost)])
+                        </small>
+                    </label>
+
+                    @if (!string.IsNullOrWhiteSpace(_validationMessage))
+                    {
+                        <div class="savings-validation" role="alert">
+                            <AppIcon Name="report" />
+                            <span>@_validationMessage</span>
+                        </div>
+                    }
+
+                    <div class="savings-actions">
+                        <span></span>
+                        <button class="ui-button ui-button-primary" type="button" @onclick="ContinueFromGoal">
+                            @T["Action.Next"]
+                            <AppIcon Name="chevron" />
+                        </button>
+                    </div>
                 }
                 else if (_stage is PlanStage.Preferences)
                 {
@@ -154,6 +282,7 @@
                 </div>
             </aside>
         </div>
+        }
     }
 </section>
 
@@ -215,30 +344,33 @@
 }
 
 @code {
-    private const decimal CurrentMonthlyCost = 298.87m;
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } =
+        default!;
 
-    private readonly IReadOnlyList<MockSubscription> Subscriptions =
-    [
-        new(Guid.Parse("43fbf738-60dd-420c-b83a-4194b00f94ee"), "ChatGPT Plus", "Category.ArtificialIntelligence", 99.99m),
-        new(Guid.Parse("5d233125-72b8-49b8-8200-2d46743aa71c"), "Netflix", "Category.Streaming", 67.00m),
-        new(Guid.Parse("5c903ff5-e3b0-4b2d-8f48-0057351fb60b"), "Spotify", "Category.Music", 23.99m),
-        new(Guid.Parse("f94fa014-f2ed-4409-83b9-4c3d47dbc322"), "JetBrains", "Category.DeveloperTools", 44.90m),
-        new(Guid.Parse("18155b5e-fc85-488a-aeba-b07cf3f22062"), "Xbox Game Pass", "Category.Gaming", 62.99m)
-    ];
+    private IReadOnlyList<SubscriptionResponse> Subscriptions = [];
 
     private readonly HashSet<Guid> _protectedSubscriptionIds = [];
 
+    private ClaimsPrincipal? _user;
+    private bool _isLoading = true;
+    private bool _loadError;
+    private decimal _currentMonthlyCost;
+    private Currency _baseCurrency = Currency.PLN;
     private PlanStage _stage = PlanStage.Goal;
     private PlanStage _furthestStage = PlanStage.Goal;
-    private GoalKind _goalKind = GoalKind.MonthlyBudget;
-    private PlanStrategy _strategy = PlanStrategy.Balanced;
+    private SavingsPlanGoalType _goalKind = SavingsPlanGoalType.MonthlyBudget;
+    private SavingsPlanStrategy _strategy = SavingsPlanStrategy.Balanced;
     private DialogKind _dialog;
-    private decimal _targetAmount = 220m;
+    private decimal _targetAmount;
     private string _additionalPreference = string.Empty;
     private string? _validationMessage;
     private int _analysisStep;
-    private MockPlan? _recommendedPlan;
-    private MockPlan? _alternativePlan;
+    private SavingsPlanScenarioResponse? _recommendedPlan;
+    private SavingsPlanScenarioResponse? _alternativePlan;
+
+    private decimal CurrentMonthlyCost =>
+        _currentMonthlyCost;
 
     private IReadOnlyList<(int Number, PlanStage Stage, string LabelKey)> FormSteps =>
     [
@@ -256,12 +388,12 @@
     ];
 
     private decimal RequiredSavings =>
-        _goalKind == GoalKind.MonthlyBudget
+        _goalKind == SavingsPlanGoalType.MonthlyBudget
             ? Math.Max(0m, CurrentMonthlyCost - _targetAmount)
             : Math.Max(0m, _targetAmount);
 
     private string GoalSummary =>
-        _goalKind == GoalKind.MonthlyBudget
+        _goalKind == SavingsPlanGoalType.MonthlyBudget
             ? T["SavingsPlan.Summary.BudgetValue", Money(_targetAmount)]
             : T["SavingsPlan.Summary.SavingsValue", Money(_targetAmount)];
 
@@ -272,12 +404,12 @@
 
     private string StrategyLabelKey => _strategy switch
     {
-        PlanStrategy.FewerChanges => "SavingsPlan.Strategy.Fewer.Title",
-        PlanStrategy.MaximumSavings => "SavingsPlan.Strategy.Maximum.Title",
+        SavingsPlanStrategy.FewerChanges => "SavingsPlan.Strategy.Fewer.Title",
+        SavingsPlanStrategy.MaximumSavings => "SavingsPlan.Strategy.Maximum.Title",
         _ => "SavingsPlan.Strategy.Balanced.Title"
     };
 
-    private RenderFragment GoalContent() => @<>
+    private RenderFragment GoalContent() => @<div class="savings-content">
         <div class="savings-card-heading">
             <span class="savings-heading-icon"><AppIcon Name="target" /></span>
             <div>
@@ -288,13 +420,13 @@
         </div>
 
         <div class="savings-choice-grid">
-            @GoalChoice(GoalKind.MonthlyBudget, "budget", "SavingsPlan.Goal.Budget.Title", "SavingsPlan.Goal.Budget.Description")
-            @GoalChoice(GoalKind.MonthlySavings, "report", "SavingsPlan.Goal.Savings.Title", "SavingsPlan.Goal.Savings.Description")
+            @GoalChoice(SavingsPlanGoalType.MonthlyBudget, "budget", "SavingsPlan.Goal.Budget.Title", "SavingsPlan.Goal.Budget.Description")
+            @GoalChoice(SavingsPlanGoalType.MonthlySavings, "report", "SavingsPlan.Goal.Savings.Title", "SavingsPlan.Goal.Savings.Description")
         </div>
 
         <label class="ui-field savings-amount-field">
             <span class="ui-label">
-                @(_goalKind == GoalKind.MonthlyBudget
+                @(_goalKind == SavingsPlanGoalType.MonthlyBudget
                     ? T["SavingsPlan.Goal.Budget.Label"]
                     : T["SavingsPlan.Goal.Savings.Label"])
             </span>
@@ -305,10 +437,10 @@
                        step="0.01"
                        @bind="_targetAmount"
                        @bind:event="oninput" />
-                <strong>PLN</strong>
+                <strong>@_baseCurrency</strong>
             </span>
             <small class="ui-help">
-                @(_goalKind == GoalKind.MonthlyBudget
+                @(_goalKind == SavingsPlanGoalType.MonthlyBudget
                     ? T["SavingsPlan.Goal.Budget.Hint", Money(CurrentMonthlyCost)]
                     : T["SavingsPlan.Goal.Savings.Hint", Money(CurrentMonthlyCost)])
             </small>
@@ -323,9 +455,9 @@
                 <AppIcon Name="chevron" />
             </button>
         </div>
-    </>;
+    </div>;
 
-    private RenderFragment PreferencesContent() => @<>
+    private RenderFragment PreferencesContent() => @<div class="savings-content">
         <div class="savings-card-heading">
             <span class="savings-heading-icon"><AppIcon Name="tune" /></span>
             <div>
@@ -353,10 +485,10 @@
                         <span class="service-avatar">@Initials(subscription.Name)</span>
                         <span class="savings-subscription-copy">
                             <strong>@subscription.Name</strong>
-                            <small>@T[subscription.CategoryKey]</small>
+                            <small>@CategoryLabel(subscription)</small>
                         </span>
                         <span class="savings-subscription-price">
-                            <strong>@Money(subscription.MonthlyCost)</strong>
+                            <strong>@Money(subscription.MonthlyEquivalentAmount, subscription.Currency)</strong>
                             <small>@T["PerMonth"]</small>
                         </span>
                         <span class="savings-selection-mark">
@@ -381,9 +513,9 @@
             </div>
 
             <div class="savings-strategy-grid">
-                @StrategyChoice(PlanStrategy.FewerChanges, "SavingsPlan.Strategy.Fewer.Title", "SavingsPlan.Strategy.Fewer.Description")
-                @StrategyChoice(PlanStrategy.Balanced, "SavingsPlan.Strategy.Balanced.Title", "SavingsPlan.Strategy.Balanced.Description")
-                @StrategyChoice(PlanStrategy.MaximumSavings, "SavingsPlan.Strategy.Maximum.Title", "SavingsPlan.Strategy.Maximum.Description")
+                @StrategyChoice(SavingsPlanStrategy.FewerChanges, "SavingsPlan.Strategy.Fewer.Title", "SavingsPlan.Strategy.Fewer.Description")
+                @StrategyChoice(SavingsPlanStrategy.Balanced, "SavingsPlan.Strategy.Balanced.Title", "SavingsPlan.Strategy.Balanced.Description")
+                @StrategyChoice(SavingsPlanStrategy.MaximumSavings, "SavingsPlan.Strategy.Maximum.Title", "SavingsPlan.Strategy.Maximum.Description")
             </div>
         </section>
 
@@ -410,9 +542,9 @@
                 <AppIcon Name="chevron" />
             </button>
         </div>
-    </>;
+    </div>;
 
-    private RenderFragment ReviewContent() => @<>
+    private RenderFragment ReviewContent() => @<div class="savings-content">
         <div class="savings-card-heading">
             <span class="savings-heading-icon"><AppIcon Name="check" /></span>
             <div>
@@ -481,6 +613,8 @@
             </div>
         </div>
 
+        @ValidationMessage()
+
         <div class="savings-actions">
             <button class="ui-button ui-button-secondary" type="button" @onclick="BackToPreferences">
                 <AppIcon Name="chevron" CssClass="icon-back" />
@@ -491,9 +625,9 @@
                 @T["SavingsPlan.Create"]
             </button>
         </div>
-    </>;
+    </div>;
 
-    private RenderFragment ResultsContent() => @<>
+    private RenderFragment ResultsContent() => @<div class="savings-results-content">
         <div class="savings-results-heading">
             <div>
                 <span class="savings-result-mark"><AppIcon Name="check" /></span>
@@ -530,7 +664,7 @@
                 @ResultMetric("SavingsPlan.Results.Current", CurrentMonthlyCost)
                 @ResultMetric("SavingsPlan.Results.Projected", _recommendedPlan.ProjectedMonthlyCost)
                 @ResultMetric("SavingsPlan.Results.MonthlySavings", _recommendedPlan.MonthlySavings)
-                @ResultMetric("SavingsPlan.Results.YearlySavings", _recommendedPlan.MonthlySavings * 12)
+                @ResultMetric("SavingsPlan.Results.YearlySavings", _recommendedPlan.YearlySavings)
             </div>
 
             <div class="savings-plans-grid">
@@ -559,9 +693,9 @@
                 </button>
             </div>
         }
-    </>;
+    </div>;
 
-    private RenderFragment GoalChoice(GoalKind kind, string icon, string titleKey, string descriptionKey) => @<button
+    private RenderFragment GoalChoice(SavingsPlanGoalType kind, string icon, string titleKey, string descriptionKey) => @<button
         type="button"
                                                                                                                   class="savings-choice-card @(_goalKind == kind ? "selected" : null)"
                                                                                                                   aria-pressed="@(_goalKind == kind)"
@@ -579,7 +713,7 @@
         </span>
     </button>;
 
-    private RenderFragment StrategyChoice(PlanStrategy strategy, string titleKey, string descriptionKey) => @<button
+    private RenderFragment StrategyChoice(SavingsPlanStrategy strategy, string titleKey, string descriptionKey) => @<button
         type="button"
                                                                                                                  class="savings-strategy-card @(_strategy == strategy ? "selected" : null)"
                                                                                                                  aria-pressed="@(_strategy == strategy)"
@@ -594,7 +728,7 @@
         <small>@T[descriptionKey]</small>
     </button>;
 
-    private RenderFragment ValidationMessage() => @<>
+    private RenderFragment ValidationMessage() => @<div class="savings-validation-container">
         @if (!string.IsNullOrWhiteSpace(_validationMessage))
         {
             <div class="savings-validation" role="alert">
@@ -602,7 +736,7 @@
                 <span>@_validationMessage</span>
             </div>
         }
-    </>;
+    </div>;
 
     private RenderFragment ResultMetric(string labelKey, decimal value) => @<article class="ui-card savings-result-metric">
         <span>@T[labelKey]</span>
@@ -610,7 +744,7 @@
         <small>@T["SavingsPlan.Results.PerMonth"]</small>
     </article>;
 
-    private RenderFragment PlanCard(MockPlan plan, bool recommended) => @<article class="ui-card savings-plan-card @(recommended ? "recommended" : null)">
+    private RenderFragment PlanCard(SavingsPlanScenarioResponse plan, bool recommended) => @<article class="ui-card savings-plan-card @(recommended ? "recommended" : null)">
         <header>
             <div>
                 <span class="ui-badge @(recommended ? "ui-badge-brand" : null)">
@@ -624,7 +758,7 @@
             </span>
         </header>
 
-        <p>@(recommended ? T["SavingsPlan.Results.RecommendedDescription"] : T["SavingsPlan.Results.AlternativeDescription"])</p>
+        <p>@plan.Explanation</p>
 
         <div class="savings-plan-subscriptions">
             @foreach (var subscription in plan.Subscriptions)
@@ -633,7 +767,7 @@
                     <span class="service-avatar">@Initials(subscription.Name)</span>
                     <span>
                         <strong>@subscription.Name</strong>
-                        <small>@T[subscription.CategoryKey]</small>
+                        <small>@CategoryLabel(subscription.Category)</small>
                     </span>
                     <b>@Money(subscription.MonthlyCost)</b>
                 </div>
@@ -647,7 +781,7 @@
         </dl>
     </article>;
 
-    private IEnumerable<MockSubscription> ProtectedSubscriptions =>
+    private IEnumerable<SubscriptionResponse> ProtectedSubscriptions =>
         Subscriptions.Where(subscription => _protectedSubscriptionIds.Contains(subscription.Id));
 
     private string ResultsDescription => _recommendedPlan switch
@@ -657,11 +791,86 @@
         _ => T["SavingsPlan.Results.CloseDescription", Money(_recommendedPlan.ProjectedMonthlyCost)]
     };
 
-    private void SelectGoal(GoalKind kind)
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _loadError = false;
+
+        try
+        {
+            var authenticationState =
+                await AuthenticationStateTask;
+
+            _user = authenticationState.User;
+
+            var subscriptionsTask =
+                SubscriptionsApiClient.GetAllAsync(
+                    _user);
+
+            var summaryTask =
+                SubscriptionsApiClient.GetCostSummaryAsync(
+                    _user);
+
+            await Task.WhenAll(
+                subscriptionsTask,
+                summaryTask);
+
+            Subscriptions =
+                subscriptionsTask.Result
+                    .Where(subscription => subscription.IsActive)
+                    .OrderBy(subscription => subscription.Name)
+                    .ToArray();
+
+            var summary =
+                summaryTask.Result;
+
+            _currentMonthlyCost =
+                summary.MonthlyCost;
+
+            _baseCurrency =
+                summary.BaseCurrency;
+
+            SetDefaultTarget();
+        }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            SessionExpirationNavigation.RedirectToLogin(
+                Navigation);
+        }
+        catch
+        {
+            _loadError = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void SelectGoal(SavingsPlanGoalType kind)
     {
         _goalKind = kind;
-        _targetAmount = kind == GoalKind.MonthlyBudget ? 220m : 60m;
+        SetDefaultTarget();
         _validationMessage = null;
+    }
+
+    private void SetDefaultTarget()
+    {
+        _targetAmount =
+            _goalKind == SavingsPlanGoalType.MonthlyBudget
+                ? Math.Round(
+                    CurrentMonthlyCost * 0.75m,
+                    2)
+                : Math.Round(
+                    CurrentMonthlyCost * 0.20m,
+                    2);
     }
 
     private void ContinueFromGoal()
@@ -674,13 +883,13 @@
             return;
         }
 
-        if (_goalKind == GoalKind.MonthlyBudget && _targetAmount >= CurrentMonthlyCost)
+        if (_goalKind == SavingsPlanGoalType.MonthlyBudget && _targetAmount >= CurrentMonthlyCost)
         {
             _validationMessage = T["SavingsPlan.Validation.BudgetTooHigh", Money(CurrentMonthlyCost)];
             return;
         }
 
-        if (_goalKind == GoalKind.MonthlySavings && _targetAmount >= CurrentMonthlyCost)
+        if (_goalKind == SavingsPlanGoalType.MonthlySavings && _targetAmount >= CurrentMonthlyCost)
         {
             _validationMessage = T["SavingsPlan.Validation.SavingsTooHigh", Money(CurrentMonthlyCost)];
             return;
@@ -704,70 +913,63 @@
 
     private async Task CreatePlanAsync()
     {
-        _stage = PlanStage.Analyzing;
-        _analysisStep = 1;
-
-        for (var step = 2; step <= AnalysisSteps.Count + 1; step++)
+        if (_user is null)
         {
-            await Task.Delay(550);
-            _analysisStep = step;
-            StateHasChanged();
-        }
-
-        BuildMockPlans();
-        _stage = PlanStage.Results;
-    }
-
-    private void BuildMockPlans()
-    {
-        var available = Subscriptions
-            .Where(subscription => !_protectedSubscriptionIds.Contains(subscription.Id))
-            .OrderByDescending(subscription => subscription.MonthlyCost)
-            .ToArray();
-
-        if (available.Length == 0)
-        {
-            _recommendedPlan = null;
-            _alternativePlan = null;
             return;
         }
 
-        var recommendedSubscriptions = new List<MockSubscription>();
-        decimal savings = 0m;
+        _validationMessage = null;
+        _stage = PlanStage.Analyzing;
+        _analysisStep = 3;
 
-        foreach (var subscription in available)
+        try
         {
-            recommendedSubscriptions.Add(subscription);
-            savings += subscription.MonthlyCost;
+            var request =
+                new CreateSavingsPlanRequest(
+                    _goalKind,
+                    _targetAmount,
+                    _protectedSubscriptionIds.ToArray(),
+                    _strategy,
+                    string.IsNullOrWhiteSpace(
+                        _additionalPreference)
+                        ? null
+                        : _additionalPreference.Trim(),
+                    CultureInfo.CurrentUICulture
+                        .TwoLetterISOLanguageName);
 
-            if (savings >= RequiredSavings)
-            {
-                break;
-            }
+            var plan =
+                await SavingsPlansApiClient.CreateAsync(
+                    request,
+                    _user);
+
+            _analysisStep = 4;
+            _baseCurrency = plan.BaseCurrency;
+            _currentMonthlyCost = plan.CurrentMonthlyCost;
+            _recommendedPlan = plan.Recommended;
+            _alternativePlan = plan.Alternative;
+            _stage = PlanStage.Results;
         }
-
-        _recommendedPlan = CreateMockPlan(recommendedSubscriptions);
-
-        var alternativeSubscriptions = _strategy == PlanStrategy.MaximumSavings
-            ? available.Take(Math.Min(3, available.Length)).ToArray()
-            : available.Take(1).ToArray();
-
-        var alternative = CreateMockPlan(alternativeSubscriptions);
-
-        _alternativePlan = alternativeSubscriptions.Select(x => x.Id)
-            .SequenceEqual(recommendedSubscriptions.Select(x => x.Id))
-                ? null
-                : alternative;
-    }
-
-    private MockPlan CreateMockPlan(IReadOnlyList<MockSubscription> subscriptions)
-    {
-        var savings = subscriptions.Sum(subscription => subscription.MonthlyCost);
-        return new MockPlan(
-            subscriptions,
-            CurrentMonthlyCost - savings,
-            savings,
-            savings >= RequiredSavings);
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.Unauthorized)
+        {
+            SessionExpirationNavigation.RedirectToLogin(
+                Navigation);
+        }
+        catch (HttpRequestException exception)
+            when (exception.StatusCode ==
+                  System.Net.HttpStatusCode.ServiceUnavailable)
+        {
+            _stage = PlanStage.Review;
+            _validationMessage =
+                T["SavingsPlan.Error.Unavailable"];
+        }
+        catch
+        {
+            _stage = PlanStage.Review;
+            _validationMessage =
+                T["SavingsPlan.Error.Generate"];
+        }
     }
 
     private void ToggleProtected(Guid id)
@@ -811,9 +1013,9 @@
     {
         _stage = PlanStage.Goal;
         _furthestStage = PlanStage.Goal;
-        _goalKind = GoalKind.MonthlyBudget;
-        _strategy = PlanStrategy.Balanced;
-        _targetAmount = 220m;
+        _goalKind = SavingsPlanGoalType.MonthlyBudget;
+        _strategy = SavingsPlanStrategy.Balanced;
+        SetDefaultTarget();
         _additionalPreference = string.Empty;
         _protectedSubscriptionIds.Clear();
         _recommendedPlan = null;
@@ -842,8 +1044,42 @@
             .Take(2)
             .Select(part => char.ToUpperInvariant(part[0])));
 
-    private static string Money(decimal amount) =>
-        $"{amount:N2} PLN";
+    private string CategoryLabel(
+        SubscriptionResponse subscription)
+    {
+        if (!string.IsNullOrWhiteSpace(
+                subscription.CustomCategoryName))
+        {
+            return subscription.CustomCategoryName;
+        }
+
+        return CategoryLabel(
+            subscription.Category);
+    }
+
+    private string CategoryLabel(
+        string? category)
+    {
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            return T["Category.Other"];
+        }
+
+        var localizationKey =
+            $"Category.{category}";
+
+        var localizedCategory =
+            T[localizationKey];
+
+        return localizedCategory == localizationKey
+            ? category
+            : localizedCategory;
+    }
+
+    private string Money(
+        decimal amount,
+        Currency? currency = null) =>
+        $"{amount:N2} {currency ?? _baseCurrency}";
 
     private enum PlanStage
     {
@@ -854,34 +1090,10 @@
         Results = 5
     }
 
-    private enum GoalKind
-    {
-        MonthlyBudget,
-        MonthlySavings
-    }
-
-    private enum PlanStrategy
-    {
-        FewerChanges,
-        Balanced,
-        MaximumSavings
-    }
-
     private enum DialogKind
     {
         None,
         ReviewChanges
     }
 
-    private sealed record MockSubscription(
-        Guid Id,
-        string Name,
-        string CategoryKey,
-        decimal MonthlyCost);
-
-    private sealed record MockPlan(
-        IReadOnlyList<MockSubscription> Subscriptions,
-        decimal ProjectedMonthlyCost,
-        decimal MonthlySavings,
-        bool TargetReached);
 }
