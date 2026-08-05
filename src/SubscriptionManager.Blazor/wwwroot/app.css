@@ -335,17 +335,6 @@ h1[tabindex="-1"]:focus {
         height: 20px;
     }
 
-.notification-button span {
-    position: absolute;
-    width: 7px;
-    height: 7px;
-    background: var(--red);
-    border: 2px solid var(--surface);
-    border-radius: 50%;
-    right: 8px;
-    top: 8px;
-}
-
 .language-switch {
     display: flex;
     gap: 3px;
@@ -391,18 +380,16 @@ h1[tabindex="-1"]:focus {
     display: flex;
     flex-direction: column;
     text-align: right;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
     .user-copy strong {
+        display: block;
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-size: 13px;
-    }
-
-    .user-copy small {
-        margin-top: 4px;
-        font-size: 10px;
-        color: var(--brand);
-        font-weight: 700;
     }
 
 .avatar {

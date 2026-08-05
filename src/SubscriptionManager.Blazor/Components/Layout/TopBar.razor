@@ -29,12 +29,6 @@
             <AppIcon Name="@(State.Theme == AppState.LightTheme ? "moon" : "sun")" />
         </button>
 
-        <button class="icon-button notification-button"
-                type="button">
-            <AppIcon Name="bell" />
-            <span></span>
-        </button>
-
         <AuthorizeView>
             <Authorized Context="authenticationState">
                 <div class="account-menu-container">
@@ -55,10 +49,6 @@
                             <strong>
                                 @DisplayName(authenticationState.User)
                             </strong>
-
-                            <small>
-                                @T["User.Role"]
-                            </small>
                         </span>
 
                         <span class="avatar">
