@@ -12,7 +12,7 @@
 
 <div class="ui-dialog-backdrop account-dialog-backdrop"
      @onclick="CloseFromBackdrop">
-    <section class="ui-dialog ui-dialog-small account-dialog"
+    <section class="ui-dialog ui-dialog-medium account-dialog"
              role="dialog"
              aria-modal="true"
              aria-labelledby="account-dialog-title"
@@ -49,119 +49,149 @@
         <div class="ui-dialog-body">
             @if (_stage == DialogStage.Settings)
             {
-                <div class="account-settings-content">
-                    <section class="account-profile-card">
-                        <span class="account-profile-avatar">
-                            @Initial
-                        </span>
+                <div class="account-settings-layout">
+                    <nav class="account-settings-navigation"
+                         aria-label="@T["Account.Settings.NavigationLabel"]">
+                        <button class="account-settings-navigation-item @GetNavigationItemClass(AccountSettingsSection.Preferences)"
+                                type="button"
+                                aria-current="@GetAriaCurrent(AccountSettingsSection.Preferences)"
+                                @onclick="() => SelectSection(AccountSettingsSection.Preferences)">
+                            <AppIcon Name="settings" />
+                            <span>
+                                <strong>@T["Account.Preferences.Title"]</strong>
+                                <small>@T["Account.Settings.PreferencesNavigationHint"]</small>
+                            </span>
+                        </button>
 
-                        <div>
-                            <strong>@Email</strong>
-                            <span>@T["Account.Settings.ActiveAccount"]</span>
-                        </div>
-                    </section>
+                        <button class="account-settings-navigation-item @GetNavigationItemClass(AccountSettingsSection.Account)"
+                                type="button"
+                                aria-current="@GetAriaCurrent(AccountSettingsSection.Account)"
+                                @onclick="() => SelectSection(AccountSettingsSection.Account)">
+                            <AppIcon Name="trash" />
+                            <span>
+                                <strong>@T["Account.Settings.AccountSection"]</strong>
+                                <small>@T["Account.Settings.AccountNavigationHint"]</small>
+                            </span>
+                        </button>
+                    </nav>
 
-                    <section class="account-preferences">
-                        <div class="account-preferences-heading">
-                            <h3>@T["Account.Preferences.Title"]</h3>
-                            <p>@T["Account.Preferences.Description"]</p>
-                        </div>
-
-                        @if (_isLoadingPreferences)
+                    <div class="account-settings-panel">
+                        @if (_activeSection == AccountSettingsSection.Preferences)
                         {
-                            <div class="account-preferences-loading"
-                                 role="status">
-                                <span class="account-preferences-spinner"
-                                      aria-hidden="true"></span>
-                                @T["Account.Preferences.Loading"]
-                            </div>
+                            <section class="account-settings-section"
+                                     aria-labelledby="account-preferences-title">
+                                <div class="account-section-heading">
+                                    <h3 id="account-preferences-title">@T["Account.Preferences.Title"]</h3>
+                                    <p>@T["Account.Preferences.Description"]</p>
+                                </div>
+
+                                @if (_isLoadingPreferences)
+                                {
+                                    <div class="account-preferences-loading"
+                                         role="status">
+                                        <span class="account-preferences-spinner"
+                                              aria-hidden="true"></span>
+                                        @T["Account.Preferences.Loading"]
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="account-preferences-fields">
+                                        <label class="account-preference-field">
+                                            <span>@T["Account.Preferences.LanguageLabel"]</span>
+
+                                            <select @bind="_language"
+                                                    disabled="@_isSavingPreferences">
+                                                @foreach (var language in Enum.GetValues<Language>())
+                                                {
+                                                    <option value="@language">
+                                                        @GetLanguageName(language)
+                                                    </option>
+                                                }
+                                            </select>
+
+                                            <small>
+                                                @T["Account.Preferences.LanguageDescription"]
+                                            </small>
+                                        </label>
+
+                                        <label class="account-preference-field">
+                                            <span>@T["Account.Preferences.CurrencyLabel"]</span>
+
+                                            <select @bind="_baseCurrency"
+                                                    disabled="@_isSavingPreferences">
+                                                @foreach (var currency in Enum.GetValues<Currency>())
+                                                {
+                                                    <option value="@currency">
+                                                        @currency
+                                                    </option>
+                                                }
+                                            </select>
+
+                                            <small>
+                                                @T["Account.Preferences.CurrencyDescription"]
+                                            </small>
+                                        </label>
+                                    </div>
+                                }
+
+                                @if (_preferencesSaved)
+                                {
+                                    <div class="account-preferences-message account-preferences-message-success"
+                                         role="status">
+                                        @T["Account.Preferences.Saved"]
+                                    </div>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(_preferencesError))
+                                {
+                                    <div class="account-preferences-message account-preferences-message-error"
+                                         role="alert">
+                                        @_preferencesError
+                                    </div>
+                                }
+                            </section>
                         }
                         else
                         {
-                            <div class="account-preferences-fields">
-                                <label class="account-preference-field">
-                                    <span>@T["Account.Preferences.LanguageLabel"]</span>
+                            <section class="account-settings-section"
+                                     aria-labelledby="account-section-title">
+                                <div class="account-section-heading">
+                                    <h3 id="account-section-title">@T["Account.Settings.AccountSection"]</h3>
+                                    <p>@T["Account.Settings.AccountSectionDescription"]</p>
+                                </div>
 
-                                    <select @bind="_language"
-                                            disabled="@_isSavingPreferences">
-                                        @foreach (var language in Enum.GetValues<Language>())
-                                        {
-                                            <option value="@language">
-                                                @GetLanguageName(language)
-                                            </option>
-                                        }
-                                    </select>
+                                <section class="account-profile-card">
+                                    <span class="account-profile-avatar">
+                                        @Initial
+                                    </span>
 
-                                    <small>
-                                        @T["Account.Preferences.LanguageDescription"]
-                                    </small>
-                                </label>
+                                    <div>
+                                        <strong>@Email</strong>
+                                        <span>@T["Account.Settings.ActiveAccount"]</span>
+                                    </div>
+                                </section>
 
-                                <label class="account-preference-field">
-                                    <span>@T["Account.Preferences.CurrencyLabel"]</span>
+                                <section class="account-danger-zone">
+                                    <div>
+                                        <span class="ui-badge ui-badge-danger">
+                                            @T["Account.Settings.DangerZone"]
+                                        </span>
 
-                                    <select @bind="_baseCurrency"
-                                            disabled="@_isSavingPreferences">
-                                        @foreach (var currency in Enum.GetValues<Currency>())
-                                        {
-                                            <option value="@currency">
-                                                @currency
-                                            </option>
-                                        }
-                                    </select>
+                                        <h3>@T["Account.Delete.Title"]</h3>
 
-                                    <small>
-                                        @T["Account.Preferences.CurrencyDescription"]
-                                    </small>
-                                </label>
-                            </div>
+                                        <p>@T["Account.Delete.Summary"]</p>
+                                    </div>
 
-                            <div class="account-preferences-actions">
-                                <button class="primary-button"
-                                        type="button"
-                                        disabled="@(_isSavingPreferences || !PreferencesChanged)"
-                                        @onclick="SavePreferencesAsync">
-                                    @(_isSavingPreferences
-                                        ? T["Account.Preferences.Saving"]
-                                        : T["Account.Preferences.Save"])
-                                </button>
-                            </div>
+                                    <button class="danger-button"
+                                            type="button"
+                                            @onclick="OpenConfirmation">
+                                        <AppIcon Name="trash" />
+                                        @T["Account.Delete.Action"]
+                                    </button>
+                                </section>
+                            </section>
                         }
-
-                        @if (_preferencesSaved)
-                        {
-                            <div class="account-preferences-message account-preferences-message-success"
-                                 role="status">
-                                @T["Account.Preferences.Saved"]
-                            </div>
-                        }
-                        else if (!string.IsNullOrWhiteSpace(_preferencesError))
-                        {
-                            <div class="account-preferences-message account-preferences-message-error"
-                                 role="alert">
-                                @_preferencesError
-                            </div>
-                        }
-                    </section>
-
-                    <section class="account-danger-zone">
-                        <div>
-                            <span class="ui-badge ui-badge-danger">
-                                @T["Account.Settings.DangerZone"]
-                            </span>
-
-                            <h3>@T["Account.Delete.Title"]</h3>
-
-                            <p>@T["Account.Delete.Summary"]</p>
-                        </div>
-
-                        <button class="danger-button"
-                                type="button"
-                                @onclick="OpenConfirmation">
-                            <AppIcon Name="trash" />
-                            @T["Account.Delete.Action"]
-                        </button>
-                    </section>
+                    </div>
                 </div>
             }
             else if (_stage == DialogStage.Confirm)
@@ -224,6 +254,18 @@
                         @onclick="CloseAsync">
                     @T["Action.Close"]
                 </button>
+
+                @if (_activeSection == AccountSettingsSection.Preferences)
+                {
+                    <button class="primary-button"
+                            type="button"
+                            disabled="@(_isLoadingPreferences || _isSavingPreferences || !PreferencesChanged)"
+                            @onclick="SavePreferencesAsync">
+                        @(_isSavingPreferences
+                            ? T["Account.Preferences.Saving"]
+                            : T["Account.Preferences.Save"])
+                    </button>
+                }
             </footer>
         }
         else if (_stage == DialogStage.Confirm)

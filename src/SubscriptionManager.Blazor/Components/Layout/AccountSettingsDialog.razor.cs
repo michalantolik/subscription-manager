@@ -17,6 +17,7 @@ public partial class AccountSettingsDialog
 
     private CancellationTokenSource? _cancellationTokenSource;
     private DialogStage _stage = DialogStage.Settings;
+    private AccountSettingsSection _activeSection = AccountSettingsSection.Preferences;
 
     private Language _language = Language.Polish;
     private Language _savedLanguage = Language.Polish;
@@ -196,6 +197,23 @@ public partial class AccountSettingsDialog
         };
     }
 
+
+    private void SelectSection(AccountSettingsSection section)
+    {
+        _activeSection = section;
+        _preferencesSaved = false;
+    }
+
+    private string GetNavigationItemClass(AccountSettingsSection section)
+        => _activeSection == section
+            ? "account-settings-navigation-item-active"
+            : string.Empty;
+
+    private string? GetAriaCurrent(AccountSettingsSection section)
+        => _activeSection == section
+            ? "page"
+            : null;
+
     private void OpenConfirmation()
     {
         _confirmed = false;
@@ -208,6 +226,7 @@ public partial class AccountSettingsDialog
         _confirmed = false;
         _error = null;
         _stage = DialogStage.Settings;
+        _activeSection = AccountSettingsSection.Account;
     }
 
     private async Task DeleteAccountAsync()
@@ -279,6 +298,12 @@ public partial class AccountSettingsDialog
         _cancellationTokenSource?.Dispose();
 
         return ValueTask.CompletedTask;
+    }
+
+    private enum AccountSettingsSection
+    {
+        Preferences,
+        Account
     }
 
     private enum DialogStage

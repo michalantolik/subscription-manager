@@ -2,17 +2,113 @@
     z-index: 1100;
 }
 
+.account-dialog {
+    min-height: 470px;
+}
+
 .account-dialog-mark-danger {
     color: var(--red);
     background: var(--red-soft);
     border-color: color-mix(in srgb, var(--red) 24%, var(--border));
 }
 
-.account-settings-content,
+.account-settings-layout {
+    min-height: 350px;
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: var(--ui-space-6);
+}
+
+.account-settings-navigation {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-2);
+    padding-right: var(--ui-space-5);
+    border-right: 1px solid var(--border);
+}
+
+.account-settings-navigation-item {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 12px;
+    color: var(--muted);
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius-md);
+    transition: color var(--ui-transition-fast), background var(--ui-transition-fast), border-color var(--ui-transition-fast);
+}
+
+.account-settings-navigation-item:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+}
+
+.account-settings-navigation-item:focus-visible {
+    outline: none;
+    box-shadow: var(--ui-focus-ring);
+}
+
+.account-settings-navigation-item-active {
+    color: var(--brand-strong);
+    background: var(--brand-soft);
+    border-color: color-mix(in srgb, var(--brand) 22%, var(--border));
+}
+
+.account-settings-navigation-item ::deep .app-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    margin-top: 1px;
+}
+
+.account-settings-navigation-item span {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.account-settings-navigation-item strong {
+    color: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.account-settings-navigation-item small {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.account-settings-panel,
+.account-settings-section,
+.account-confirmation {
+    min-width: 0;
+}
+
+.account-settings-section,
 .account-confirmation {
     display: flex;
     flex-direction: column;
     gap: var(--ui-space-5);
+}
+
+.account-section-heading h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 17px;
+}
+
+.account-section-heading p {
+    margin: 7px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
 }
 
 .account-profile-card {
@@ -56,28 +152,9 @@
     font-size: 12px;
 }
 
-.account-preferences {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-space-4);
-}
-
-.account-preferences-heading h3 {
-    margin: 0;
-    color: var(--text);
-    font-size: 15px;
-}
-
-.account-preferences-heading p {
-    margin: 6px 0 0;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.55;
-}
-
 .account-preferences-fields {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--ui-space-4);
 }
 
@@ -88,56 +165,46 @@
     gap: 7px;
 }
 
-    .account-preference-field > span {
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .account-preference-field select {
-        width: 100%;
-        min-height: 40px;
-        padding: 0 36px 0 12px;
-        color: var(--text);
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--ui-radius-md);
-        font: inherit;
-        font-size: 13px;
-    }
-
-        .account-preference-field select:hover:not(:disabled) {
-            border-color: var(--border-strong);
-        }
-
-        .account-preference-field select:focus {
-            border-color: var(--brand);
-            outline: 3px solid var(--brand-soft);
-        }
-
-        .account-preference-field select:disabled {
-            opacity: .65;
-            cursor: not-allowed;
-        }
-
-    .account-preference-field small {
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 1.5;
-    }
-
-.account-preferences-actions {
-    display: flex;
-    justify-content: flex-end;
+.account-preference-field > span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
 }
 
-    .account-preferences-actions .primary-button {
-        min-width: 120px;
-        min-height: 40px;
-    }
+.account-preference-field select {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 36px 0 12px;
+    color: var(--text);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-md);
+    font: inherit;
+    font-size: 13px;
+}
+
+.account-preference-field select:hover:not(:disabled) {
+    border-color: var(--border-strong);
+}
+
+.account-preference-field select:focus {
+    border-color: var(--brand);
+    outline: 3px solid var(--brand-soft);
+}
+
+.account-preference-field select:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+}
+
+.account-preference-field small {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
 
 .account-preferences-loading {
-    min-height: 40px;
+    min-height: 64px;
     display: flex;
     align-items: center;
     gap: 9px;
@@ -180,23 +247,25 @@
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--ui-space-5);
-    padding-top: var(--ui-space-5);
-    border-top: 1px solid var(--border);
+    padding: var(--ui-space-5);
+    background: color-mix(in srgb, var(--red-soft) 38%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--red) 20%, var(--border));
+    border-radius: var(--ui-radius-lg);
 }
 
-    .account-danger-zone h3 {
-        margin: 12px 0 0;
-        color: var(--text);
-        font-size: 15px;
-    }
+.account-danger-zone h3 {
+    margin: 12px 0 0;
+    color: var(--text);
+    font-size: 15px;
+}
 
-    .account-danger-zone p {
-        max-width: 310px;
-        margin: 6px 0 0;
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.55;
-    }
+.account-danger-zone p {
+    max-width: 330px;
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
 
 .account-delete-list {
     margin-top: 10px;
@@ -216,13 +285,13 @@
     cursor: pointer;
 }
 
-    .account-confirm-checkbox input {
-        width: 17px;
-        height: 17px;
-        flex: 0 0 17px;
-        margin: 1px 0 0;
-        accent-color: var(--red);
-    }
+.account-confirm-checkbox input {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    margin: 1px 0 0;
+    accent-color: var(--red);
+}
 
 .account-operation-state {
     min-height: 230px;
@@ -234,17 +303,17 @@
     text-align: center;
 }
 
-    .account-operation-state strong {
-        font-size: 16px;
-    }
+.account-operation-state strong {
+    font-size: 16px;
+}
 
-    .account-operation-state p {
-        max-width: 330px;
-        margin: 0;
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.55;
-    }
+.account-operation-state p {
+    max-width: 330px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
 
 .account-spinner {
     width: 38px;
@@ -266,10 +335,10 @@
     border-radius: 50%;
 }
 
-    .account-success-icon ::deep .app-icon {
-        width: 24px;
-        height: 24px;
-    }
+.account-success-icon ::deep .app-icon {
+    width: 24px;
+    height: 24px;
+}
 
 @keyframes account-spin {
     to {
@@ -277,9 +346,39 @@
     }
 }
 
-@media (max-width: 600px) {
-    .account-preferences-actions .primary-button {
-        width: 100%;
+@media (max-width: 700px) {
+    .account-dialog {
+        min-height: 0;
+    }
+
+    .account-settings-layout {
+        min-height: 0;
+        grid-template-columns: 1fr;
+        gap: var(--ui-space-5);
+    }
+
+    .account-settings-navigation {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0 0 var(--ui-space-4);
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .account-settings-navigation-item {
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .account-settings-navigation-item ::deep .app-icon,
+    .account-settings-navigation-item small {
+        display: none;
+    }
+
+    .account-preferences-fields {
+        grid-template-columns: 1fr;
     }
 
     .account-danger-zone {
@@ -287,9 +386,9 @@
         flex-direction: column;
     }
 
-        .account-danger-zone .danger-button {
-            width: 100%;
-        }
+    .account-danger-zone .danger-button {
+        width: 100%;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
