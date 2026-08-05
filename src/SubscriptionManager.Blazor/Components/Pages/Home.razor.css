@@ -1,0 +1,579 @@
+﻿.overview-analysis-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(300px, 0.9fr);
+    gap: 18px;
+    align-items: stretch;
+}
+
+.cost-structure-card,
+.overview-insights {
+    min-width: 0;
+    padding: 20px;
+}
+
+.cost-structure-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+    .cost-structure-heading h2,
+    .overview-insights-heading h2 {
+        margin: 0;
+        color: var(--text);
+        font-size: 16px;
+        letter-spacing: -0.2px;
+    }
+
+    .cost-structure-heading p,
+    .overview-insights-heading p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+.cost-grouping-switch {
+    display: inline-flex;
+    flex: 0 0 auto;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-soft);
+}
+
+    .cost-grouping-switch button {
+        min-height: 32px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+        .cost-grouping-switch button:hover {
+            color: var(--text);
+        }
+
+        .cost-grouping-switch button.active {
+            background: var(--brand-soft);
+            color: var(--brand-strong);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+
+.cost-structure-content {
+    display: grid;
+    grid-template-columns: minmax(230px, 0.85fr) minmax(280px, 1.15fr);
+    gap: 30px;
+    align-items: center;
+    min-height: 340px;
+    padding-top: 18px;
+}
+
+.cost-chart-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+
+.cost-donut {
+    position: relative;
+    width: min(100%, 260px);
+    aspect-ratio: 1;
+}
+
+    .cost-donut svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        transform: rotate(-90deg);
+    }
+
+.cost-donut-track,
+.cost-donut-segment {
+    fill: none;
+    stroke-width: 5.7;
+}
+
+.cost-donut-track {
+    stroke: var(--surface-soft);
+}
+
+.cost-donut-segment {
+    cursor: pointer;
+    transition: stroke-width var(--ui-transition-fast), opacity var(--ui-transition-fast), filter var(--ui-transition-fast);
+}
+
+.cost-donut-link.is-active .cost-donut-segment {
+    stroke-width: 6.8;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.24));
+}
+
+.cost-donut-link.is-muted .cost-donut-segment {
+    opacity: 0.34;
+}
+
+.cost-donut-link:focus {
+    outline: none;
+}
+
+.cost-donut-link:focus-visible .cost-donut-segment {
+    stroke-width: 6.8;
+    filter: drop-shadow(0 0 1px var(--text));
+}
+
+.cost-donut-value {
+    position: absolute;
+    inset: 25%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+    .cost-donut-value strong {
+        color: var(--text);
+        font-size: clamp(18px, 2vw, 24px);
+        line-height: 1.15;
+        letter-spacing: -0.5px;
+        white-space: nowrap;
+    }
+
+    .cost-donut-value span {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+.cost-chart-tooltip {
+    position: absolute;
+    z-index: 5;
+    left: clamp(68px, var(--tooltip-x, 50%), calc(100% - 68px));
+    top: clamp(78px, var(--tooltip-y, 50%), calc(100% - 26px));
+    width: max-content;
+    max-width: min(220px, calc(100vw - 36px));
+    display: grid;
+    grid-template-columns: 4px minmax(0, 1fr);
+    gap: 11px;
+    padding: 11px 13px 11px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 11px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    pointer-events: none;
+    transform: translate( var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, -112%));
+    animation: cost-tooltip-in var(--ui-transition-fast);
+}
+
+    .cost-chart-tooltip > i {
+        width: 4px;
+        min-height: 100%;
+        border-radius: 999px;
+        background: var(--tooltip-color, var(--brand));
+    }
+
+    .cost-chart-tooltip > div {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cost-chart-tooltip strong {
+        max-width: 185px;
+        overflow: hidden;
+        color: var(--text);
+        font-size: 12px;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cost-chart-tooltip span {
+        margin-top: 4px;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .cost-chart-tooltip small {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+    }
+
+@keyframes cost-tooltip-in {
+    from {
+        opacity: 0;
+        transform: translate( var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, -112%)) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate( var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, -112%)) scale(1);
+    }
+}
+
+.cost-legend {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cost-legend-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    min-height: 53px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 6px;
+    transition: background 0.18s ease, padding 0.18s ease;
+}
+
+    .cost-legend-item:last-child {
+        border-bottom: 0;
+    }
+
+    .cost-legend-item:hover {
+        padding-right: 9px;
+        padding-left: 9px;
+        background: var(--surface-hover);
+    }
+
+    .cost-legend-item.is-active {
+        padding-right: 9px;
+        padding-left: 9px;
+        background: var(--surface-hover);
+        box-shadow: inset 3px 0 var(--cost-color, var(--brand));
+    }
+
+    .cost-legend-item:focus {
+        outline: none;
+    }
+
+    .cost-legend-item:focus-visible {
+        background: var(--surface-hover);
+        box-shadow: var(--ui-focus-ring);
+    }
+
+.cost-legend-name {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+    .cost-legend-name i {
+        width: 9px;
+        height: 9px;
+        flex: 0 0 9px;
+        border-radius: 50%;
+        background: var(--cost-color);
+        box-shadow: 0 0 0 3px color-mix( in srgb, var(--cost-color) 14%, transparent);
+        transition: transform var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+    }
+
+.cost-legend-item.is-active .cost-legend-name i {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 4px color-mix( in srgb, var(--cost-color) 22%, transparent);
+}
+
+.cost-legend-name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cost-legend-values {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    text-align: right;
+}
+
+    .cost-legend-values strong {
+        color: var(--text);
+        font-size: 13px;
+    }
+
+    .cost-legend-values small {
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+.overview-insights {
+    display: flex;
+    flex-direction: column;
+}
+
+.overview-insights-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.overview-insights-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+}
+
+    .overview-insights-icon ::deep .app-icon {
+        width: 18px;
+        height: 18px;
+    }
+
+.overview-insights-list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.overview-insight {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    flex: 1;
+    align-content: center;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+    .overview-insight:last-child {
+        border-bottom: 0;
+    }
+
+.overview-insight-marker {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--surface-soft);
+    color: var(--brand);
+}
+
+    .overview-insight-marker ::deep .app-icon {
+        width: 17px;
+        height: 17px;
+    }
+
+.overview-insight strong {
+    display: block;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.overview-insight p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.overview-insight a {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+    .overview-insight a:hover {
+        text-decoration: underline;
+    }
+
+.cost-structure-empty,
+.overview-insights-empty {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 310px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.cost-structure-empty-icon {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    border-radius: 15px;
+    background: var(--brand-soft);
+    color: var(--brand);
+}
+
+    .cost-structure-empty-icon ::deep .app-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+.cost-structure-empty strong {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.cost-structure-empty span {
+    max-width: 340px;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.cost-structure-empty a {
+    margin-top: 14px;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+    .overview-analysis-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .overview-insights-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .overview-insight {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-content: start;
+        border-right: 1px solid var(--border);
+        border-bottom: 0;
+        padding: 18px 18px 4px 0;
+    }
+
+        .overview-insight:last-child {
+            border-right: 0;
+            padding-right: 0;
+        }
+}
+
+@media (max-width: 820px) {
+    .cost-structure-heading {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cost-grouping-switch {
+        align-self: flex-start;
+    }
+
+    .cost-structure-content {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .cost-donut {
+        width: min(100%, 240px);
+    }
+
+    .overview-insights-list {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+
+    .overview-insight {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        padding: 17px 0;
+    }
+
+        .overview-insight:last-child {
+            border-bottom: 0;
+        }
+}
+
+@media (max-width: 520px) {
+    .cost-structure-card,
+    .overview-insights {
+        padding: 17px;
+    }
+
+    .cost-grouping-switch {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+        .cost-grouping-switch button {
+            min-width: 0;
+            padding: 0 8px;
+            white-space: normal;
+        }
+
+    .cost-structure-content {
+        min-height: 0;
+        padding-top: 22px;
+    }
+
+    .cost-donut {
+        width: min(100%, 220px);
+    }
+
+    .cost-donut-value strong {
+        font-size: 18px;
+    }
+
+    .cost-chart-tooltip {
+        left: clamp(72px, var(--tooltip-x, 50%), calc(100% - 72px));
+        max-width: min(200px, calc(100vw - 44px));
+    }
+
+    .cost-legend-item {
+        gap: 10px;
+    }
+
+    .cost-legend-name {
+        font-size: 12px;
+    }
+
+    .cost-legend-values strong {
+        font-size: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cost-donut-segment,
+    .cost-legend-item,
+    .cost-legend-name i {
+        transition: none;
+    }
+
+    .cost-chart-tooltip {
+        animation: none;
+    }
+}

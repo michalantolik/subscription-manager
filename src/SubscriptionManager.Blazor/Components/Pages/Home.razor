@@ -41,8 +41,8 @@
     }
     else
     {
-        <div class="metrics-grid">
-            <article class="metric-tile">
+        <div class="subscription-metrics">
+            <article class="panel subscription-metric">
                 <span>@T["Subscriptions.Active"]</span>
                 <strong>@_summary.ActiveCount</strong>
                 <small>
@@ -52,7 +52,7 @@
                 </small>
             </article>
 
-            <article class="metric-tile">
+            <article class="panel subscription-metric">
                 <span>@T["Subscriptions.Monthly"]</span>
                 <strong>
                     @Money(
@@ -66,7 +66,7 @@
                 </small>
             </article>
 
-            <article class="metric-tile">
+            <article class="panel subscription-metric">
                 <span>@T["Subscriptions.Yearly"]</span>
                 <strong>
                     @Money(
@@ -80,85 +80,255 @@
                 </small>
             </article>
 
-            <article class="metric-tile">
+            <article class="panel subscription-metric">
                 <span>@T["Subscriptions.MostExpensive"]</span>
-                <strong>
-                    @Money(
-                        MostExpensive?
-                            .MonthlyCost ?? 0m)
-                </strong>
+
+                <div class="subscription-metric-value">
+                    <strong>
+                        @Money(
+                            MostExpensive?
+                                .MonthlyCost ?? 0m)
+                    </strong>
+
+                    @if (MostExpensive is not null)
+                    {
+                        <small>@T["PerMonth"]</small>
+                    }
+                </div>
+
                 <small>
                     @(MostExpensive?.Name ?? "—")
                 </small>
             </article>
         </div>
 
-        <div class="overview-grid">
-            <section class="panel overview-list">
-                <div class="panel-heading">
+        <div class="overview-analysis-grid">
+            <section class="panel cost-structure-card">
+                <div class="cost-structure-heading">
                     <div>
-                        <h2>@T["Subscriptions.ListTitle"]</h2>
-                        <p>@T["Subscriptions.ListDescription"]</p>
+                        <h2>@T["Overview.CostStructure.Title"]</h2>
+                        <p>@T["Overview.CostStructure.Description"]</p>
                     </div>
 
-                    <a href="/subscriptions">
-                        @T["Filter.All"]
-                    </a>
+                    <div class="cost-grouping-switch"
+                         role="group"
+                         aria-label="@T["Overview.CostStructure.Grouping"]">
+                        <button type="button"
+                                class="@(
+                                _grouping ==
+                                CostGrouping.Category
+                                    ? "active"
+                                    : null)"
+                                aria-pressed="@(
+                                _grouping ==
+                                CostGrouping.Category)"
+                                @onclick="() => SetGrouping(
+                                                                                                                                                                    CostGrouping.Category)">
+@T["Overview.CostStructure.ByCategory"]
+</button>
+
+                        <button type="button"
+                                class="@(
+                                _grouping ==
+                                CostGrouping.Subscription
+                                    ? "active"
+                                    : null)"
+                                aria-pressed="@(
+                                _grouping ==
+                                CostGrouping.Subscription)"
+                                @onclick="() => SetGrouping(
+                                                                                                                                                                    CostGrouping.Subscription)">
+@T["Overview.CostStructure.BySubscription"]
+</button>
+                    </div>
                 </div>
 
-                @foreach (
-                    var subscription in
-                    _summary.TopSubscriptions)
+                @if (_summary.ActiveCount == 0 ||
+                     _summary.MonthlyCost <= 0m)
                 {
-                    <div class="compact-subscription-row">
-                        <span class="service-avatar">
-                            @Initials(subscription.Name)
-                        </span>
-
-                        <div>
-                            <strong>@subscription.Name</strong>
-                            <small>
-                                @Billing(
-                                    subscription.BillingPeriod)
-                            </small>
+                    <div class="cost-structure-empty">
+                        <div class="cost-structure-empty-icon">
+                            <AppIcon Name="subscriptions" />
                         </div>
 
-                        <b>
-                            @Money(
-                                subscription.MonthlyCost)
-                        </b>
+                        <strong>
+                            @T["Overview.CostStructure.Empty.Title"]
+                        </strong>
+
+                        <span>
+                            @T["Overview.CostStructure.Empty.Description"]
+                        </span>
+
+                        <a href="/subscriptions">
+                            @T["Subscriptions.Add"]
+                        </a>
                     </div>
                 }
+                else
+                {
+                    <div class="cost-structure-content">
+                        <div class="cost-chart-column">
+                            <div class="cost-donut">
+                                <svg viewBox="0 0 42 42"
+                                     role="img"
+                                     aria-label="@T[
+                                                                                                                                                                                             "Overview.CostStructure.ChartLabel",
+                                                                                                                                                                                             Money(_summary.MonthlyCost)]">
+                                    <circle class="cost-donut-track"
+                                            cx="21"
+                                            cy="21"
+                                            r="15.9155"
+                                            pathLength="100" />
+
+                                    @foreach (var item in ChartItems)
+                                    {
+                                        <a class="@ChartSegmentClass(item)"
+                                           href="@item.TargetUrl"
+                                           @onmouseenter="() => ActivateChartItem(item)"
+                                           @onmouseleave="() => DeactivateChartItem(item)"
+                                           @onfocus="() => ActivateChartItem(item)"
+                                           @onblur="() => DeactivateChartItem(item)"
+                                           aria-label="@ChartItemLabel(item)">
+                                            <circle class="cost-donut-segment"
+                                                    cx="21"
+                                                    cy="21"
+                                                    r="15.9155"
+                                                    pathLength="100"
+                                                    stroke="@item.Color"
+                                                    stroke-dasharray="@SegmentDashArray(item)"
+                                                    stroke-dashoffset="@SegmentDashOffset(item)" />
+                                        </a>
+                                    }
+                                </svg>
+
+                                <div class="cost-donut-value">
+                                    <strong>
+                                        @Money(
+                                            _summary.MonthlyCost)
+                                    </strong>
+
+                                    <span>@T["PerMonth"]</span>
+                                </div>
+
+                                @if (ActiveChartItem is { } activeItem)
+                                {
+                                    <div class="cost-chart-tooltip"
+                                         role="tooltip"
+                                         style="@TooltipStyle(activeItem)">
+                                        <i></i>
+
+                                        <div>
+                                            <strong>@activeItem.Name</strong>
+                                            <span>
+                                                @Money(activeItem.Amount)
+                                                @T["PerMonth"]
+                                            </span>
+                                            <small>
+                                                @T[
+                                                    "Overview.CostStructure.TooltipShare",
+                                                    Percentage(activeItem.Amount)]
+                                            </small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="cost-legend"
+                             aria-label="@T["Overview.CostStructure.Legend"]">
+                            @foreach (var item in ChartItems)
+                            {
+                                <a class="@LegendItemClass(item)"
+                                   href="@item.TargetUrl"
+                                   style="@LegendItemStyle(item)"
+                                   @onmouseenter="() => ActivateChartItem(item)"
+                                   @onmouseleave="() => DeactivateChartItem(item)"
+                                   @onfocus="() => ActivateChartItem(item)"
+                                   @onblur="() => DeactivateChartItem(item)">
+                                    <span class="cost-legend-name">
+                                        <i style="@(
+                                           $"--cost-color: {item.Color}")">
+                                        </i>
+
+                                        <span>@item.Name</span>
+                                    </span>
+
+                                    <span class="cost-legend-values">
+                                        <strong>
+                                            @Money(item.Amount)
+                                        </strong>
+
+                                        <small>
+                                            @Percentage(item.Amount)
+                                        </small>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+
+            <aside class="panel overview-insights">
+                <div class="overview-insights-heading">
+                    <div class="overview-insights-icon">
+                        <AppIcon Name="info" />
+                    </div>
+
+                    <div>
+                        <h2>@T["Overview.Insights.Title"]</h2>
+                        <p>@T["Overview.Insights.Description"]</p>
+                    </div>
+                </div>
 
                 @if (_summary.ActiveCount == 0)
                 {
-                    <div class="empty-inline">
-                        @T["Empty.Description"]
+                    <div class="overview-insights-empty">
+                        @T["Overview.Insights.Empty"]
                     </div>
                 }
-            </section>
+                else
+                {
+                    <div class="overview-insights-list">
+                        @foreach (var insight in Insights)
+                        {
+                            <article class="overview-insight">
+                                <span class="overview-insight-marker">
+                                    <AppIcon Name="@insight.Icon" />
+                                </span>
 
-            <section class="panel overview-summary">
-                <div class="panel-heading">
-                    <div>
-                        <h2>@T["Subscriptions.Monthly"]</h2>
-                        <p>@SummaryDescription</p>
+                                <div>
+                                    <strong>@insight.Title</strong>
+                                    <p>@insight.Description</p>
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                             insight.TargetUrl))
+                                    {
+                                        <a href="@insight.TargetUrl">
+                                            @T["Overview.Insights.View"]
+                                        </a>
+                                    }
+                                </div>
+                            </article>
+                        }
                     </div>
-                </div>
-
-                <div class="summary-ring">
-                    <strong>
-                        @Money(
-                            _summary.MonthlyCost)
-                    </strong>
-                    <span>@T["PerMonth"]</span>
-                </div>
-            </section>
+                }
+            </aside>
         </div>
     }
 </section>
 
 @code {
+    private static readonly string[] ChartColors =
+    [
+        "#55ca79",
+        "#63a0ff",
+        "#ffad62",
+        "#a980ff",
+        "#ff7279",
+        "#78909c"
+    ];
+
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask
     {
@@ -168,26 +338,28 @@
 
     private SubscriptionCostSummaryResponse? _summary;
 
+    private CostGrouping _grouping =
+        CostGrouping.Category;
+
+    private string? _activeChartItemKey;
+
     private bool _loading = true;
     private bool _error;
 
     private SubscriptionCostSummaryItemResponse? MostExpensive =>
         _summary?.TopSubscriptions.FirstOrDefault();
 
-    private string SummaryDescription
-    {
-        get
-        {
-            if (_summary?.ExchangeRateEffectiveDate is not { } date)
-            {
-                return T["Subscriptions.Description"];
-            }
+    private IReadOnlyList<CostChartItem> ChartItems =>
+        _grouping == CostGrouping.Category
+            ? CreateCategoryItems()
+            : CreateSubscriptionItems();
 
-            return T[
-                "Subscriptions.ExchangeRatesAsOf",
-                FormatDate(date)];
-        }
-    }
+    private IReadOnlyList<OverviewInsight> Insights =>
+        CreateInsights();
+
+    private CostChartItem? ActiveChartItem =>
+        ChartItems.FirstOrDefault(item =>
+            item.Key == _activeChartItemKey);
 
     protected override async Task OnInitializedAsync()
     {
@@ -228,20 +400,455 @@
         }
     }
 
-    private void OnBaseCurrencyChanged()
+    private void SetGrouping(
+        CostGrouping grouping)
     {
-        _ = InvokeAsync(
-            async () =>
-            {
-                await LoadAsync();
-                StateHasChanged();
-            });
+        _grouping = grouping;
+        _activeChartItemKey = null;
     }
 
-    public void Dispose()
+    private void ActivateChartItem(
+        CostChartItem item)
     {
-        State.BaseCurrencyChanged -=
-            OnBaseCurrencyChanged;
+        _activeChartItemKey = item.Key;
+    }
+
+    private void DeactivateChartItem(
+        CostChartItem item)
+    {
+        if (_activeChartItemKey == item.Key)
+        {
+            _activeChartItemKey = null;
+        }
+    }
+
+    private string ChartSegmentClass(
+        CostChartItem item)
+    {
+        if (_activeChartItemKey is null)
+        {
+            return "cost-donut-link";
+        }
+
+        return _activeChartItemKey == item.Key
+            ? "cost-donut-link is-active"
+            : "cost-donut-link is-muted";
+    }
+
+    private string LegendItemClass(
+        CostChartItem item)
+    {
+        return _activeChartItemKey == item.Key
+            ? "cost-legend-item is-active"
+            : "cost-legend-item";
+    }
+
+    private static string LegendItemStyle(
+        CostChartItem item)
+    {
+        return $"--cost-color: {item.Color}";
+    }
+
+    private IReadOnlyList<CostChartItem>
+        CreateCategoryItems()
+    {
+        if (_summary is null ||
+            _summary.MonthlyCost <= 0m)
+        {
+            return [];
+        }
+
+        var categories =
+            _summary.Categories
+                .Where(category =>
+                    category.MonthlyCost > 0m)
+                .OrderByDescending(category =>
+                    category.MonthlyCost)
+                .ToArray();
+
+        var visible =
+            categories
+                .Take(5)
+                .Select((
+                    category,
+                    index) =>
+                    new CostChartItem(
+                        $"category:{category.Category}:{category.CustomCategoryName}",
+                        CategoryName(category),
+                        category.MonthlyCost,
+                        ChartColors[index],
+                        CategoryTargetUrl(category),
+                        0m))
+                .ToList();
+
+        var remaining =
+            categories
+                .Skip(5)
+                .Sum(category =>
+                    category.MonthlyCost);
+
+        if (remaining > 0m)
+        {
+            visible.Add(
+                new CostChartItem(
+                    "category:other",
+                    T["Overview.CostStructure.Other"],
+                    remaining,
+                    ChartColors[5],
+                    "/subscriptions",
+                    0m));
+        }
+
+        return AddOffsets(visible);
+    }
+
+    private IReadOnlyList<CostChartItem>
+        CreateSubscriptionItems()
+    {
+        if (_summary is null ||
+            _summary.MonthlyCost <= 0m)
+        {
+            return [];
+        }
+
+        var visible =
+            _summary.TopSubscriptions
+                .Where(subscription =>
+                    subscription.MonthlyCost > 0m)
+                .Take(5)
+                .Select((
+                    subscription,
+                    index) =>
+                    new CostChartItem(
+                        $"subscription:{subscription.Id}",
+                        subscription.Name,
+                        subscription.MonthlyCost,
+                        ChartColors[index],
+                        $"/subscriptions?subscriptionId={subscription.Id}",
+                        0m))
+                .ToList();
+
+        var remaining =
+            Math.Max(
+                0m,
+                _summary.MonthlyCost -
+                visible.Sum(item =>
+                    item.Amount));
+
+        if (remaining > 0.005m)
+        {
+            visible.Add(
+                new CostChartItem(
+                    "subscription:other",
+                    T["Overview.CostStructure.Other"],
+                    remaining,
+                    ChartColors[5],
+                    "/subscriptions",
+                    0m));
+        }
+
+        return AddOffsets(visible);
+    }
+
+    private IReadOnlyList<CostChartItem> AddOffsets(
+        IReadOnlyList<CostChartItem> items)
+    {
+        if (_summary is null ||
+            _summary.MonthlyCost <= 0m)
+        {
+            return [];
+        }
+
+        var result =
+            new List<CostChartItem>(
+                items.Count);
+
+        var offset = 0m;
+
+        foreach (var item in items)
+        {
+            result.Add(
+                item with
+                {
+                    Offset = offset
+                });
+
+            offset +=
+                item.Amount /
+                _summary.MonthlyCost *
+                100m;
+        }
+
+        return result;
+    }
+
+    private IReadOnlyList<OverviewInsight>
+        CreateInsights()
+    {
+        if (_summary is null ||
+            _summary.ActiveCount == 0 ||
+            _summary.MonthlyCost <= 0m)
+        {
+            return [];
+        }
+
+        var insights =
+            new List<OverviewInsight>(3);
+
+        var mostExpensive =
+            _summary.TopSubscriptions
+                .FirstOrDefault();
+
+        if (mostExpensive is not null)
+        {
+            insights.Add(
+                new OverviewInsight(
+                    "subscriptions",
+                    T[
+                        "Overview.Insights.Largest.Title",
+                        mostExpensive.Name],
+                    T[
+                        "Overview.Insights.Largest.Description",
+                        Percentage(
+                            mostExpensive.MonthlyCost),
+                        Money(
+                            mostExpensive.MonthlyCost)],
+                    SubscriptionTargetUrl(mostExpensive)));
+        }
+
+        var topThree =
+            _summary.TopSubscriptions
+                .Take(3)
+                .ToArray();
+
+        if (topThree.Length >= 2)
+        {
+            var topThreeCost =
+                topThree.Sum(subscription =>
+                    subscription.MonthlyCost);
+
+            insights.Add(
+                new OverviewInsight(
+                    "chart",
+                    T[
+                        "Overview.Insights.Concentration.Title",
+                        topThree.Length],
+                    T[
+                        "Overview.Insights.Concentration.Description",
+                        Percentage(topThreeCost),
+                        Money(topThreeCost)],
+                    SubscriptionTargetUrl(topThree)));
+        }
+
+        var largestCategory =
+            _summary.Categories
+                .Where(category =>
+                    category.MonthlyCost > 0m)
+                .OrderByDescending(category =>
+                    category.MonthlyCost)
+                .FirstOrDefault();
+
+        if (largestCategory is not null)
+        {
+            insights.Add(
+                new OverviewInsight(
+                    "category",
+                    T[
+                        "Overview.Insights.Category.Title",
+                        CategoryName(largestCategory)],
+                    T[
+                        "Overview.Insights.Category.Description",
+                        Percentage(
+                            largestCategory.MonthlyCost),
+                        Money(
+                            largestCategory.MonthlyCost)],
+                    CategoryTargetUrl(largestCategory)));
+        }
+
+        if (insights.Count < 3 &&
+            _summary.TotalCount >
+            _summary.ActiveCount)
+        {
+            var inactiveCount =
+                _summary.TotalCount -
+                _summary.ActiveCount;
+
+            insights.Add(
+                new OverviewInsight(
+                    "end",
+                    T["Overview.Insights.Inactive.Title"],
+                    T[
+                        "Overview.Insights.Inactive.Description",
+                        inactiveCount],
+                    "/subscriptions?status=ended"));
+        }
+
+        return insights
+            .Take(3)
+            .ToArray();
+    }
+
+    private string CategoryName(
+        SubscriptionCategoryCostSummaryResponse category)
+    {
+        if (!string.IsNullOrWhiteSpace(
+                category.CustomCategoryName))
+        {
+            return category.CustomCategoryName;
+        }
+
+        return T[
+            $"Category.{category.Category}"];
+    }
+
+    private string CategoryTargetUrl(
+        SubscriptionCategoryCostSummaryResponse category)
+    {
+        if (!string.IsNullOrWhiteSpace(
+                category.CustomCategoryName))
+        {
+            return
+                $"/subscriptions?customCategory={Uri.EscapeDataString(category.CustomCategoryName)}";
+        }
+
+        return
+            $"/subscriptions?category={Uri.EscapeDataString(category.Category)}";
+    }
+
+    private static string SubscriptionTargetUrl(
+        params SubscriptionCostSummaryItemResponse[] subscriptions)
+    {
+        if (subscriptions.Length == 0)
+        {
+            return "/subscriptions";
+        }
+
+        var query =
+            string.Join(
+                "&",
+                subscriptions.Select(subscription =>
+                    $"subscriptionId={subscription.Id}"));
+
+        return $"/subscriptions?{query}";
+    }
+
+    private string SegmentDashArray(
+        CostChartItem item)
+    {
+        if (_summary is null ||
+            _summary.MonthlyCost <= 0m)
+        {
+            return "0 100";
+        }
+
+        var percentage =
+            item.Amount /
+            _summary.MonthlyCost *
+            100m;
+
+        var visiblePercentage =
+            Math.Max(
+                0m,
+                percentage - 0.7m);
+
+        return FormattableString.Invariant(
+            $"{visiblePercentage:0.###} {100m - visiblePercentage:0.###}");
+    }
+
+    private static string SegmentDashOffset(
+        CostChartItem item)
+    {
+        return FormattableString.Invariant(
+            $"{-item.Offset:0.###}");
+    }
+
+    private string ChartItemLabel(
+        CostChartItem item)
+    {
+        return T[
+            "Overview.CostStructure.ItemLabel",
+            item.Name,
+            Money(item.Amount),
+            Percentage(item.Amount)];
+    }
+
+    private string TooltipStyle(
+        CostChartItem item)
+    {
+        if (_summary is null ||
+            _summary.MonthlyCost <= 0m)
+        {
+            return $"--tooltip-color: {item.Color}";
+        }
+
+        var percentage =
+            item.Amount /
+            _summary.MonthlyCost *
+            100m;
+
+        var angle =
+            ((double)(item.Offset + percentage / 2m) * 3.6d - 90d) *
+            Math.PI /
+            180d;
+
+        var horizontalDirection =
+            Math.Cos(angle);
+
+        var verticalDirection =
+            Math.Sin(angle);
+
+        var x =
+            50d +
+            horizontalDirection * 46d;
+
+        var y =
+            50d +
+            verticalDirection * 46d;
+
+        var translateX = "-50%";
+        var translateY = "-112%";
+
+        if (Math.Abs(horizontalDirection) >=
+            Math.Abs(verticalDirection))
+        {
+            if (horizontalDirection < 0d)
+            {
+                translateX = "-104%";
+                translateY = "-50%";
+            }
+            else
+            {
+                translateY =
+                    verticalDirection < 0d
+                        ? "-112%"
+                        : "12%";
+            }
+        }
+        else if (verticalDirection > 0d)
+        {
+            translateY = "12%";
+        }
+
+        return FormattableString.Invariant(
+            $"--tooltip-x: {x:0.##}%; --tooltip-y: {y:0.##}%; --tooltip-translate-x: {translateX}; --tooltip-translate-y: {translateY}; --tooltip-color: {item.Color}");
+    }
+
+    private string Percentage(
+        decimal amount)
+    {
+        if (_summary is null ||
+            _summary.MonthlyCost <= 0m)
+        {
+            return "0%";
+        }
+
+        var percentage =
+            amount /
+            _summary.MonthlyCost;
+
+        return percentage.ToString(
+            "P1",
+            System.Globalization.CultureInfo.CurrentCulture);
     }
 
     private string Money(
@@ -258,29 +865,39 @@
             currency);
     }
 
-    private static string Initials(
-        string name)
+    private void OnBaseCurrencyChanged()
     {
-        return string.Concat(
-            name.Split(
-                    ' ',
-                    StringSplitOptions.RemoveEmptyEntries)
-                .Take(2)
-                .Select(part =>
-                    char.ToUpperInvariant(part[0])));
+        _ = InvokeAsync(
+            async () =>
+            {
+                await LoadAsync();
+                StateHasChanged();
+            });
     }
 
-    private string Billing(
-        BillingPeriod period)
+    public void Dispose()
     {
-        return T[$"Billing.{period}"];
+        State.BaseCurrencyChanged -=
+            OnBaseCurrencyChanged;
     }
 
-    private static string FormatDate(
-        DateOnly date)
+    private enum CostGrouping
     {
-        return date.ToString(
-            "d",
-            System.Globalization.CultureInfo.CurrentCulture);
+        Category,
+        Subscription
     }
+
+    private sealed record CostChartItem(
+        string Key,
+        string Name,
+        decimal Amount,
+        string Color,
+        string TargetUrl,
+        decimal Offset);
+
+    private sealed record OverviewInsight(
+        string Icon,
+        string Title,
+        string Description,
+        string TargetUrl);
 }

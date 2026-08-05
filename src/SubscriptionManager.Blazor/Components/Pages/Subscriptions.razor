@@ -1,7 +1,7 @@
 @page "/subscriptions"
 
 @attribute [Authorize]
-@implements IDisposable
+@implements IAsyncDisposable
 
 @using SubscriptionManager.Blazor.Features.Currencies
 @using SubscriptionManager.Blazor.Features.DigitalServices
@@ -11,6 +11,7 @@
 @inject AppState State
 @inject Localizer T
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Subscription Manager — @T["Navigation.Subscriptions"]</PageTitle>
 
@@ -132,40 +133,100 @@
 
                 <div class="subscription-filters">
                     <div class="subscription-filter-group subscription-status-filters">
-                        <button class="subscription-filter @(_status == StatusFilter.Active ? "active" : null)"
-                                @onclick="() => _status = StatusFilter.Active">
+                        <button type="button"
+                                class="subscription-filter @(_status == StatusFilter.Active ? "active" : null)"
+                                @onclick="() => SetStatus(StatusFilter.Active)">
                             @T["Filter.Active"]
                         </button>
 
-                        <button class="subscription-filter @(_status == StatusFilter.All ? "active" : null)"
-                                @onclick="() => _status = StatusFilter.All">
+                        <button type="button"
+                                class="subscription-filter @(_status == StatusFilter.All ? "active" : null)"
+                                @onclick="() => SetStatus(StatusFilter.All)">
                             @T["Filter.All"]
                         </button>
 
-                        <button class="subscription-filter @(_status == StatusFilter.Ended ? "active" : null)"
-                                @onclick="() => _status = StatusFilter.Ended">
+                        <button type="button"
+                                class="subscription-filter @(_status == StatusFilter.Ended ? "active" : null)"
+                                @onclick="() => SetStatus(StatusFilter.Ended)">
                             @T["Filter.Ended"]
                         </button>
                     </div>
 
-                    <div class="subscription-filter-group subscription-category-filters">
-                        @foreach (var category in Categories)
-                        {
-                            <button class="subscription-filter @(_category == category ? "active" : null)"
-                                    @onclick="() => _category = category">
-                                @CategoryLabel(category)
-                            </button>
-                        }
+                    <div class="subscription-category-navigation @CategoryNavigationClass">
+                        <button type="button"
+                                class="subscription-category-scroll previous"
+                                disabled="@(!_canScrollCategoriesLeft)"
+                                title="@T["Subscriptions.Categories.Previous"]"
+                                aria-label="@T["Subscriptions.Categories.Previous"]"
+                                @onclick="() => ScrollCategoriesAsync(-1)">
+                            <AppIcon Name="chevron" />
+                        </button>
+
+                        <div class="subscription-filter-group subscription-category-filters"
+                             @ref="_categoryFiltersElement">
+                            @foreach (var category in Categories)
+                            {
+                                var selected = _category == category;
+
+                                <button type="button"
+                                        class="subscription-filter @(selected ? "active" : null)"
+                                        aria-current="@(selected ? "true" : null)"
+                                        @onclick="() => SetCategory(category)">
+                                    @CategoryLabel(category)
+                                </button>
+                            }
+                        </div>
+
+                        <button type="button"
+                                class="subscription-category-scroll next"
+                                disabled="@(!_canScrollCategoriesRight)"
+                                title="@T["Subscriptions.Categories.Next"]"
+                                aria-label="@T["Subscriptions.Categories.Next"]"
+                                @onclick="() => ScrollCategoriesAsync(1)">
+                            <AppIcon Name="chevron" />
+                        </button>
                     </div>
                 </div>
 
+                @if (SelectedSubscriptionFilters.Count > 0)
+                {
+                    <div class="subscription-applied-filters"
+                         aria-label="@T["Subscriptions.Filter.Applied"]">
+                        @foreach (var filter in SelectedSubscriptionFilters)
+                        {
+                            <div class="subscription-applied-filter">
+                                <span>
+                                    @T[
+                                        "Subscriptions.Filter.Subscription",
+                                        filter.Name]
+                                </span>
+
+                                <button type="button"
+                                        title="@T["Subscriptions.Filter.ClearSubscription"]"
+                                        aria-label="@T["Subscriptions.Filter.ClearSubscription"]"
+                                        @onclick="() => RemoveSubscriptionFilter(filter.Id)">
+                                    <AppIcon Name="close" />
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+
                 <div class="subscription-list">
-                    @if (!Filtered.Any())
+                    @if (_subscriptions.Count == 0)
                     {
                         <div class="empty-subscriptions">
                             <AppIcon Name="search" />
                             <strong>@T["Empty.Title"]</strong>
                             <span>@T["Empty.Description"]</span>
+                        </div>
+                    }
+                    else if (!Filtered.Any())
+                    {
+                        <div class="empty-subscriptions">
+                            <AppIcon Name="search" />
+                            <strong>@T["Subscriptions.NoResults.Title"]</strong>
+                            <span>@T["Subscriptions.NoResults.Description"]</span>
                         </div>
                     }
                     else
@@ -709,6 +770,22 @@
 }
 
 @code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "status")]
+    public string? StatusQuery { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "category")]
+    public string? CategoryQuery { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "customCategory")]
+    public string? CustomCategoryQuery { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "subscriptionId")]
+    public Guid[]? SubscriptionIdQuery { get; set; }
+
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask
     {
@@ -725,9 +802,13 @@
 
     private bool _loading = true;
     private bool _saving;
+    private bool _categoryScrollInitialized;
+    private bool _canScrollCategoriesLeft;
+    private bool _canScrollCategoriesRight;
 
     private string? _pageError;
     private string? _dialogError;
+    private string? _revealedCategory;
     private string _search = string.Empty;
     private string _catalogSearch = string.Empty;
     private string _category = AllCategories;
@@ -742,10 +823,37 @@
     private SubscriptionFormModel _form = new();
     private EndSubscriptionModel _endModel = new();
 
+    private ElementReference _categoryFiltersElement;
+    private IJSObjectReference? _categoryScrollModule;
+    private DotNetObjectReference<Subscriptions>? _dotNetReference;
+
     private const string AllCategories = "__all";
+
+    private string CategoryNavigationClass =>
+        $"{(_canScrollCategoriesLeft ? "can-scroll-left" : null)} " +
+        $"{(_canScrollCategoriesRight ? "can-scroll-right" : null)}";
 
     private SubscriptionCostSummaryItemResponse? MostExpensive =>
         _summary?.TopSubscriptions.FirstOrDefault();
+
+    private IReadOnlyList<Guid> SelectedSubscriptionIds =>
+        SubscriptionIdQuery?
+            .Distinct()
+            .ToArray() ??
+        [];
+
+    private IReadOnlyList<AppliedSubscriptionFilter>
+        SelectedSubscriptionFilters =>
+        SelectedSubscriptionIds
+            .Select(subscriptionId =>
+                new AppliedSubscriptionFilter(
+                    subscriptionId,
+                    _subscriptions
+                        .FirstOrDefault(subscription =>
+                            subscription.Id == subscriptionId)
+                        ?.Name ??
+                    T["Subscriptions.Filter.Unavailable"]))
+            .ToArray();
 
     private IReadOnlyList<string> Categories =>
         new[] { AllCategories }
@@ -773,6 +881,9 @@
 
     private IEnumerable<SubscriptionResponse> Filtered =>
         _subscriptions
+            .Where(subscription =>
+                SelectedSubscriptionIds.Count == 0 ||
+                SelectedSubscriptionIds.Contains(subscription.Id))
             .Where(MatchesStatus)
             .Where(x =>
                 _category == AllCategories ||
@@ -888,6 +999,59 @@
         await LoadAsync();
     }
 
+    protected override void OnParametersSet()
+    {
+        if (!_loading)
+        {
+            ApplyQueryFilters();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        if (_loading ||
+            _summary is null ||
+            !string.IsNullOrWhiteSpace(_pageError))
+        {
+            return;
+        }
+
+        _categoryScrollModule ??=
+            await JS.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./Components/Pages/Subscriptions.razor.js");
+
+        if (!_categoryScrollInitialized)
+        {
+            _dotNetReference ??=
+                DotNetObjectReference.Create(this);
+
+            await _categoryScrollModule.InvokeVoidAsync(
+                "initialize",
+                _categoryFiltersElement,
+                _dotNetReference);
+
+            _categoryScrollInitialized = true;
+        }
+
+        var revealSelected =
+            !string.Equals(
+                _revealedCategory,
+                _category,
+                StringComparison.OrdinalIgnoreCase);
+
+        await _categoryScrollModule.InvokeVoidAsync(
+            "refresh",
+            _categoryFiltersElement,
+            revealSelected);
+
+        if (revealSelected)
+        {
+            _revealedCategory = _category;
+        }
+    }
+
     private void OnBaseCurrencyChanged()
     {
         _ = InvokeAsync(
@@ -900,6 +1064,8 @@
 
     private async Task LoadAsync()
     {
+        await DisposeCategoryScrollAsync();
+
         _loading = true;
         _pageError = null;
 
@@ -931,7 +1097,183 @@
         finally
         {
             _loading = false;
+            ApplyQueryFilters();
         }
+    }
+
+    private void ApplyQueryFilters()
+    {
+        if (SelectedSubscriptionIds.Count > 0)
+        {
+            _status = StatusFilter.All;
+            _category = AllCategories;
+            return;
+        }
+
+        _status = ParseStatus(StatusQuery);
+
+        var requestedCategory =
+            !string.IsNullOrWhiteSpace(CategoryQuery)
+                ? CategoryQuery
+                : CustomCategoryQuery;
+
+        _category =
+            requestedCategory is not null &&
+            Categories.Contains(
+                requestedCategory,
+                StringComparer.OrdinalIgnoreCase)
+                ? Categories.First(category =>
+                    string.Equals(
+                        category,
+                        requestedCategory,
+                        StringComparison.OrdinalIgnoreCase))
+                : AllCategories;
+    }
+
+    private static StatusFilter ParseStatus(
+        string? value)
+    {
+        if (string.Equals(
+                value,
+                "all",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusFilter.All;
+        }
+
+        if (string.Equals(
+                value,
+                "ended",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusFilter.Ended;
+        }
+
+        return StatusFilter.Active;
+    }
+
+    private void SetStatus(
+        StatusFilter status)
+    {
+        NavigateToFilters(
+            status,
+            _category);
+    }
+
+    private void SetCategory(
+        string category)
+    {
+        NavigateToFilters(
+            _status,
+            category);
+    }
+
+    private void RemoveSubscriptionFilter(
+        Guid subscriptionId)
+    {
+        var remainingIds =
+            SelectedSubscriptionIds
+                .Where(id => id != subscriptionId)
+                .ToArray();
+
+        if (remainingIds.Length == 0)
+        {
+            NavigateToFilters(
+                StatusFilter.All,
+                AllCategories);
+
+            return;
+        }
+
+        var uri =
+            Navigation.GetUriWithQueryParameters(
+                "/subscriptions",
+                new Dictionary<string, object?>
+                {
+                    ["subscriptionId"] = remainingIds
+                });
+
+        Navigation.NavigateTo(uri);
+    }
+
+    private async Task ScrollCategoriesAsync(
+        int direction)
+    {
+        if (_categoryScrollModule is null ||
+            !_categoryScrollInitialized)
+        {
+            return;
+        }
+
+        await _categoryScrollModule.InvokeVoidAsync(
+            "scroll",
+            _categoryFiltersElement,
+            direction);
+    }
+
+    [JSInvokable]
+    public Task UpdateCategoryScrollState(
+        bool canScrollLeft,
+        bool canScrollRight)
+    {
+        if (_canScrollCategoriesLeft == canScrollLeft &&
+            _canScrollCategoriesRight == canScrollRight)
+        {
+            return Task.CompletedTask;
+        }
+
+        _canScrollCategoriesLeft = canScrollLeft;
+        _canScrollCategoriesRight = canScrollRight;
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void NavigateToFilters(
+        StatusFilter status,
+        string category)
+    {
+        string? predefinedCategory = null;
+        string? customCategory = null;
+
+        if (category != AllCategories)
+        {
+            if (IsCustomCategory(category))
+            {
+                customCategory = category;
+            }
+            else
+            {
+                predefinedCategory = category;
+            }
+        }
+
+        var uri =
+            Navigation.GetUriWithQueryParameters(
+                "/subscriptions",
+                new Dictionary<string, object?>
+                {
+                    ["status"] =
+                        status == StatusFilter.Active
+                            ? null
+                            : status.ToString().ToLowerInvariant(),
+
+                    ["category"] = predefinedCategory,
+                    ["customCategory"] = customCategory,
+                    ["subscriptionId"] = null
+                });
+
+        Navigation.NavigateTo(uri);
+    }
+
+    private bool IsCustomCategory(
+        string category)
+    {
+        return _digitalServices.Any(service =>
+            !service.IsPredefined &&
+            string.Equals(
+                service.CustomCategoryName,
+                category,
+                StringComparison.OrdinalIgnoreCase));
     }
 
     private void OpenCatalog()
@@ -1224,9 +1566,16 @@
     private string CategoryKeyFor(
         SubscriptionResponse subscription)
     {
-        return ServiceFor(subscription) is { } service
-            ? ServiceCategoryLabel(service)
-            : T["Category.Other"];
+        if (ServiceFor(subscription) is not { } service)
+        {
+            return "Other";
+        }
+
+        return !service.IsPredefined &&
+               !string.IsNullOrWhiteSpace(
+                   service.CustomCategoryName)
+            ? service.CustomCategoryName
+            : service.Category;
     }
 
     private string CategoryFor(
@@ -1257,7 +1606,7 @@
     {
         if (category == AllCategories)
         {
-            return T["Filter.All"];
+            return T["Filter.AllCategories"];
         }
 
         var key = $"Category.{category}";
@@ -1351,10 +1700,47 @@
         }[index % 4];
     }
 
-    public void Dispose()
+    private async ValueTask DisposeCategoryScrollAsync()
+    {
+        if (_categoryScrollModule is not null &&
+            _categoryScrollInitialized)
+        {
+            try
+            {
+                await _categoryScrollModule.InvokeVoidAsync(
+                    "dispose",
+                    _categoryFiltersElement);
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+
+        _categoryScrollInitialized = false;
+        _canScrollCategoriesLeft = false;
+        _canScrollCategoriesRight = false;
+        _revealedCategory = null;
+    }
+
+    public async ValueTask DisposeAsync()
     {
         State.BaseCurrencyChanged -=
             OnBaseCurrencyChanged;
+
+        await DisposeCategoryScrollAsync();
+
+        _dotNetReference?.Dispose();
+
+        if (_categoryScrollModule is not null)
+        {
+            try
+            {
+                await _categoryScrollModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
     }
 
     private enum StatusFilter
@@ -1379,4 +1765,8 @@
         string Name,
         string Tone,
         decimal Amount);
+
+    private sealed record AppliedSubscriptionFilter(
+        Guid Id,
+        string Name);
 }
