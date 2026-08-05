@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.Account.GetAccountPreferences;
+using SubscriptionManager.Application.Account.UpdateAccountPreferences;
 using SubscriptionManager.Application.DigitalServices.CreateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeactivateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
@@ -9,11 +11,9 @@ using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.Identity.ConfirmEmail;
 using SubscriptionManager.Application.Identity.DeleteUser;
 using SubscriptionManager.Application.Identity.ForgotPassword;
-using SubscriptionManager.Application.Identity.GetBaseCurrency;
 using SubscriptionManager.Application.Identity.LoginUser;
 using SubscriptionManager.Application.Identity.RegisterUser;
 using SubscriptionManager.Application.Identity.ResetPassword;
-using SubscriptionManager.Application.Identity.UpdateBaseCurrency;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
 using SubscriptionManager.Application.Subscriptions.DeleteSubscription;
@@ -59,8 +59,8 @@ public static class DependencyInjection
         services.AddScoped<LoginUserHandler>();
         services.AddScoped<ForgotPasswordHandler>();
         services.AddScoped<ResetPasswordHandler>();
-        services.AddScoped<GetBaseCurrencyHandler>();
-        services.AddScoped<UpdateBaseCurrencyHandler>();
+        services.AddScoped<GetAccountPreferencesHandler>();
+        services.AddScoped<UpdateAccountPreferencesHandler>();
         services.AddScoped<DeleteUserHandler>();
 
         return services;

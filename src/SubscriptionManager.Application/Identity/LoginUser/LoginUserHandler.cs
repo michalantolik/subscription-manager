@@ -1,5 +1,6 @@
 ﻿using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Application.Common.Localization;
 
 namespace SubscriptionManager.Application.Identity.LoginUser;
 
@@ -26,20 +27,32 @@ public sealed class LoginUserHandler(
         var accessToken = accessTokenGenerator.GenerateToken(
             authenticationResult.UserId!.Value);
 
-        return LoginUserResult.Success(accessToken);
+        return LoginUserResult.Success(
+            accessToken,
+            authenticationResult.Language!.Value);
     }
 }
 
 public sealed record LoginUserResult(
     bool Succeeded,
     string? AccessToken,
+    Language? Language,
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static LoginUserResult Success(
-        string accessToken)
-        => new(true, accessToken, []);
+        string accessToken,
+        Language language)
+        => new(
+            true,
+            accessToken,
+            language,
+            []);
 
     public static LoginUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
-        => new(false, null, errors.ToArray());
+        => new(
+            false,
+            null,
+            null,
+            errors.ToArray());
 }

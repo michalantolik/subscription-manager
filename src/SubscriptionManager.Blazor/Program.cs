@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using SubscriptionManager.Blazor.Components;
 using SubscriptionManager.Blazor.Configuration;
+using SubscriptionManager.Blazor.Features.Account;
 using SubscriptionManager.Blazor.Features.Authentication;
 using SubscriptionManager.Blazor.Features.DigitalServices;
 using SubscriptionManager.Blazor.Features.SavingsPlans;
@@ -125,6 +126,17 @@ builder.Services.AddHttpClient<SavingsPlansApiClient>(
     });
 
 builder.Services.AddHttpClient<DigitalServicesApiClient>(
+    (serviceProvider, client) =>
+    {
+        var options = serviceProvider
+            .GetRequiredService<IOptions<ApiOptions>>()
+            .Value;
+
+        client.BaseAddress =
+            new Uri(options.BaseUrl);
+    });
+
+builder.Services.AddHttpClient<AccountApiClient>(
     (serviceProvider, client) =>
     {
         var options = serviceProvider

@@ -1,6 +1,9 @@
 @using System.Security.Claims
+@using SubscriptionManager.Blazor.Features.Account
 @using SubscriptionManager.Blazor.Features.Authentication
 @using SubscriptionManager.Blazor.Features.Currencies
+@using SubscriptionManager.Blazor.Features.Localization
+@inject AccountApiClient AccountApiClient
 @inject AuthenticationApiClient AuthenticationApiClient
 @inject AppState State
 @inject Localizer T
@@ -60,29 +63,45 @@
 
                     <section class="account-preferences">
                         <div class="account-preferences-heading">
-                            <div>
-                                <h3>@T["Account.Currency.Title"]</h3>
-                                <p>@T["Account.Currency.Description"]</p>
-                            </div>
+                            <h3>@T["Account.Preferences.Title"]</h3>
+                            <p>@T["Account.Preferences.Description"]</p>
                         </div>
 
-                        @if (_isLoadingBaseCurrency)
+                        @if (_isLoadingPreferences)
                         {
-                            <div class="account-currency-loading"
+                            <div class="account-preferences-loading"
                                  role="status">
-                                <span class="account-currency-spinner"
+                                <span class="account-preferences-spinner"
                                       aria-hidden="true"></span>
-                                @T["Account.Currency.Loading"]
+                                @T["Account.Preferences.Loading"]
                             </div>
                         }
                         else
                         {
-                            <div class="account-currency-controls">
-                                <label>
-                                    <span>@T["Account.Currency.Label"]</span>
+                            <div class="account-preferences-fields">
+                                <label class="account-preference-field">
+                                    <span>@T["Account.Preferences.LanguageLabel"]</span>
+
+                                    <select @bind="_language"
+                                            disabled="@_isSavingPreferences">
+                                        @foreach (var language in Enum.GetValues<Language>())
+                                        {
+                                            <option value="@language">
+                                                @GetLanguageName(language)
+                                            </option>
+                                        }
+                                    </select>
+
+                                    <small>
+                                        @T["Account.Preferences.LanguageDescription"]
+                                    </small>
+                                </label>
+
+                                <label class="account-preference-field">
+                                    <span>@T["Account.Preferences.CurrencyLabel"]</span>
 
                                     <select @bind="_baseCurrency"
-                                            disabled="@_isSavingBaseCurrency">
+                                            disabled="@_isSavingPreferences">
                                         @foreach (var currency in Enum.GetValues<Currency>())
                                         {
                                             <option value="@currency">
@@ -90,31 +109,37 @@
                                             </option>
                                         }
                                     </select>
-                                </label>
 
+                                    <small>
+                                        @T["Account.Preferences.CurrencyDescription"]
+                                    </small>
+                                </label>
+                            </div>
+
+                            <div class="account-preferences-actions">
                                 <button class="primary-button"
                                         type="button"
-                                        disabled="@(_isSavingBaseCurrency || _baseCurrency == _savedBaseCurrency)"
-                                        @onclick="SaveBaseCurrencyAsync">
-                                    @(_isSavingBaseCurrency
-                                        ? T["Account.Currency.Saving"]
-                                        : T["Account.Currency.Save"])
+                                        disabled="@(_isSavingPreferences || !PreferencesChanged)"
+                                        @onclick="SavePreferencesAsync">
+                                    @(_isSavingPreferences
+                                        ? T["Account.Preferences.Saving"]
+                                        : T["Account.Preferences.Save"])
                                 </button>
                             </div>
                         }
 
-                        @if (_baseCurrencySaved)
+                        @if (_preferencesSaved)
                         {
-                            <div class="account-currency-message account-currency-message-success"
+                            <div class="account-preferences-message account-preferences-message-success"
                                  role="status">
-                                @T["Account.Currency.Saved"]
+                                @T["Account.Preferences.Saved"]
                             </div>
                         }
-                        else if (!string.IsNullOrWhiteSpace(_baseCurrencyError))
+                        else if (!string.IsNullOrWhiteSpace(_preferencesError))
                         {
-                            <div class="account-currency-message account-currency-message-error"
+                            <div class="account-preferences-message account-preferences-message-error"
                                  role="alert">
-                                @_baseCurrencyError
+                                @_preferencesError
                             </div>
                         }
                     </section>
@@ -231,14 +256,23 @@
 
     private CancellationTokenSource? _cancellationTokenSource;
     private DialogStage _stage = DialogStage.Settings;
+
+    private Language _language = Language.Polish;
+    private Language _savedLanguage = Language.Polish;
     private Currency _baseCurrency = Currency.PLN;
     private Currency _savedBaseCurrency = Currency.PLN;
-    private bool _isLoadingBaseCurrency = true;
-    private bool _isSavingBaseCurrency;
-    private bool _baseCurrencySaved;
+
+    private bool _isLoadingPreferences = true;
+    private bool _isSavingPreferences;
+    private bool _preferencesSaved;
     private bool _confirmed;
-    private string? _baseCurrencyError;
+
+    private string? _preferencesError;
     private string? _error;
+
+    private bool PreferencesChanged =>
+        _language != _savedLanguage ||
+        _baseCurrency != _savedBaseCurrency;
 
     private string Email =>
         User.FindFirst(ClaimTypes.Email)?.Value ??
@@ -271,90 +305,134 @@
         _cancellationTokenSource =
             new CancellationTokenSource();
 
-        await LoadBaseCurrencyAsync();
+        await LoadPreferencesAsync();
     }
 
-    private async Task LoadBaseCurrencyAsync()
+    private async Task LoadPreferencesAsync()
     {
-        _isLoadingBaseCurrency = true;
-        _baseCurrencySaved = false;
-        _baseCurrencyError = null;
+        _isLoadingPreferences = true;
+        _preferencesSaved = false;
+        _preferencesError = null;
 
         try
         {
-            var baseCurrency =
-                await AuthenticationApiClient.GetBaseCurrencyAsync(
+            var preferences =
+                await AccountApiClient.GetPreferencesAsync(
                     User,
                     _cancellationTokenSource!.Token);
 
-            if (baseCurrency is null)
-            {
-                _baseCurrencyError =
-                    T["Account.Currency.Error"];
-                return;
-            }
-
-            _baseCurrency = baseCurrency.Value;
-            _savedBaseCurrency = baseCurrency.Value;
+            _language = preferences.Language;
+            _savedLanguage = preferences.Language;
+            _baseCurrency = preferences.BaseCurrency;
+            _savedBaseCurrency = preferences.BaseCurrency;
         }
         catch (HttpRequestException)
         {
-            _baseCurrencyError =
-                T["Account.Currency.Error"];
+            _preferencesError =
+                T["Account.Preferences.Error"];
+        }
+        catch (InvalidOperationException)
+        {
+            _preferencesError =
+                T["Account.Preferences.Error"];
         }
         catch (OperationCanceledException)
         {
         }
         finally
         {
-            _isLoadingBaseCurrency = false;
+            _isLoadingPreferences = false;
         }
     }
 
-    private async Task SaveBaseCurrencyAsync()
+    private async Task SavePreferencesAsync()
     {
-        if (_isSavingBaseCurrency ||
-            _baseCurrency == _savedBaseCurrency)
+        if (_isSavingPreferences || !PreferencesChanged)
         {
             return;
         }
 
-        _isSavingBaseCurrency = true;
-        _baseCurrencySaved = false;
-        _baseCurrencyError = null;
+        _isSavingPreferences = true;
+        _preferencesSaved = false;
+        _preferencesError = null;
+
+        var languageChanged =
+            _language != _savedLanguage;
+
+        var baseCurrencyChanged =
+            _baseCurrency != _savedBaseCurrency;
 
         try
         {
-            var result =
-                await AuthenticationApiClient.UpdateBaseCurrencyAsync(
-                    _baseCurrency,
-                    User,
-                    _cancellationTokenSource!.Token);
+            await AccountApiClient.UpdatePreferencesAsync(
+                _language,
+                _baseCurrency,
+                User,
+                _cancellationTokenSource!.Token);
 
-            if (!result.Succeeded)
+            _savedLanguage = _language;
+            _savedBaseCurrency = _baseCurrency;
+
+            if (baseCurrencyChanged)
             {
-                _baseCurrencyError =
-                    T["Account.Currency.Error"];
+                State.NotifyBaseCurrencyChanged();
+            }
+
+            if (languageChanged)
+            {
+                ApplySelectedLanguage();
                 return;
             }
 
-            _savedBaseCurrency = _baseCurrency;
-            _baseCurrencySaved = true;
-
-            State.NotifyBaseCurrencyChanged();
+            _preferencesSaved = true;
         }
         catch (HttpRequestException)
         {
-            _baseCurrencyError =
-                T["Account.Currency.Error"];
+            _preferencesError =
+                T["Account.Preferences.Error"];
         }
         catch (OperationCanceledException)
         {
         }
         finally
         {
-            _isSavingBaseCurrency = false;
+            _isSavingPreferences = false;
         }
+    }
+
+    private void ApplySelectedLanguage()
+    {
+        var culture =
+            _language.ToCultureName();
+
+        var relativePath =
+            Navigation.ToBaseRelativePath(
+                Navigation.Uri);
+
+        var redirectUri =
+            string.IsNullOrWhiteSpace(relativePath)
+                ? "/"
+                : $"/{relativePath}";
+
+        Navigation.NavigateTo(
+            $"/culture/set?culture={Uri.EscapeDataString(culture)}" +
+            $"&redirectUri={Uri.EscapeDataString(redirectUri)}",
+            forceLoad: true);
+    }
+
+    private static string GetLanguageName(
+        Language language)
+    {
+        return language switch
+        {
+            Language.Polish => "Polski",
+            Language.English => "English",
+            Language.German => "Deutsch",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(language),
+                language,
+                "The language is not supported.")
+        };
     }
 
     private void OpenConfirmation()
@@ -438,6 +516,7 @@
     {
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource?.Dispose();
+
         return ValueTask.CompletedTask;
     }
 

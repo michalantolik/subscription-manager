@@ -2,6 +2,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Identity;
@@ -95,7 +96,7 @@ public sealed class IdentityServiceTests
     }
 
     [Fact]
-    public async Task UpdateBaseCurrencyAsync_ShouldUpdateBaseCurrency_WhenUserExists()
+    public async Task UpdateAccountPreferencesAsync_ShouldUpdatePreferences_WhenUserExists()
     {
         await using var connection =
             new SqliteConnection("Data Source=:memory:");
@@ -121,6 +122,7 @@ public sealed class IdentityServiceTests
             Id = Guid.NewGuid(),
             UserName = "user@example.com",
             Email = "user@example.com",
+            Language = Language.Polish,
             BaseCurrency = Currency.PLN
         };
 
@@ -135,28 +137,37 @@ public sealed class IdentityServiceTests
                 dbContext);
 
         var result =
-            await identityService.UpdateBaseCurrencyAsync(
+            await identityService.UpdateAccountPreferencesAsync(
                 user.Id,
+                Language.German,
                 Currency.EUR);
 
         Assert.True(result);
 
-        var baseCurrency =
+        var preferences =
             await dbContext.Users
                 .AsNoTracking()
                 .Where(currentUser =>
                     currentUser.Id == user.Id)
                 .Select(currentUser =>
-                    currentUser.BaseCurrency)
+                    new
+                    {
+                        currentUser.Language,
+                        currentUser.BaseCurrency
+                    })
                 .SingleAsync();
 
         Assert.Equal(
+            Language.German,
+            preferences.Language);
+
+        Assert.Equal(
             Currency.EUR,
-            baseCurrency);
+            preferences.BaseCurrency);
     }
 
     [Fact]
-    public async Task UpdateBaseCurrencyAsync_ShouldReturnFalse_WhenUserDoesNotExist()
+    public async Task UpdateAccountPreferencesAsync_ShouldReturnFalse_WhenUserDoesNotExist()
     {
         await using var connection =
             new SqliteConnection("Data Source=:memory:");
@@ -183,15 +194,16 @@ public sealed class IdentityServiceTests
                 dbContext);
 
         var result =
-            await identityService.UpdateBaseCurrencyAsync(
+            await identityService.UpdateAccountPreferencesAsync(
                 Guid.NewGuid(),
+                Language.English,
                 Currency.EUR);
 
         Assert.False(result);
     }
 
     [Fact]
-    public async Task UpdateBaseCurrencyAsync_ShouldThrow_WhenBaseCurrencyIsInvalid()
+    public async Task UpdateAccountPreferencesAsync_ShouldThrow_WhenLanguageIsInvalid()
     {
         await using var connection =
             new SqliteConnection("Data Source=:memory:");
@@ -218,8 +230,43 @@ public sealed class IdentityServiceTests
                 dbContext);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-            identityService.UpdateBaseCurrencyAsync(
+            identityService.UpdateAccountPreferencesAsync(
                 Guid.NewGuid(),
+                (Language)999,
+                Currency.EUR));
+    }
+
+    [Fact]
+    public async Task UpdateAccountPreferencesAsync_ShouldThrow_WhenBaseCurrencyIsInvalid()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            identityService.UpdateAccountPreferencesAsync(
+                Guid.NewGuid(),
+                Language.English,
                 (Currency)999));
     }
 

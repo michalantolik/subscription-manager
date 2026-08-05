@@ -10,6 +10,11 @@ internal sealed class ApplicationUserConfiguration
     public void Configure(
         EntityTypeBuilder<ApplicationUser> builder)
     {
+        builder.Property(x => x.Language)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+
         builder.Property(x => x.BaseCurrency)
             .HasConversion<string>()
             .HasMaxLength(3)

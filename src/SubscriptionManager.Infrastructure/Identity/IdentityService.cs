@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Persistence;
 
@@ -14,9 +15,17 @@ public sealed class IdentityService(
     public async Task<CreateUserResult> CreateUserAsync(
         string email,
         string password,
+        Language language,
         Currency baseCurrency,
         CancellationToken cancellationToken = default)
     {
+        if (!Enum.IsDefined(language))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(language),
+                "The language is not supported.");
+        }
+
         if (!Enum.IsDefined(baseCurrency))
         {
             throw new ArgumentOutOfRangeException(
@@ -29,6 +38,7 @@ public sealed class IdentityService(
             Id = Guid.NewGuid(),
             UserName = email,
             Email = email,
+            Language = language,
             BaseCurrency = baseCurrency
         };
 
@@ -47,6 +57,21 @@ public sealed class IdentityService(
             result.Errors.Select(MapError));
     }
 
+    public async Task<AccountPreferences?> GetAccountPreferencesAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user =>
+                new AccountPreferences(
+                    user.Language,
+                    user.BaseCurrency))
+            .SingleOrDefaultAsync(
+                cancellationToken);
+    }
+
     public async Task<Currency?> GetBaseCurrencyAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -60,11 +85,19 @@ public sealed class IdentityService(
                 cancellationToken);
     }
 
-    public async Task<bool> UpdateBaseCurrencyAsync(
+    public async Task<bool> UpdateAccountPreferencesAsync(
         Guid userId,
+        Language language,
         Currency baseCurrency,
         CancellationToken cancellationToken = default)
     {
+        if (!Enum.IsDefined(language))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(language),
+                "The language is not supported.");
+        }
+
         if (!Enum.IsDefined(baseCurrency))
         {
             throw new ArgumentOutOfRangeException(
@@ -84,6 +117,7 @@ public sealed class IdentityService(
             return false;
         }
 
+        user.Language = language;
         user.BaseCurrency = baseCurrency;
 
         await dbContext.SaveChangesAsync(
@@ -178,7 +212,8 @@ public sealed class IdentityService(
         }
 
         return AuthenticateUserResult.Success(
-            user.Id);
+            user.Id,
+            user.Language);
     }
 
     public async Task<PasswordResetToken?> GeneratePasswordResetTokenAsync(

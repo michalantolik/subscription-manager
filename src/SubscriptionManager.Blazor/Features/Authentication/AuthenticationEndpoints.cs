@@ -2,8 +2,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using SubscriptionManager.Blazor.Configuration;
+using SubscriptionManager.Blazor.Features.Currencies;
+using SubscriptionManager.Blazor.Features.Localization;
 
 namespace SubscriptionManager.Blazor.Features.Authentication;
 
@@ -56,12 +59,25 @@ public static class AuthenticationEndpoints
         var confirmPassword = form["confirmPassword"]
             .ToString();
 
-        var languageCode = NormalizeLanguageCode(
-            form["languageCode"].ToString());
+        var languageIsValid =
+            Enum.TryParse<Language>(
+                form["language"].ToString(),
+                ignoreCase: true,
+                out var language) &&
+            Enum.IsDefined(language);
+
+        var baseCurrencyIsValid =
+            Enum.TryParse<Currency>(
+                form["baseCurrency"].ToString(),
+                ignoreCase: true,
+                out var baseCurrency) &&
+            Enum.IsDefined(baseCurrency);
 
         if (string.IsNullOrWhiteSpace(email) ||
             string.IsNullOrWhiteSpace(password) ||
-            string.IsNullOrWhiteSpace(confirmPassword))
+            string.IsNullOrWhiteSpace(confirmPassword) ||
+            !languageIsValid ||
+            !baseCurrencyIsValid)
         {
             return RedirectToRegister(
             [
@@ -88,7 +104,8 @@ public static class AuthenticationEndpoints
                 await authenticationApiClient.RegisterAsync(
                     email,
                     password,
-                    languageCode,
+                    language,
+                    baseCurrency,
                     cancellationToken);
         }
         catch (HttpRequestException)
@@ -159,7 +176,8 @@ public static class AuthenticationEndpoints
 
         if (!loginResult.Succeeded ||
             string.IsNullOrWhiteSpace(
-                loginResult.AccessToken))
+                loginResult.AccessToken) ||
+            loginResult.Language is null)
         {
             var errorCode =
                 AuthenticationErrorCodes.Normalize(
@@ -210,6 +228,10 @@ public static class AuthenticationEndpoints
             principal,
             authenticationProperties);
 
+        SetCultureCookie(
+            context,
+            loginResult.Language.Value);
+
         return Results.LocalRedirect(returnUrl);
     }
 
@@ -248,6 +270,31 @@ public static class AuthenticationEndpoints
             CookieAuthenticationDefaults.AuthenticationScheme);
 
         return Results.LocalRedirect("/login");
+    }
+
+    private static void SetCultureCookie(
+        HttpContext context,
+        Language language)
+    {
+        var cultureName =
+            language.ToCultureName();
+
+        context.Response.Cookies.Append(
+            CookieRequestCultureProvider
+                .DefaultCookieName,
+            CookieRequestCultureProvider
+                .MakeCookieValue(
+                    new RequestCulture(
+                        cultureName)),
+            new CookieOptions
+            {
+                Expires =
+                    DateTimeOffset.UtcNow.AddYears(1),
+
+                IsEssential = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = context.Request.IsHttps
+            });
     }
 
     private static IResult RedirectToRegister(
@@ -291,18 +338,5 @@ public static class AuthenticationEndpoints
         }
 
         return returnUrl;
-    }
-
-    private static string NormalizeLanguageCode(
-        string? languageCode)
-    {
-        return languageCode?
-            .Trim()
-            .ToLowerInvariant() switch
-        {
-            "en" or "en-us" => "en",
-            "de" or "de-de" => "de",
-            _ => "pl"
-        };
     }
 }

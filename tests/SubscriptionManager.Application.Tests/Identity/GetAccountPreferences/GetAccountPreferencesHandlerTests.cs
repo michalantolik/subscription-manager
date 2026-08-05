@@ -1,41 +1,52 @@
 ﻿using Moq;
+using SubscriptionManager.Application.Account.GetAccountPreferences;
 using SubscriptionManager.Application.Common.Identity;
-using SubscriptionManager.Application.Identity.GetBaseCurrency;
+using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Subscriptions;
 
-namespace SubscriptionManager.Application.Tests.Identity.GetBaseCurrency;
+namespace SubscriptionManager.Application.Tests.Identity.GetAccountPreferences;
 
-public sealed class GetBaseCurrencyHandlerTests
+public sealed class GetAccountPreferencesHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ShouldReturnBaseCurrency_WhenUserExists()
+    public async Task HandleAsync_ShouldReturnAccountPreferences()
     {
         var userId = Guid.NewGuid();
+
+        var expectedPreferences =
+            new AccountPreferences(
+                Language.English,
+                Currency.USD);
 
         var identityService =
             new Mock<IIdentityService>();
 
         identityService
             .Setup(service =>
-                service.GetBaseCurrencyAsync(
+                service.GetAccountPreferencesAsync(
                     userId,
                     It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Currency.EUR);
+            .ReturnsAsync(
+                expectedPreferences);
 
         var handler =
-            new GetBaseCurrencyHandler(
+            new GetAccountPreferencesHandler(
                 identityService.Object);
 
         var result =
             await handler.HandleAsync(userId);
 
+        Assert.NotNull(result);
         Assert.Equal(
-            Currency.EUR,
-            result);
+            Language.English,
+            result.Language);
+        Assert.Equal(
+            Currency.USD,
+            result.BaseCurrency);
 
         identityService.Verify(
             service =>
-                service.GetBaseCurrencyAsync(
+                service.GetAccountPreferencesAsync(
                     userId,
                     It.IsAny<CancellationToken>()),
             Times.Once);
@@ -51,13 +62,14 @@ public sealed class GetBaseCurrencyHandlerTests
 
         identityService
             .Setup(service =>
-                service.GetBaseCurrencyAsync(
+                service.GetAccountPreferencesAsync(
                     userId,
                     It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Currency?)null);
+            .ReturnsAsync(
+                (AccountPreferences?)null);
 
         var handler =
-            new GetBaseCurrencyHandler(
+            new GetAccountPreferencesHandler(
                 identityService.Object);
 
         var result =
@@ -67,7 +79,7 @@ public sealed class GetBaseCurrencyHandlerTests
 
         identityService.Verify(
             service =>
-                service.GetBaseCurrencyAsync(
+                service.GetAccountPreferencesAsync(
                     userId,
                     It.IsAny<CancellationToken>()),
             Times.Once);

@@ -1,6 +1,6 @@
 using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
-using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Application.Common.Localization;
 
 namespace SubscriptionManager.Application.Identity.RegisterUser;
 
@@ -14,15 +14,12 @@ public sealed class RegisterUserHandler(
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        var baseCurrency =
-            GetDefaultCurrency(
-                command.LanguageCode);
-
         var result =
             await identityService.CreateUserAsync(
                 command.Email,
                 command.Password,
-                baseCurrency,
+                command.Language,
+                command.BaseCurrency,
                 cancellationToken);
 
         if (!result.Succeeded)
@@ -45,23 +42,10 @@ public sealed class RegisterUserHandler(
                     command.Email,
                     userId,
                     confirmationToken,
-                    command.LanguageCode,
+                    command.Language.ToLanguageCode(),
                     cancellationToken);
         }
 
         return result;
-    }
-
-    private static Currency GetDefaultCurrency(
-        string? languageCode)
-    {
-        return languageCode?
-            .Trim()
-            .ToLowerInvariant() switch
-        {
-            "de" or "de-de" => Currency.EUR,
-            "en" or "en-us" => Currency.EUR,
-            _ => Currency.PLN
-        };
     }
 }

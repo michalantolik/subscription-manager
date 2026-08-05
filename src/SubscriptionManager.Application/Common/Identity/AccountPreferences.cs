@@ -1,10 +1,8 @@
 ﻿using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Subscriptions;
 
-namespace SubscriptionManager.Application.Identity.RegisterUser;
+namespace SubscriptionManager.Application.Common.Identity;
 
-public sealed record RegisterUserCommand(
-    string Email,
-    string Password,
+public sealed record AccountPreferences(
     Language Language,
     Currency BaseCurrency);

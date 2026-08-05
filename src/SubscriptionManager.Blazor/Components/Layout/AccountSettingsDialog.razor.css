@@ -75,27 +75,26 @@
     line-height: 1.55;
 }
 
-.account-currency-controls {
+.account-preferences-fields {
     display: flex;
-    align-items: flex-end;
-    gap: var(--ui-space-3);
+    flex-direction: column;
+    gap: var(--ui-space-4);
 }
 
-    .account-currency-controls label {
-        min-width: 0;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
+.account-preference-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+    .account-preference-field > span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
     }
 
-        .account-currency-controls label > span {
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-    .account-currency-controls select {
+    .account-preference-field select {
         width: 100%;
         min-height: 40px;
         padding: 0 36px 0 12px;
@@ -107,26 +106,37 @@
         font-size: 13px;
     }
 
-        .account-currency-controls select:hover:not(:disabled) {
+        .account-preference-field select:hover:not(:disabled) {
             border-color: var(--border-strong);
         }
 
-        .account-currency-controls select:focus {
+        .account-preference-field select:focus {
             border-color: var(--brand);
             outline: 3px solid var(--brand-soft);
         }
 
-        .account-currency-controls select:disabled {
+        .account-preference-field select:disabled {
             opacity: .65;
             cursor: not-allowed;
         }
 
-    .account-currency-controls .primary-button {
-        min-width: 92px;
+    .account-preference-field small {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+.account-preferences-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+    .account-preferences-actions .primary-button {
+        min-width: 120px;
         min-height: 40px;
     }
 
-.account-currency-loading {
+.account-preferences-loading {
     min-height: 40px;
     display: flex;
     align-items: center;
@@ -135,7 +145,7 @@
     font-size: 12px;
 }
 
-.account-currency-spinner {
+.account-preferences-spinner {
     width: 16px;
     height: 16px;
     flex: 0 0 16px;
@@ -145,7 +155,7 @@
     animation: account-spin .8s linear infinite;
 }
 
-.account-currency-message {
+.account-preferences-message {
     padding: 9px 11px;
     border: 1px solid;
     border-radius: var(--ui-radius-md);
@@ -153,13 +163,13 @@
     line-height: 1.45;
 }
 
-.account-currency-message-success {
+.account-preferences-message-success {
     color: var(--brand-strong);
     background: var(--brand-soft);
     border-color: color-mix(in srgb, var(--brand) 24%, var(--border));
 }
 
-.account-currency-message-error {
+.account-preferences-message-error {
     color: var(--red);
     background: var(--red-soft);
     border-color: color-mix(in srgb, var(--red) 24%, var(--border));
@@ -268,14 +278,9 @@
 }
 
 @media (max-width: 600px) {
-    .account-currency-controls {
-        align-items: stretch;
-        flex-direction: column;
+    .account-preferences-actions .primary-button {
+        width: 100%;
     }
-
-        .account-currency-controls .primary-button {
-            width: 100%;
-        }
 
     .account-danger-zone {
         align-items: stretch;
@@ -289,7 +294,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .account-spinner,
-    .account-currency-spinner {
+    .account-preferences-spinner {
         animation-duration: 1.5s;
     }
 }

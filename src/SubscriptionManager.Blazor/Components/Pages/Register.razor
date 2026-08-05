@@ -3,13 +3,15 @@
 @using Microsoft.AspNetCore.Components
 @using System.Globalization
 @using SubscriptionManager.Blazor.Features.Authentication
+@using SubscriptionManager.Blazor.Features.Currencies
+@using SubscriptionManager.Blazor.Features.Localization
 @inject Localizer T
 
 <PageTitle>
     Subscription Manager — @T["Authentication.Register.Title"]
 </PageTitle>
 
-<section class="page">
+<section class="page register-page">
     <div class="page-heading">
         <div>
             <p class="eyebrow">
@@ -26,8 +28,7 @@
         </div>
     </div>
 
-    <div class="ui-card"
-         style="max-width: 560px;">
+    <div class="ui-card register-card">
         @if (IsCreated)
         {
             <div class="ui-form">
@@ -49,74 +50,139 @@
             <form method="post"
                   action="/authentication/register">
                 <AntiforgeryToken />
-                <input type="hidden"
-                       name="languageCode"
-                       value="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName" />
 
                 <div class="ui-form">
-                    <div class="ui-form-section">
-                        <div class="ui-form-section-header">
-                            <h2 class="ui-form-section-title">
-                                @T["Authentication.Register.FormTitle"]
-                            </h2>
+                    <div class="register-form-sections">
+                        <div class="ui-form-section register-form-section">
+                            <div class="ui-form-section-header">
+                                <h2 class="ui-form-section-title">
+                                    @T["Authentication.Register.FormTitle"]
+                                </h2>
 
-                            <p class="ui-form-section-description">
-                                @T["Authentication.Register.FormDescription"]
-                            </p>
+                                <p class="ui-form-section-description">
+                                    @T["Authentication.Register.FormDescription"]
+                                </p>
+                            </div>
+
+                            <div class="ui-form-grid ui-form-grid-single">
+                                <div class="ui-field">
+                                    <div class="ui-field-heading">
+                                        <label class="ui-label"
+                                               for="register-email">
+                                            @T["Field.Email"]
+                                        </label>
+                                    </div>
+
+                                    <input id="register-email"
+                                           class="ui-control"
+                                           name="email"
+                                           type="email"
+                                           autocomplete="username"
+                                           placeholder="@T["Field.EmailPlaceholder"]"
+                                           required />
+                                </div>
+
+                                <div class="ui-field">
+                                    <div class="ui-field-heading">
+                                        <label class="ui-label"
+                                               for="register-password">
+                                            @T["Authentication.Password"]
+                                        </label>
+                                    </div>
+
+                                    <input id="register-password"
+                                           class="ui-control"
+                                           name="password"
+                                           type="password"
+                                           minlength="8"
+                                           autocomplete="new-password"
+                                           placeholder="@T["Authentication.PasswordPlaceholder"]"
+                                           required />
+                                </div>
+
+                                <div class="ui-field">
+                                    <div class="ui-field-heading">
+                                        <label class="ui-label"
+                                               for="register-confirm-password">
+                                            @T["Authentication.ConfirmPassword"]
+                                        </label>
+                                    </div>
+
+                                    <input id="register-confirm-password"
+                                           class="ui-control"
+                                           name="confirmPassword"
+                                           type="password"
+                                           minlength="8"
+                                           autocomplete="new-password"
+                                           placeholder="@T["Authentication.Register.ConfirmPasswordPlaceholder"]"
+                                           required />
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="ui-form-grid ui-form-grid-single">
-                            <div class="ui-field">
-                                <div class="ui-field-heading">
-                                    <label class="ui-label"
-                                           for="register-email">
-                                        @T["Field.Email"]
-                                    </label>
-                                </div>
+                        <div class="ui-form-section register-form-section">
+                            <div class="ui-form-section-header">
+                                <h2 class="ui-form-section-title">
+                                    @T["Authentication.Register.PreferencesTitle"]
+                                </h2>
 
-                                <input id="register-email"
-                                       class="ui-control"
-                                       name="email"
-                                       type="email"
-                                       autocomplete="username"
-                                       placeholder="@T["Field.EmailPlaceholder"]"
-                                       required />
+                                <p class="ui-form-section-description">
+                                    @T["Authentication.Register.PreferencesDescription"]
+                                </p>
                             </div>
 
-                            <div class="ui-field">
-                                <div class="ui-field-heading">
-                                    <label class="ui-label"
-                                           for="register-password">
-                                        @T["Authentication.Password"]
-                                    </label>
+                            <div class="ui-form-grid ui-form-grid-single">
+                                <div class="ui-field">
+                                    <div class="ui-field-heading">
+                                        <label class="ui-label"
+                                               for="register-language">
+                                            @T["Authentication.Register.LanguageLabel"]
+                                        </label>
+                                    </div>
+
+                                    <select id="register-language"
+                                            class="ui-control"
+                                            name="language"
+                                            required>
+                                        @foreach (var language in Languages)
+                                        {
+                                            <option value="@language.Value"
+                                                    selected="@(language.Value == DefaultLanguage)">
+                                                @language.Label
+                                            </option>
+                                        }
+                                    </select>
+
+                                    <span class="ui-help">
+                                        @T["Authentication.Register.LanguageDescription"]
+                                    </span>
                                 </div>
 
-                                <input id="register-password"
-                                       class="ui-control"
-                                       name="password"
-                                       type="password"
-                                       minlength="8"
-                                       autocomplete="new-password"
-                                       placeholder="@T["Authentication.PasswordPlaceholder"]"
-                                       required />
-                            </div>
+                                <div class="ui-field">
+                                    <div class="ui-field-heading">
+                                        <label class="ui-label"
+                                               for="register-base-currency">
+                                            @T["Authentication.Register.BaseCurrencyLabel"]
+                                        </label>
+                                    </div>
 
-                            <div class="ui-field">
-                                <div class="ui-field-heading">
-                                    <label class="ui-label"
-                                           for="register-confirm-password">
-                                        @T["Authentication.ConfirmPassword"]
-                                    </label>
+                                    <select id="register-base-currency"
+                                            class="ui-control"
+                                            name="baseCurrency"
+                                            required>
+                                        @foreach (var currency in Enum.GetValues<Currency>())
+                                        {
+                                            <option value="@currency"
+                                                    selected="@(currency == DefaultBaseCurrency)">
+                                                @currency
+                                            </option>
+                                        }
+                                    </select>
+
+                                    <span class="ui-help">
+                                        @T["Authentication.Register.BaseCurrencyDescription"]
+                                    </span>
                                 </div>
-
-                                <input id="register-confirm-password"
-                                       class="ui-control"
-                                       name="confirmPassword"
-                                       type="password"
-                                       minlength="8"
-                                       autocomplete="new-password"
-                                       placeholder="@T["Authentication.Register.ConfirmPasswordPlaceholder"]"
-                                       required />
                             </div>
                         </div>
                     </div>
@@ -141,7 +207,7 @@
                         </div>
                     }
 
-                    <div class="ui-form-actions">
+                    <div class="ui-form-actions register-form-actions">
                         <a class="secondary-button"
                            href="/login">
                             @T["Authentication.BackToSignIn"]
@@ -159,11 +225,33 @@
 </section>
 
 @code {
+    private static readonly IReadOnlyList<(Language Value, string Label)>
+        Languages =
+        [
+            (Language.Polish, "Polski"),
+            (Language.English, "English"),
+            (Language.German, "Deutsch")
+        ];
+
     [SupplyParameterFromQuery(Name = "errors")]
     private string? Errors { get; set; }
 
     [SupplyParameterFromQuery(Name = "status")]
     private string? Status { get; set; }
+
+    private Language DefaultLanguage =>
+        CultureInfo.CurrentUICulture
+            .TwoLetterISOLanguageName switch
+        {
+            "en" => Language.English,
+            "de" => Language.German,
+            _ => Language.Polish
+        };
+
+    private Currency DefaultBaseCurrency =>
+        DefaultLanguage == Language.Polish
+            ? Currency.PLN
+            : Currency.EUR;
 
     private bool IsCreated =>
         string.Equals(

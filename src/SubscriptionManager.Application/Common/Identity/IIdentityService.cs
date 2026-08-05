@@ -1,4 +1,5 @@
-﻿using SubscriptionManager.Domain.Subscriptions;
+﻿using SubscriptionManager.Application.Common.Localization;
+using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Common.Identity;
 
@@ -7,16 +8,22 @@ public interface IIdentityService
     Task<CreateUserResult> CreateUserAsync(
         string email,
         string password,
+        Language language,
+        Currency baseCurrency,
+        CancellationToken cancellationToken = default);
+
+    Task<AccountPreferences?> GetAccountPreferencesAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> UpdateAccountPreferencesAsync(
+        Guid userId,
+        Language language,
         Currency baseCurrency,
         CancellationToken cancellationToken = default);
 
     Task<Currency?> GetBaseCurrencyAsync(
         Guid userId,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> UpdateBaseCurrencyAsync(
-        Guid userId,
-        Currency baseCurrency,
         CancellationToken cancellationToken = default);
 
     Task<string?> GenerateEmailConfirmationTokenAsync(
@@ -81,15 +88,17 @@ public sealed record ConfirmEmailResult(
 public sealed record AuthenticateUserResult(
     bool Succeeded,
     Guid? UserId,
+    Language? Language,
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static AuthenticateUserResult Success(
-        Guid userId)
-        => new(true, userId, []);
+        Guid userId,
+        Language language)
+        => new(true, userId, language, []);
 
     public static AuthenticateUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
-        => new(false, null, errors.ToArray());
+        => new(false, null, null, errors.ToArray());
 }
 
 public sealed record PasswordResetToken(

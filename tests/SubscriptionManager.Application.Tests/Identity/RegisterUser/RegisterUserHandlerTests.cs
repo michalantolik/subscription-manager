@@ -1,6 +1,7 @@
 using Moq;
 using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Application.Identity.RegisterUser;
 using SubscriptionManager.Domain.Subscriptions;
 
@@ -9,15 +10,13 @@ namespace SubscriptionManager.Application.Tests.Identity.RegisterUser;
 public sealed class RegisterUserHandlerTests
 {
     [Theory]
-    [InlineData("pl", Currency.PLN)]
-    [InlineData("pl-PL", Currency.PLN)]
-    [InlineData("en", Currency.EUR)]
-    [InlineData("en-US", Currency.EUR)]
-    [InlineData("de", Currency.EUR)]
-    [InlineData("de-DE", Currency.EUR)]
-    public async Task HandleAsync_ShouldCreateUserWithCurrencySelectedForLanguage(
-        string languageCode,
-        Currency expectedCurrency)
+    [InlineData(Language.Polish, Currency.PLN, "pl")]
+    [InlineData(Language.English, Currency.USD, "en")]
+    [InlineData(Language.German, Currency.EUR, "de")]
+    public async Task HandleAsync_ShouldCreateUserWithSelectedPreferences(
+        Language language,
+        Currency baseCurrency,
+        string expectedLanguageCode)
     {
         var userId = Guid.NewGuid();
 
@@ -29,7 +28,8 @@ public sealed class RegisterUserHandlerTests
                 service.CreateUserAsync(
                     "michal@example.com",
                     "Test123!",
-                    expectedCurrency,
+                    language,
+                    baseCurrency,
                     It.IsAny<CancellationToken>()))
             .ReturnsAsync(
                 CreateUserResult.Success(userId));
@@ -52,7 +52,8 @@ public sealed class RegisterUserHandlerTests
         var command = new RegisterUserCommand(
             "michal@example.com",
             "Test123!",
-            languageCode);
+            language,
+            baseCurrency);
 
         var result =
             await handler.HandleAsync(command);
@@ -65,7 +66,8 @@ public sealed class RegisterUserHandlerTests
             service => service.CreateUserAsync(
                 "michal@example.com",
                 "Test123!",
-                expectedCurrency,
+                language,
+                baseCurrency,
                 It.IsAny<CancellationToken>()),
             Times.Once);
 
@@ -82,60 +84,8 @@ public sealed class RegisterUserHandlerTests
                     "michal@example.com",
                     userId,
                     "confirmation-token",
-                    languageCode,
+                    expectedLanguageCode,
                     It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldUsePln_WhenLanguageIsUnknown()
-    {
-        var userId = Guid.NewGuid();
-
-        var identityService =
-            new Mock<IIdentityService>();
-
-        identityService
-            .Setup(service =>
-                service.CreateUserAsync(
-                    "michal@example.com",
-                    "Test123!",
-                    Currency.PLN,
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                CreateUserResult.Success(userId));
-
-        identityService
-            .Setup(service =>
-                service.GenerateEmailConfirmationTokenAsync(
-                    userId,
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                "confirmation-token");
-
-        var emailSender =
-            new Mock<IEmailSender>();
-
-        var handler = new RegisterUserHandler(
-            identityService.Object,
-            emailSender.Object);
-
-        var command = new RegisterUserCommand(
-            "michal@example.com",
-            "Test123!",
-            "unknown");
-
-        var result =
-            await handler.HandleAsync(command);
-
-        Assert.True(result.Succeeded);
-
-        identityService.Verify(
-            service => service.CreateUserAsync(
-                "michal@example.com",
-                "Test123!",
-                Currency.PLN,
-                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -157,6 +107,7 @@ public sealed class RegisterUserHandlerTests
                 service.CreateUserAsync(
                     "michal@example.com",
                     "Test123!",
+                    Language.Polish,
                     Currency.PLN,
                     It.IsAny<CancellationToken>()))
             .ReturnsAsync(
@@ -172,7 +123,8 @@ public sealed class RegisterUserHandlerTests
         var command = new RegisterUserCommand(
             "michal@example.com",
             "Test123!",
-            "pl");
+            Language.Polish,
+            Currency.PLN);
 
         var result =
             await handler.HandleAsync(command);
@@ -194,6 +146,7 @@ public sealed class RegisterUserHandlerTests
             service => service.CreateUserAsync(
                 "michal@example.com",
                 "Test123!",
+                Language.Polish,
                 Currency.PLN,
                 It.IsAny<CancellationToken>()),
             Times.Once);
