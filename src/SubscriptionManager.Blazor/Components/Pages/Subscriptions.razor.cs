@@ -921,6 +921,13 @@ public partial class Subscriptions
             CategoryKeyFor(subscription));
     }
 
+    private static string IconFor(
+        DigitalServiceResponse service)
+    {
+        return SubscriptionCategoryIconMapper.GetIcon(
+            service.Category);
+    }
+
     private string Money(
         decimal value,
         Currency? currency = null)

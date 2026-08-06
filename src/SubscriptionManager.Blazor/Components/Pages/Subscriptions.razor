@@ -237,7 +237,9 @@
                             <article class="subscription-row @(!subscription.IsActive ? "is-ended" : null)"
                                      style="@StyleFor(subscription)">
                                 <div class="service-logo">
-                                    <AppIcon Name="@IconFor(subscription)" />
+                                    <DigitalServiceIcon
+                                        IconKey="@ServiceFor(subscription)?.IconKey"
+                                        FallbackIcon="@IconFor(subscription)" />
                                 </div>
 
                                 <div class="subscription-copy">
@@ -461,7 +463,9 @@
                                     aria-selected="@selected"
                                     @onclick="() => SelectService(service)">
                                 <span class="catalog-logo">
-                                    @Initials(service.Name)
+                                    <DigitalServiceIcon
+                                        IconKey="@service.IconKey"
+                                        FallbackIcon="@IconFor(service)" />
                                 </span>
 
                                 <span class="catalog-copy">

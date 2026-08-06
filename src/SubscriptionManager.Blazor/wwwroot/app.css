@@ -3475,3 +3475,19 @@ h1[tabindex="-1"]:focus {
     .subscription-row.is-ended:hover {
         opacity: .9;
     }
+
+.digital-service-icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+    flex: 0 0 22px;
+    background: currentColor;
+    -webkit-mask: var(--digital-service-icon) center / contain no-repeat;
+    mask: var(--digital-service-icon) center / contain no-repeat;
+}
+
+.catalog-logo .digital-service-icon {
+    width: 20px;
+    height: 20px;
+    flex-basis: 20px;
+}
