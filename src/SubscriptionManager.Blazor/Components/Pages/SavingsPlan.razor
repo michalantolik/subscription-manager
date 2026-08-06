@@ -160,7 +160,7 @@
 
                     <div class="savings-choice-grid">
                         <button type="button"
-                                class="savings-choice-card @(_goalKind == SavingsPlanGoalType.MonthlyBudget ? "selected" : null)"
+                                class="savings-choice-card goal-control @(_goalKind == SavingsPlanGoalType.MonthlyBudget ? "selected" : null)"
                                 aria-pressed="@(_goalKind == SavingsPlanGoalType.MonthlyBudget)"
                                 @onclick="() => SelectGoal(SavingsPlanGoalType.MonthlyBudget)">
                             <span class="savings-choice-icon"><AppIcon Name="budget" /></span>
@@ -177,7 +177,7 @@
                         </button>
 
                         <button type="button"
-                                class="savings-choice-card @(_goalKind == SavingsPlanGoalType.MonthlySavings ? "selected" : null)"
+                                class="savings-choice-card goal-growth @(_goalKind == SavingsPlanGoalType.MonthlySavings ? "selected" : null)"
                                 aria-pressed="@(_goalKind == SavingsPlanGoalType.MonthlySavings)"
                                 @onclick="() => SelectGoal(SavingsPlanGoalType.MonthlySavings)">
                             <span class="savings-choice-icon"><AppIcon Name="report" /></span>
@@ -308,8 +308,19 @@
                 <div class="savings-dialog-list">
                     @foreach (var subscription in _recommendedPlan.Subscriptions)
                     {
-                        <div>
-                            <span class="service-avatar">@Initials(subscription.Name)</span>
+                        var sourceSubscription = FindSubscription(subscription.Id);
+                        <div style="@(sourceSubscription is null ? null : StyleFor(sourceSubscription))">
+                            <span class="savings-service-mark">
+                                @if (sourceSubscription is not null)
+                                {
+                                    <DigitalServiceIcon IconKey="@sourceSubscription.IconKey"
+                                                        FallbackIcon="@IconFor(sourceSubscription)" />
+                                }
+                                else
+                                {
+                                    <AppIcon Name="subscriptions" />
+                                }
+                            </span>
                             <span>
                                 <strong>@subscription.Name</strong>
                                 <small>@Money(subscription.MonthlyCost) @T["PerMonth"]</small>
@@ -408,10 +419,14 @@
                     var isProtected = _protectedSubscriptionIds.Contains(subscription.Id);
 
                     <button class="savings-subscription-choice @(isProtected ? "selected" : null)"
+                            style="@StyleFor(subscription)"
                             type="button"
                             aria-pressed="@isProtected"
                             @onclick="() => ToggleProtected(subscription.Id)">
-                        <span class="service-avatar">@Initials(subscription.Name)</span>
+                        <span class="savings-service-mark">
+                            <DigitalServiceIcon IconKey="@subscription.IconKey"
+                                                FallbackIcon="@IconFor(subscription)" />
+                        </span>
                         <span class="savings-subscription-copy">
                             <strong>@subscription.Name</strong>
                             <small>@CategoryLabel(subscription)</small>
@@ -463,7 +478,7 @@
 
         <div class="savings-actions">
             <button class="ui-button ui-button-secondary" type="button" @onclick="BackToGoal">
-                <AppIcon Name="chevron" CssClass="icon-back" />
+                <AppIcon Name="chevron-left" />
                 @T["Action.Back"]
             </button>
             <button class="ui-button ui-button-primary" type="button" @onclick="ContinueFromPreferences">
@@ -546,7 +561,7 @@
 
         <div class="savings-actions">
             <button class="ui-button ui-button-secondary" type="button" @onclick="BackToPreferences">
-                <AppIcon Name="chevron" CssClass="icon-back" />
+                <AppIcon Name="chevron-left" />
                 @T["Action.Back"]
             </button>
             <button class="ui-button ui-button-primary" type="button" @onclick="CreatePlanAsync">
@@ -626,7 +641,7 @@
 
     private RenderFragment GoalChoice(SavingsPlanGoalType kind, string icon, string titleKey, string descriptionKey) => @<button
         type="button"
-                                                                                                                  class="savings-choice-card @(_goalKind == kind ? "selected" : null)"
+                                                                                                                  class="savings-choice-card goal-@GoalTone(kind) @(_goalKind == kind ? "selected" : null)"
                                                                                                                   aria-pressed="@(_goalKind == kind)"
                                                                                                                   @onclick="() => SelectGoal(kind)">
         <span class="savings-choice-icon"><AppIcon Name="@icon" /></span>
@@ -644,7 +659,7 @@
 
     private RenderFragment StrategyChoice(SavingsPlanStrategy strategy, string titleKey, string descriptionKey) => @<button
         type="button"
-                                                                                                                 class="savings-strategy-card @(_strategy == strategy ? "selected" : null)"
+                                                                                                                 class="savings-strategy-card strategy-@StrategyTone(strategy) @(_strategy == strategy ? "selected" : null)"
                                                                                                                  aria-pressed="@(_strategy == strategy)"
                                                                                                                  @onclick="() => _strategy = strategy">
         <span class="savings-radio-mark">
@@ -692,8 +707,19 @@
         <div class="savings-plan-subscriptions">
             @foreach (var subscription in plan.Subscriptions)
             {
-                <div>
-                    <span class="service-avatar">@Initials(subscription.Name)</span>
+                var sourceSubscription = FindSubscription(subscription.Id);
+                <div class="savings-plan-subscription" style="@(sourceSubscription is null ? null : StyleFor(sourceSubscription))">
+                    <span class="savings-service-mark">
+                        @if (sourceSubscription is not null)
+                        {
+                            <DigitalServiceIcon IconKey="@sourceSubscription.IconKey"
+                                                FallbackIcon="@IconFor(sourceSubscription)" />
+                        }
+                        else
+                        {
+                            <AppIcon Name="subscriptions" />
+                        }
+                    </span>
                     <span>
                         <strong>@subscription.Name</strong>
                         <small>@CategoryLabel(subscription.Category)</small>

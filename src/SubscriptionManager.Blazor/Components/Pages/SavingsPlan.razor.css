@@ -504,9 +504,6 @@
     min-width: 122px;
 }
 
-.savings-actions .icon-back {
-    transform: rotate(180deg);
-}
 
 .savings-summary .savings-card-heading {
     margin-bottom: 17px;
@@ -1205,5 +1202,155 @@
     .savings-analysis-mark,
     .savings-analysis-progress span {
         animation: none;
+    }
+}
+
+/* Savings plan visual language aligned with subscription cards. */
+.savings-choice-card,
+.savings-strategy-card,
+.savings-subscription-choice {
+    --selection-accent: var(--brand);
+    --selection-soft: var(--brand-soft);
+}
+
+.savings-choice-card.goal-control {
+    --selection-accent: var(--blue);
+    --selection-soft: var(--blue-soft);
+}
+
+.savings-choice-card.goal-growth {
+    --selection-accent: var(--brand);
+    --selection-soft: var(--brand-soft);
+}
+
+.savings-strategy-card.strategy-calm {
+    --selection-accent: var(--blue);
+    --selection-soft: var(--blue-soft);
+}
+
+.savings-strategy-card.strategy-balanced {
+    --selection-accent: var(--brand);
+    --selection-soft: var(--brand-soft);
+}
+
+.savings-strategy-card.strategy-strong {
+    --selection-accent: var(--orange);
+    --selection-soft: color-mix(in srgb, var(--orange) 14%, var(--surface));
+}
+
+.savings-choice-card.selected,
+.savings-strategy-card.selected {
+    border-color: var(--selection-accent);
+    background: var(--selection-soft);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--selection-accent) 13%, transparent);
+}
+
+.savings-choice-card.selected .savings-choice-icon {
+    color: var(--selection-accent);
+    background: color-mix(in srgb, var(--surface) 54%, var(--selection-soft));
+    border-color: color-mix(in srgb, var(--selection-accent) 28%, var(--border));
+}
+
+.savings-choice-card.selected .savings-radio-mark,
+.savings-strategy-card.selected .savings-radio-mark {
+    border-color: var(--selection-accent);
+}
+
+.savings-choice-card.selected .savings-radio-mark i,
+.savings-strategy-card.selected .savings-radio-mark i {
+    background: var(--selection-accent);
+}
+
+.savings-subscription-choice {
+    position: relative;
+    overflow: hidden;
+    transition: border-color var(--ui-transition-fast), background var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+}
+
+.savings-subscription-choice::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--subscription-color);
+    opacity: 0;
+    transition: opacity var(--ui-transition-fast);
+}
+
+.savings-subscription-choice:hover {
+    border-color: color-mix(in srgb, var(--subscription-color) 35%, var(--border));
+    background: color-mix(in srgb, var(--subscription-color) 7%, var(--surface));
+}
+
+.savings-subscription-choice:hover::before,
+.savings-subscription-choice.selected::before {
+    opacity: 1;
+}
+
+.savings-subscription-choice.selected {
+    border-color: color-mix(in srgb, var(--subscription-color) 45%, var(--border));
+    background: color-mix(in srgb, var(--subscription-color) 11%, var(--surface));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--subscription-color) 10%, transparent);
+}
+
+.savings-service-mark {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    color: var(--subscription-color, var(--brand-strong));
+    background: color-mix(in srgb, var(--subscription-color, var(--brand)) 16%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--subscription-color, var(--brand)) 28%, var(--border));
+    border-radius: 11px;
+}
+
+.savings-service-mark .digital-service-icon,
+.savings-service-mark .app-icon {
+    width: 23px;
+    height: 23px;
+}
+
+.savings-subscription-choice.selected .savings-selection-mark {
+    color: var(--surface);
+    border-color: var(--subscription-color);
+    background: var(--subscription-color);
+}
+
+.savings-plan-subscription {
+    position: relative;
+    overflow: hidden;
+}
+
+.savings-plan-subscription::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--subscription-color, var(--brand));
+}
+
+.savings-plan-card:not(.recommended) {
+    border-top: 2px solid color-mix(in srgb, var(--blue) 55%, var(--border));
+}
+
+.savings-result-metric:nth-child(2) {
+    border-top: 2px solid color-mix(in srgb, var(--blue) 55%, var(--border));
+}
+
+.savings-result-metric:nth-child(3),
+.savings-result-metric:nth-child(4) {
+    border-top: 2px solid color-mix(in srgb, var(--brand) 55%, var(--border));
+}
+
+@media (max-width: 520px) {
+    .savings-service-mark {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+
+    .savings-subscription-choice {
+        grid-template-columns: 38px minmax(0, 1fr) 22px;
     }
 }

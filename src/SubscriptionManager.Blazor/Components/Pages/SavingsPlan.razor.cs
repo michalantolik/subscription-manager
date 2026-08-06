@@ -16,6 +16,8 @@ public partial class SavingsPlan
         default!;
 
     private IReadOnlyList<SubscriptionResponse> Subscriptions = [];
+    private IReadOnlyDictionary<Guid, string> SubscriptionColors =
+        new Dictionary<Guid, string>();
 
     private readonly HashSet<Guid> _protectedSubscriptionIds = [];
 
@@ -120,6 +122,8 @@ public partial class SavingsPlan
                     .Where(subscription => subscription.IsActive)
                     .OrderBy(subscription => subscription.Name)
                     .ToArray();
+
+            SubscriptionColors = CreateSubscriptionColors();
 
             var summary =
                 summaryTask.Result;
@@ -332,6 +336,47 @@ public partial class SavingsPlan
         _ when stage == _stage => "active",
         _ when (int)stage < (int)_stage || (int)stage < (int)_furthestStage => "complete",
         _ => string.Empty
+    };
+
+
+    private IReadOnlyDictionary<Guid, string> CreateSubscriptionColors()
+    {
+        return Subscriptions
+            .OrderByDescending(subscription => subscription.MonthlyEquivalentAmount)
+            .ThenBy(subscription => subscription.Name)
+            .Select((subscription, index) => new
+            {
+                subscription.Id,
+                Color = SubscriptionColorPalette.GetColor(index)
+            })
+            .ToDictionary(item => item.Id, item => item.Color);
+    }
+
+    private string ColorFor(SubscriptionResponse subscription) =>
+        SubscriptionColors.TryGetValue(subscription.Id, out var color)
+            ? color
+            : SubscriptionColorPalette.GetColor(0);
+
+    private string StyleFor(SubscriptionResponse subscription) =>
+        $"--subscription-color: {ColorFor(subscription)}";
+
+    private static string IconFor(SubscriptionResponse subscription) =>
+        SubscriptionCategoryIconMapper.GetIcon(subscription.Category ?? "Other");
+
+    private SubscriptionResponse? FindSubscription(Guid id) =>
+        Subscriptions.FirstOrDefault(subscription => subscription.Id == id);
+
+    private static string GoalTone(SavingsPlanGoalType kind) => kind switch
+    {
+        SavingsPlanGoalType.MonthlySavings => "growth",
+        _ => "control"
+    };
+
+    private static string StrategyTone(SavingsPlanStrategy strategy) => strategy switch
+    {
+        SavingsPlanStrategy.FewerChanges => "calm",
+        SavingsPlanStrategy.MaximumSavings => "strong",
+        _ => "balanced"
     };
 
     private static string Initials(string name) => string.Concat(
