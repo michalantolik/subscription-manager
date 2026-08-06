@@ -145,18 +145,6 @@ public partial class Subscriptions
             .OrderByDescending(x => x.IsActive)
             .ThenBy(x => x.Name);
 
-    private IEnumerable<CategorySummary> CategorySummaries =>
-        (_summary?.Categories ?? [])
-            .Select(
-                (summary, index) =>
-                    new CategorySummary(
-                        string.IsNullOrWhiteSpace(
-                            summary.CustomCategoryName)
-                            ? CategoryLabel(summary.Category)
-                            : summary.CustomCategoryName!,
-                        Tone(index),
-                        summary.MonthlyCost));
-
     private string SummaryDescription
     {
         get
@@ -999,18 +987,6 @@ public partial class Subscriptions
             System.Globalization.CultureInfo.CurrentCulture);
     }
 
-    private static string Tone(
-        int index)
-    {
-        return new[]
-        {
-            "orange",
-            "violet",
-            "green",
-            "blue"
-        }[index % 4];
-    }
-
     private async ValueTask DisposeCategoryScrollAsync()
     {
         if (_categoryScrollModule is not null &&
@@ -1071,11 +1047,6 @@ public partial class Subscriptions
         End,
         Delete
     }
-
-    private sealed record CategorySummary(
-        string Name,
-        string Tone,
-        decimal Amount);
 
     private sealed record AppliedSubscriptionFilter(
         Guid Id,

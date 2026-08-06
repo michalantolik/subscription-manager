@@ -1088,7 +1088,7 @@ h1[tabindex="-1"]:focus {
         cursor: pointer;
     }
 
-@media (max-width: 1280px) {
+@media (max-width: 1480px) {
     .metrics-grid {
         grid-template-columns: repeat(2, minmax(0,1fr));
     }
@@ -3490,4 +3490,278 @@ h1[tabindex="-1"]:focus {
     width: 20px;
     height: 20px;
     flex-basis: 20px;
+}
+
+/* Subscription list layout after removing the duplicated category summary. */
+.subscriptions-layout {
+    display: block;
+    width: min(100%, 1120px);
+}
+
+.subscriptions-main {
+    width: 100%;
+}
+
+.subscription-row {
+    grid-template-columns:
+        48px
+        minmax(240px, 320px)
+        132px
+        140px
+        minmax(20px, 1fr)
+        165px;
+    grid-template-areas: "logo copy next price . actions";
+    column-gap: 16px;
+    padding: 17px 24px;
+}
+
+.service-logo {
+    grid-area: logo;
+}
+
+.subscription-copy {
+    grid-area: copy;
+}
+
+.subscription-next {
+    grid-area: next;
+}
+
+.subscription-price {
+    grid-area: price;
+}
+
+.subscription-actions {
+    grid-area: actions;
+    grid-template-columns: repeat(4, 36px);
+    gap: 7px;
+}
+
+.icon-action.action-end:not(.disabled) {
+    color: color-mix(in srgb, var(--orange) 78%, var(--muted));
+    border-color: color-mix(in srgb, var(--orange) 28%, var(--border));
+}
+
+.icon-action.action-end:not(.disabled):hover {
+    color: var(--orange);
+    border-color: color-mix(in srgb, var(--orange) 62%, var(--border));
+    background: color-mix(in srgb, var(--orange) 8%, var(--surface));
+}
+
+.icon-action.action-delete {
+    color: color-mix(in srgb, var(--red) 72%, var(--muted));
+    border-color: color-mix(in srgb, var(--red) 24%, var(--border));
+}
+
+.icon-action.action-delete:hover {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 58%, var(--border));
+    background: color-mix(in srgb, var(--red) 8%, var(--surface));
+}
+
+/* The sidebar reduces the content width before viewport-only mobile breakpoints
+   are reached, so the list switches to a two-row layout earlier. */
+@media (max-width: 1280px) {
+    .subscriptions-layout {
+        width: 100%;
+    }
+
+    .subscription-row {
+        grid-template-columns: 48px minmax(0, 1fr) minmax(145px, auto);
+        grid-template-areas:
+            "logo copy price"
+            "logo next actions";
+        column-gap: 18px;
+        row-gap: 9px;
+        padding: 16px 20px;
+    }
+
+    .subscription-next {
+        display: flex;
+        align-self: end;
+    }
+
+    .subscription-price {
+        align-self: start;
+    }
+
+    .subscription-actions {
+        justify-self: end;
+        align-self: end;
+        grid-template-columns: repeat(4, 36px);
+    }
+}
+
+@media (max-width: 760px) {
+    .subscription-row {
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "logo copy copy"
+            ". next price"
+            "actions actions actions";
+        column-gap: 12px;
+        row-gap: 12px;
+        padding: 16px;
+    }
+
+    .subscription-copy strong,
+    .subscription-copy small {
+        white-space: normal;
+    }
+
+    .subscription-next {
+        align-self: start;
+    }
+
+    .subscription-price {
+        align-self: start;
+        min-width: 92px;
+    }
+
+    .subscription-actions {
+        width: 100%;
+        grid-template-columns: repeat(4, 36px);
+        justify-content: end;
+        justify-self: stretch;
+        padding-top: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .subscription-row {
+        grid-template-columns: 44px minmax(0, 1fr);
+        grid-template-areas:
+            "logo copy"
+            "next next"
+            "price price"
+            "actions actions";
+    }
+
+    .subscription-next,
+    .subscription-price {
+        width: 100%;
+        justify-self: stretch;
+        text-align: left;
+    }
+
+    .subscription-price {
+        display: grid;
+        grid-template-columns: auto auto;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 4px 12px;
+    }
+
+    .subscription-price .subscription-monthly-equivalent {
+        grid-column: 1 / -1;
+        margin-top: 0;
+        text-align: right;
+    }
+
+    .subscription-actions {
+        justify-content: space-between;
+    }
+}
+
+/* Compact mobile layout for the subscription list. */
+@media (max-width: 760px) {
+    .subscriptions-toolbar {
+        gap: 14px;
+        padding: 18px 16px 14px;
+    }
+
+    .subscriptions-toolbar p {
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    .subscription-search {
+        width: 100%;
+        height: 42px;
+        min-height: 42px;
+        flex: none;
+    }
+
+    .subscription-filters {
+        gap: 9px;
+        padding: 0 16px 13px;
+        overflow: hidden;
+    }
+
+    .subscription-status-filters {
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+    }
+
+    .subscription-status-filters::-webkit-scrollbar,
+    .subscription-category-filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    .subscription-category-navigation,
+    .subscription-category-filters {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .subscription-category-filters {
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: none;
+    }
+
+    .subscription-row {
+        row-gap: 10px;
+        padding: 14px 16px;
+    }
+
+    .subscription-actions {
+        width: auto;
+        justify-self: end;
+        justify-content: end;
+        gap: 6px;
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .subscriptions-toolbar {
+        padding: 16px 14px 12px;
+    }
+
+    .subscriptions-toolbar h2 {
+        font-size: 16px;
+    }
+
+    .subscription-filters {
+        padding: 0 14px 12px;
+    }
+
+    .subscription-filter {
+        padding: 6px 10px;
+    }
+
+    .subscription-row {
+        row-gap: 9px;
+        padding: 13px 14px;
+    }
+
+    .subscription-actions {
+        width: auto;
+        grid-template-columns: repeat(4, 34px);
+        justify-content: end;
+        justify-self: end;
+        gap: 6px;
+    }
+
+    .subscription-actions .icon-action,
+    .subscription-actions .ui-button.icon-action {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+    }
 }

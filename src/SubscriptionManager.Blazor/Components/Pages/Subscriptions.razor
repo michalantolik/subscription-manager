@@ -298,7 +298,7 @@
                                     @if (!string.IsNullOrWhiteSpace(
                                              ManagementUrlFor(subscription)))
                                     {
-                                        <a class="icon-action"
+                                        <a class="icon-action action-manage"
                                            href="@ManagementUrlFor(subscription)"
                                            target="_blank"
                                            rel="noopener noreferrer"
@@ -308,15 +308,22 @@
                                     }
                                     else
                                     {
-                                        <span class="icon-action disabled"
+                                        <span class="icon-action action-manage disabled"
                                               title="@T["Action.Manage"]">
                                             <AppIcon Name="external" />
                                         </span>
                                     }
 
+                                    <button class="icon-action action-edit"
+                                            type="button"
+                                            title="@T["Action.Edit"]"
+                                            @onclick="() => OpenEdit(subscription)">
+                                        <AppIcon Name="edit" />
+                                    </button>
+
                                     @if (subscription.IsActive)
                                     {
-                                        <button class="icon-action"
+                                        <button class="icon-action action-end"
                                                 type="button"
                                                 title="@T["Action.End"]"
                                                 @onclick="() => OpenEnd(subscription)">
@@ -325,19 +332,12 @@
                                     }
                                     else
                                     {
-                                        <span class="icon-action disabled">
+                                        <span class="icon-action action-end disabled">
                                             <AppIcon Name="reactivate" />
                                         </span>
                                     }
 
-                                    <button class="icon-action"
-                                            type="button"
-                                            title="@T["Action.Edit"]"
-                                            @onclick="() => OpenEdit(subscription)">
-                                        <AppIcon Name="edit" />
-                                    </button>
-
-                                    <button class="icon-action"
+                                    <button class="icon-action action-delete"
                                             type="button"
                                             title="@T["Action.Delete"]"
                                             @onclick="() => OpenDelete(subscription)">
@@ -350,25 +350,7 @@
                 </div>
             </section>
 
-            <aside class="subscriptions-side">
-                <section class="panel category-card">
-                    <div class="card-heading">
-                        <h2>@T["Subscriptions.Categories"]</h2>
-                    </div>
 
-                    @foreach (var summary in CategorySummaries)
-                    {
-                        <div class="category-summary">
-                            <span>
-                                <i class="category-dot @summary.Tone"></i>
-                                @summary.Name
-                            </span>
-
-                            <strong>@Money(summary.Amount)</strong>
-                        </div>
-                    }
-                </section>
-            </aside>
         </div>
     }
 </section>
