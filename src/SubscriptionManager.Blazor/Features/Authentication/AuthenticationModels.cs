@@ -82,21 +82,25 @@ public sealed record LoginOperationResult(
     bool Succeeded,
     string? AccessToken,
     Language? Language,
+    string? SubscriptionPlan,
     IReadOnlyCollection<AuthenticationError> Errors)
 {
     public static LoginOperationResult Success(
         string accessToken,
-        Language language)
+        Language language,
+        string subscriptionPlan)
         => new(
             true,
             accessToken,
             language,
+            subscriptionPlan,
             []);
 
     public static LoginOperationResult Failure(
         IEnumerable<AuthenticationError> errors)
         => new(
             false,
+            null,
             null,
             null,
             errors.ToArray());
@@ -200,7 +204,8 @@ public sealed class AuthenticationApiClient(
 
             return LoginOperationResult.Success(
                 loginResponse.AccessToken,
-                loginResponse.Language);
+                loginResponse.Language,
+                loginResponse.SubscriptionPlan);
         }
 
         if (response.StatusCode is
@@ -365,7 +370,8 @@ public sealed class AuthenticationApiClient(
 
     private sealed record LoginResponse(
         string AccessToken,
-        Language Language);
+        Language Language,
+        string SubscriptionPlan);
 
     private sealed record ValidationProblemResponse(
         IReadOnlyDictionary<string, string[]> Errors);

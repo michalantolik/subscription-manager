@@ -38,6 +38,11 @@ public sealed record CreateSavingsPlanRequest(
     string? AdditionalPreference,
     string LanguageCode);
 
+public sealed record SavingsPlanUsageResponse(
+    SubscriptionPlan SubscriptionPlan,
+    int DailyRequestLimit,
+    int RemainingRequestCount);
+
 public sealed record SavingsPlanResponse(
     Currency BaseCurrency,
     decimal CurrentMonthlyCost,
@@ -89,6 +94,36 @@ public sealed class SavingsPlansApiClient(
                 new JsonStringEnumConverter()
             }
         };
+
+    public async Task<SavingsPlanUsageResponse> GetUsageAsync(
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        using var request =
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                "api/savings-plans/usage");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response =
+            await httpClient.SendAsync(
+                request,
+                cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+                   .ReadFromJsonAsync<SavingsPlanUsageResponse>(
+                       JsonOptions,
+                       cancellationToken)
+               ?? throw new InvalidOperationException(
+                   "The savings plan usage response was empty.");
+    }
 
     public async Task<SavingsPlanResponse> CreateAsync(
         CreateSavingsPlanRequest model,

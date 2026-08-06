@@ -177,7 +177,9 @@ public static class AuthenticationEndpoints
         if (!loginResult.Succeeded ||
             string.IsNullOrWhiteSpace(
                 loginResult.AccessToken) ||
-            loginResult.Language is null)
+            loginResult.Language is null ||
+            string.IsNullOrWhiteSpace(
+                loginResult.SubscriptionPlan))
         {
             var errorCode =
                 AuthenticationErrorCodes.Normalize(
@@ -202,7 +204,11 @@ public static class AuthenticationEndpoints
 
             new Claim(
                 AuthenticationClaimTypes.AccessToken,
-                loginResult.AccessToken)
+                loginResult.AccessToken),
+
+            new Claim(
+                AuthenticationClaimTypes.SubscriptionPlan,
+                loginResult.SubscriptionPlan)
         };
 
         var identity = new ClaimsIdentity(

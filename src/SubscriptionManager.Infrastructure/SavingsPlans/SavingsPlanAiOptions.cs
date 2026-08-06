@@ -14,4 +14,8 @@ public sealed class SavingsPlanAiOptions
         string.Empty;
 
     public int MaximumIterations { get; init; } = 8;
+
+    public int MaximumOutputTokens { get; init; } = 800;
+
+    public int RequestTimeoutSeconds { get; init; } = 30;
 }

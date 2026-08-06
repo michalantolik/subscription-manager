@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
@@ -216,7 +216,8 @@ public sealed class IdentityService(
 
         return AuthenticateUserResult.Success(
             user.Id,
-            user.Language);
+            user.Language,
+            user.SubscriptionPlan);
     }
 
     public async Task<PasswordResetToken?> GeneratePasswordResetTokenAsync(

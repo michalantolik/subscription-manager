@@ -49,6 +49,13 @@
                             <strong>
                                 @DisplayName(authenticationState.User)
                             </strong>
+
+                            @if (SubscriptionPlan(authenticationState.User) is { } subscriptionPlan)
+                            {
+                                <small class="user-plan">
+                                    @subscriptionPlan
+                                </small>
+                            }
                         </span>
 
                         <span class="avatar">

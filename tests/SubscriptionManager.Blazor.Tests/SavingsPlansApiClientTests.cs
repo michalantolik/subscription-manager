@@ -11,6 +11,88 @@ namespace SubscriptionManager.Blazor.Tests;
 public sealed class SavingsPlansApiClientTests
 {
     [Fact]
+    public async Task GetUsageAsync_ShouldSendAuthorizedRequestAndReturnUsage()
+    {
+        HttpRequestMessage? capturedRequest = null;
+
+        using var httpClient =
+            new HttpClient(
+                new StubHttpMessageHandler(
+                    (
+                        request,
+                        _) =>
+                    {
+                        capturedRequest = request;
+
+                        return Task.FromResult(
+                            new HttpResponseMessage(
+                                HttpStatusCode.OK)
+                            {
+                                Content = JsonContent.Create(
+                                    new
+                                    {
+                                        SubscriptionPlan = "Free",
+                                        DailyRequestLimit = 3,
+                                        RemainingRequestCount = 2
+                                    })
+                            });
+                    }))
+            {
+                BaseAddress =
+                    new Uri("https://api.example.com")
+            };
+
+        var apiClient =
+            new SavingsPlansApiClient(
+                httpClient);
+
+        var user =
+            new ClaimsPrincipal(
+                new ClaimsIdentity(
+                [
+                    new Claim(
+                    AuthenticationClaimTypes.AccessToken,
+                    "access-token")
+                ],
+                "Test"));
+
+        var result =
+            await apiClient.GetUsageAsync(
+                user);
+
+        Assert.NotNull(
+            capturedRequest);
+
+        Assert.Equal(
+            HttpMethod.Get,
+            capturedRequest.Method);
+
+        Assert.Equal(
+            "https://api.example.com/api/savings-plans/usage",
+            capturedRequest.RequestUri?.ToString());
+
+        Assert.Equal(
+            "Bearer",
+            capturedRequest.Headers.Authorization?.Scheme);
+
+        Assert.Equal(
+            "access-token",
+            capturedRequest.Headers.Authorization?.Parameter);
+
+        Assert.Equal(
+            SubscriptionPlan.Free,
+            result.SubscriptionPlan);
+
+        Assert.Equal(
+            3,
+            result.DailyRequestLimit);
+
+        Assert.Equal(
+            2,
+            result.RemainingRequestCount);
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldSendAuthorizedRequestAndReturnPlan()
     {
         HttpRequestMessage? capturedRequest = null;

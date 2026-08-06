@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
+using SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
 
 namespace SubscriptionManager.Api.Controllers;
 
@@ -14,11 +15,30 @@ public sealed class SavingsPlansController
     private readonly CreateSavingsPlanHandler
         _createSavingsPlanHandler;
 
+    private readonly GetSavingsPlanUsageHandler
+        _getSavingsPlanUsageHandler;
+
     public SavingsPlansController(
-        CreateSavingsPlanHandler createSavingsPlanHandler)
+        CreateSavingsPlanHandler createSavingsPlanHandler,
+        GetSavingsPlanUsageHandler getSavingsPlanUsageHandler)
     {
         _createSavingsPlanHandler =
             createSavingsPlanHandler;
+
+        _getSavingsPlanUsageHandler =
+            getSavingsPlanUsageHandler;
+    }
+
+    [HttpGet("usage")]
+    public async Task<ActionResult<SavingsPlanUsageDto>>
+        GetUsageAsync(
+            CancellationToken cancellationToken)
+    {
+        var usage =
+            await _getSavingsPlanUsageHandler.HandleAsync(
+                cancellationToken);
+
+        return Ok(usage);
     }
 
     [HttpPost]

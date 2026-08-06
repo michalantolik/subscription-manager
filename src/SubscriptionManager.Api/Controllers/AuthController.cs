@@ -96,7 +96,8 @@ public sealed class AuthController(
 
         var response = new LoginUserResponse(
             result.AccessToken!,
-            result.Language!.Value);
+            result.Language!.Value,
+            result.SubscriptionPlan!.Value);
 
         return Ok(response);
     }
@@ -205,7 +206,8 @@ public sealed record LoginUserRequest(
 
 public sealed record LoginUserResponse(
     string AccessToken,
-    Language Language);
+    Language Language,
+    SubscriptionPlan SubscriptionPlan);
 
 public sealed record ForgotPasswordRequest(
     string Email,

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using SubscriptionManager.Infrastructure.Identity;
@@ -54,6 +54,10 @@ public sealed class PostLoginEndpointTests
         Assert.False(
             string.IsNullOrWhiteSpace(
                 loginResponse.AccessToken));
+
+        Assert.Equal(
+            "Free",
+            loginResponse.SubscriptionPlan);
     }
 
     [Fact]
@@ -170,5 +174,6 @@ public sealed class PostLoginEndpointTests
         string Password);
 
     private sealed record LoginResponse(
-        string AccessToken);
+        string AccessToken,
+        string SubscriptionPlan);
 }

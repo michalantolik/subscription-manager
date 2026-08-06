@@ -179,9 +179,14 @@ public partial class SavingsPlan
                 SubscriptionsApiClient.GetCostSummaryAsync(
                     _user);
 
+            var usageTask =
+                SavingsPlansApiClient.GetUsageAsync(
+                    _user);
+
             await Task.WhenAll(
                 subscriptionsTask,
-                summaryTask);
+                summaryTask,
+                usageTask);
 
             Subscriptions =
                 subscriptionsTask.Result
@@ -202,6 +207,18 @@ public partial class SavingsPlan
 
             _baseCurrency =
                 summary.BaseCurrency;
+
+            var usage =
+                usageTask.Result;
+
+            _subscriptionPlan =
+                usage.SubscriptionPlan;
+
+            _dailyRequestLimit =
+                usage.DailyRequestLimit;
+
+            _remainingRequestCount =
+                usage.RemainingRequestCount;
 
             SetDefaultTarget();
         }

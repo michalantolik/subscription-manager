@@ -1,15 +1,23 @@
-﻿using System.Globalization;
+﻿using System.ClientModel;
+using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SubscriptionManager.Application.SavingsPlans;
-using System.ClientModel;
 
 namespace SubscriptionManager.Infrastructure.SavingsPlans;
 
 public sealed class OpenAiSavingsPlanAgent(
-    IChatClient chatClient)
+    IChatClient chatClient,
+    IOptions<SavingsPlanAiOptions> options,
+    ILogger<OpenAiSavingsPlanAgent> logger)
     : ISavingsPlanAgent
 {
+    private readonly SavingsPlanAiOptions _options =
+        options.Value;
+
     public async Task<SavingsPlanAgentResult> CreatePlanAsync(
         SavingsPlanAgentRequest request,
         CancellationToken cancellationToken = default)
@@ -19,7 +27,7 @@ public sealed class OpenAiSavingsPlanAgent(
         var tools =
             new SavingsPlanTools(request);
 
-        var options =
+        var chatOptions =
             new ChatOptions
             {
                 Tools =
@@ -35,8 +43,21 @@ public sealed class OpenAiSavingsPlanAgent(
                             tools.SimulateEndingSubscriptions))
                 ],
                 Temperature = 0.1f,
-                Seed = 12345
+                Seed = 12345,
+                MaxOutputTokens =
+                    _options.MaximumOutputTokens
             };
+
+        using var timeoutCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken);
+
+        timeoutCancellationTokenSource.CancelAfter(
+            TimeSpan.FromSeconds(
+                _options.RequestTimeoutSeconds));
+
+        var stopwatch =
+            Stopwatch.StartNew();
 
         try
         {
@@ -44,19 +65,32 @@ public sealed class OpenAiSavingsPlanAgent(
                 await chatClient
                     .GetResponseAsync<SavingsPlanAgentResult>(
                         BuildMessages(request),
-                        options,
+                        chatOptions,
                         cancellationToken:
-                            cancellationToken);
+                            timeoutCancellationTokenSource.Token);
+
+            logger.LogInformation(
+                "Savings plan AI request completed in {ElapsedMilliseconds} ms.",
+                stopwatch.ElapsedMilliseconds);
 
             return response.Result;
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)
         {
+            logger.LogInformation(
+                "Savings plan AI request was cancelled after {ElapsedMilliseconds} ms.",
+                stopwatch.ElapsedMilliseconds);
+
             throw;
         }
         catch (OperationCanceledException exception)
         {
+            logger.LogWarning(
+                "Savings plan AI request timed out after {ElapsedMilliseconds} ms. Exception type: {ExceptionType}.",
+                stopwatch.ElapsedMilliseconds,
+                exception.GetType().Name);
+
             throw CreateUnavailableException(
                 exception);
         }
@@ -68,6 +102,11 @@ public sealed class OpenAiSavingsPlanAgent(
                 InvalidOperationException or
                 JsonException)
         {
+            logger.LogError(
+                "Savings plan AI request failed after {ElapsedMilliseconds} ms. Exception type: {ExceptionType}.",
+                stopwatch.ElapsedMilliseconds,
+                exception.GetType().Name);
+
             throw CreateUnavailableException(
                 exception);
         }

@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Application.Common.Authentication;
+using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
 
@@ -29,7 +29,8 @@ public sealed class LoginUserHandler(
 
         return LoginUserResult.Success(
             accessToken,
-            authenticationResult.Language!.Value);
+            authenticationResult.Language!.Value,
+            authenticationResult.SubscriptionPlan!.Value);
     }
 }
 
@@ -37,21 +38,25 @@ public sealed record LoginUserResult(
     bool Succeeded,
     string? AccessToken,
     Language? Language,
+    SubscriptionPlan? SubscriptionPlan,
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static LoginUserResult Success(
         string accessToken,
-        Language language)
+        Language language,
+        SubscriptionPlan subscriptionPlan)
         => new(
             true,
             accessToken,
             language,
+            subscriptionPlan,
             []);
 
     public static LoginUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
         => new(
             false,
+            null,
             null,
             null,
             errors.ToArray());

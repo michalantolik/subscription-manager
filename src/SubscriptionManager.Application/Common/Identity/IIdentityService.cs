@@ -1,4 +1,4 @@
-﻿using SubscriptionManager.Application.Common.Localization;
+using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Common.Identity;
@@ -93,16 +93,28 @@ public sealed record AuthenticateUserResult(
     bool Succeeded,
     Guid? UserId,
     Language? Language,
+    SubscriptionPlan? SubscriptionPlan,
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static AuthenticateUserResult Success(
         Guid userId,
-        Language language)
-        => new(true, userId, language, []);
+        Language language,
+        SubscriptionPlan subscriptionPlan)
+        => new(
+            true,
+            userId,
+            language,
+            subscriptionPlan,
+            []);
 
     public static AuthenticateUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
-        => new(false, null, null, errors.ToArray());
+        => new(
+            false,
+            null,
+            null,
+            null,
+            errors.ToArray());
 }
 
 public sealed record PasswordResetToken(

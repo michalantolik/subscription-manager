@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
@@ -25,7 +25,8 @@ public sealed class LoginUserHandlerTests
             .ReturnsAsync(
                 AuthenticateUserResult.Success(
                     userId,
-                    Language.English));
+                    Language.English,
+                    SubscriptionPlan.Free));
 
         var accessTokenGenerator =
             new Mock<IAccessTokenGenerator>();
@@ -53,6 +54,9 @@ public sealed class LoginUserHandlerTests
         Assert.Equal(
             Language.English,
             result.Language);
+        Assert.Equal(
+            SubscriptionPlan.Free,
+            result.SubscriptionPlan);
         Assert.Empty(result.Errors);
 
         identityService.Verify(
@@ -108,6 +112,7 @@ public sealed class LoginUserHandlerTests
         Assert.False(result.Succeeded);
         Assert.Null(result.AccessToken);
         Assert.Null(result.Language);
+        Assert.Null(result.SubscriptionPlan);
 
         var error = Assert.Single(result.Errors);
 

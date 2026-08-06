@@ -1,4 +1,5 @@
 using Microsoft.JSInterop;
+using SubscriptionManager.Blazor.Features.Authentication;
 using SubscriptionManager.Blazor.Services;
 using System.Globalization;
 using System.Security.Claims;
@@ -81,6 +82,11 @@ public partial class TopBar
         => user.FindFirst(ClaimTypes.Email)?.Value ??
            user.Identity?.Name ??
            "User";
+
+    private static string? SubscriptionPlan(
+        ClaimsPrincipal user)
+        => user.FindFirst(
+            AuthenticationClaimTypes.SubscriptionPlan)?.Value;
 
     private static string Initial(
         ClaimsPrincipal user)
