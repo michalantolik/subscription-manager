@@ -8,16 +8,6 @@ namespace SubscriptionManager.Blazor.Components.Pages;
 
 public partial class Home
 {
-    private static readonly string[] ChartColors =
-    [
-        "#55ca79",
-        "#63a0ff",
-        "#ffad62",
-        "#a980ff",
-        "#ff7279",
-        "#78909c"
-    ];
-
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask
     {
@@ -165,7 +155,7 @@ public partial class Home
                         $"category:{category.Category}:{category.CustomCategoryName}",
                         CategoryName(category),
                         category.MonthlyCost,
-                        ChartColors[index],
+                        SubscriptionColorPalette.GetColor(index),
                         CategoryTargetUrl(category),
                         0m))
                 .ToList();
@@ -183,7 +173,7 @@ public partial class Home
                     "category:other",
                     T["Overview.CostStructure.Other"],
                     remaining,
-                    ChartColors[5],
+                    SubscriptionColorPalette.GetColor(5),
                     "/subscriptions",
                     0m));
         }
@@ -212,7 +202,7 @@ public partial class Home
                         $"subscription:{subscription.Id}",
                         subscription.Name,
                         subscription.MonthlyCost,
-                        ChartColors[index],
+                        SubscriptionColorPalette.GetColor(index),
                         $"/subscriptions?subscriptionId={subscription.Id}",
                         0m))
                 .ToList();
@@ -231,7 +221,7 @@ public partial class Home
                     "subscription:other",
                     T["Overview.CostStructure.Other"],
                     remaining,
-                    ChartColors[5],
+                    SubscriptionColorPalette.GetColor(5),
                     "/subscriptions",
                     0m));
         }

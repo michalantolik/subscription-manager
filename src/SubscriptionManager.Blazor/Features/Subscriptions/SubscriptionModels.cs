@@ -44,6 +44,8 @@ public sealed record SubscriptionCostSummaryResponse(
     decimal AverageYearlyCost,
     IReadOnlyList<SubscriptionCostSummaryItemResponse>
         TopSubscriptions,
+    IReadOnlyList<SubscriptionCostSummaryItemResponse>
+        ActiveSubscriptions,
     IReadOnlyList<SubscriptionCategoryCostSummaryResponse>
         Categories);
 

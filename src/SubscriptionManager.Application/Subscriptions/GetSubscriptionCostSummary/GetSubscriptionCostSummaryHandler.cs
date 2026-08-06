@@ -83,19 +83,23 @@ public sealed class GetSubscriptionCostSummaryHandler
             costs.Sum(cost =>
                 cost.YearlyCost);
 
-        var topSubscriptions =
+        var activeSubscriptionItems =
             costs
                 .OrderByDescending(cost =>
                     cost.MonthlyCost)
                 .ThenBy(cost =>
                     cost.Subscription.Name)
-                .Take(5)
                 .Select(cost =>
                     new SubscriptionCostSummaryItemDto(
                         cost.Subscription.Id,
                         cost.Subscription.Name,
                         cost.Subscription.BillingPeriod,
                         cost.MonthlyCost))
+                .ToArray();
+
+        var topSubscriptions =
+            activeSubscriptionItems
+                .Take(5)
                 .ToArray();
 
         var categories =
@@ -135,6 +139,7 @@ public sealed class GetSubscriptionCostSummaryHandler
             monthlyCost / activeSubscriptions.Length,
             yearlyCost / activeSubscriptions.Length,
             topSubscriptions,
+            activeSubscriptionItems,
             categories);
     }
 
@@ -182,6 +187,7 @@ public sealed class GetSubscriptionCostSummaryHandler
             0m,
             0m,
             0m,
+            [],
             [],
             []);
     }

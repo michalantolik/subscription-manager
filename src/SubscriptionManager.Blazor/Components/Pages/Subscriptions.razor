@@ -234,9 +234,10 @@
                     {
                         @foreach (var subscription in Filtered)
                         {
-                            <article class="subscription-row">
-                                <div class="service-logo @(subscription.IsActive ? "green" : "red")">
-                                    @Initials(subscription.Name)
+                            <article class="subscription-row @(!subscription.IsActive ? "is-ended" : null)"
+                                     style="@StyleFor(subscription)">
+                                <div class="service-logo">
+                                    <AppIcon Name="@IconFor(subscription)" />
                                 </div>
 
                                 <div class="subscription-copy">

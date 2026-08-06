@@ -76,6 +76,9 @@ public partial class Subscriptions
     private SubscriptionCostSummaryItemResponse? MostExpensive =>
         _summary?.TopSubscriptions.FirstOrDefault();
 
+    private IReadOnlyDictionary<Guid, string> SubscriptionColors =>
+        CreateSubscriptionColors();
+
     private IReadOnlyList<Guid> SelectedSubscriptionIds =>
         SubscriptionIdQuery?
             .Distinct()
@@ -855,6 +858,67 @@ public partial class Subscriptions
         return value == key
             ? category
             : value;
+    }
+
+    private IReadOnlyDictionary<Guid, string>
+        CreateSubscriptionColors()
+    {
+        var colors =
+            new Dictionary<Guid, string>();
+
+        var position = 0;
+
+        foreach (var subscription in
+                 _summary?.ActiveSubscriptions ?? [])
+        {
+            colors[subscription.Id] =
+                SubscriptionColorPalette.GetColor(
+                    position);
+
+            position++;
+        }
+
+        foreach (var subscription in
+                 _subscriptions
+                     .Where(subscription =>
+                         !colors.ContainsKey(
+                             subscription.Id))
+                     .OrderByDescending(subscription =>
+                         subscription.MonthlyEquivalentAmount)
+                     .ThenBy(subscription =>
+                         subscription.Name))
+        {
+            colors[subscription.Id] =
+                SubscriptionColorPalette.GetColor(
+                    position);
+
+            position++;
+        }
+
+        return colors;
+    }
+
+    private string ColorFor(
+        SubscriptionResponse subscription)
+    {
+        return SubscriptionColors.TryGetValue(
+            subscription.Id,
+            out var color)
+            ? color
+            : SubscriptionColorPalette.GetColor(0);
+    }
+
+    private string StyleFor(
+        SubscriptionResponse subscription)
+    {
+        return $"--subscription-color: {ColorFor(subscription)}";
+    }
+
+    private string IconFor(
+        SubscriptionResponse subscription)
+    {
+        return SubscriptionCategoryIconMapper.GetIcon(
+            CategoryKeyFor(subscription));
     }
 
     private string Money(

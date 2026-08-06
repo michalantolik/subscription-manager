@@ -112,6 +112,18 @@ public sealed class GetSubscriptionCostSummaryHandlerTests
             10m,
             topSubscription.MonthlyCost);
 
+        var activeSubscription =
+            Assert.Single(
+                result.ActiveSubscriptions);
+
+        Assert.Equal(
+            subscription.Id,
+            activeSubscription.Id);
+
+        Assert.Equal(
+            10m,
+            activeSubscription.MonthlyCost);
+
         var category =
             Assert.Single(
                 result.Categories);
@@ -289,6 +301,29 @@ public sealed class GetSubscriptionCostSummaryHandlerTests
             });
 
         Assert.Collection(
+            result.ActiveSubscriptions,
+            first =>
+            {
+                Assert.Equal(
+                    "Netflix",
+                    first.Name);
+
+                Assert.Equal(
+                    60m,
+                    first.MonthlyCost);
+            },
+            second =>
+            {
+                Assert.Equal(
+                    "Spotify",
+                    second.Name);
+
+                Assert.Equal(
+                    40m,
+                    second.MonthlyCost);
+            });
+
+        Assert.Collection(
             result.Categories,
             first =>
             {
@@ -391,6 +426,9 @@ public sealed class GetSubscriptionCostSummaryHandlerTests
 
         Assert.Empty(
             result.TopSubscriptions);
+
+        Assert.Empty(
+            result.ActiveSubscriptions);
 
         Assert.Empty(
             result.Categories);

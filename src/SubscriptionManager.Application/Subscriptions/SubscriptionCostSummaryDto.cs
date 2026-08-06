@@ -13,6 +13,7 @@ public sealed record SubscriptionCostSummaryDto(
     decimal AverageMonthlyCost,
     decimal AverageYearlyCost,
     IReadOnlyCollection<SubscriptionCostSummaryItemDto> TopSubscriptions,
+    IReadOnlyCollection<SubscriptionCostSummaryItemDto> ActiveSubscriptions,
     IReadOnlyCollection<SubscriptionCategoryCostSummaryDto> Categories);
 
 public sealed record SubscriptionCostSummaryItemDto(

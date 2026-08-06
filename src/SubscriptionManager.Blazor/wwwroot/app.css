@@ -1435,21 +1435,44 @@ h1[tabindex="-1"]:focus {
 }
 
 .subscription-row {
+    position: relative;
     display: grid;
     grid-template-columns: 48px minmax(170px,1.35fr) minmax(120px,.7fr) minmax(120px,auto) auto;
     column-gap: 18px;
     align-items: center;
     padding: 15px 20px;
     border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
+
+    .subscription-row::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        bottom: 8px;
+        left: 0;
+        width: 3px;
+        border-radius: 0 999px 999px 0;
+        background: var(--subscription-color);
+        opacity: 0;
+        transform: scaleY(.72);
+        transition: opacity .18s ease, transform .18s ease;
+    }
 
     .subscription-row:last-child {
         border-bottom: 0;
     }
 
     .subscription-row:hover {
-        background: var(--surface-soft);
+        background: color-mix( in srgb, var(--subscription-color) 7%, var(--surface));
+        box-shadow: inset 0 0 0 1px color-mix( in srgb, var(--subscription-color) 18%, transparent);
     }
+
+        .subscription-row:hover::before {
+            opacity: 1;
+            transform: scaleY(1);
+        }
 
 .service-logo {
     width: 44px;
@@ -1459,38 +1482,47 @@ h1[tabindex="-1"]:focus {
     place-items: center;
     font-weight: 900;
     letter-spacing: -.5px;
-    background: var(--surface-hover);
+    color: var(--subscription-color);
+    background: color-mix( in srgb, var(--subscription-color) 16%, var(--surface));
+    border: 1px solid color-mix( in srgb, var(--subscription-color) 28%, var(--border));
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
 }
 
-    .service-logo.red, .category-dot.red {
-        background: #fde8e8;
-        color: #df3441;
-    }
+.subscription-row:hover .service-logo {
+    background: color-mix( in srgb, var(--subscription-color) 22%, var(--surface));
+    border-color: color-mix( in srgb, var(--subscription-color) 42%, var(--border));
+    transform: translateY(-1px);
+}
 
-    .service-logo.green {
-        background: #e1f8eb;
-        color: #1aa568;
-    }
+.service-logo.red, .category-dot.red {
+    background: #fde8e8;
+    color: #df3441;
+}
 
-    .service-logo.violet, .category-dot.violet {
-        background: #eee8ff;
-        color: #7856d8;
-    }
+.service-logo.green {
+    background: #e1f8eb;
+    color: #1aa568;
+}
 
-    .service-logo.blue, .category-dot.blue {
-        background: #e7f1ff;
-        color: #347bd5;
-    }
+.service-logo.violet, .category-dot.violet {
+    background: #eee8ff;
+    color: #7856d8;
+}
 
-    .service-logo.orange, .category-dot.orange {
-        background: #fff0df;
-        color: #df812f;
-    }
+.service-logo.blue, .category-dot.blue {
+    background: #e7f1ff;
+    color: #347bd5;
+}
 
-    .service-logo.dark {
-        background: #242b31;
-        color: #fff;
-    }
+.service-logo.orange, .category-dot.orange {
+    background: #fff0df;
+    color: #df812f;
+}
+
+.service-logo.dark {
+    background: #242b31;
+    color: #fff;
+}
 
 .subscription-copy, .subscription-next, .subscription-price {
     display: flex;
@@ -3421,3 +3453,25 @@ h1[tabindex="-1"]:focus {
         transition: none
     }
 }
+
+
+.service-logo .app-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--subscription-color);
+    stroke-width: 2;
+    flex: 0 0 22px;
+}
+
+
+.subscription-row.is-ended {
+    opacity: .72;
+}
+
+    .subscription-row.is-ended .service-logo {
+        filter: saturate(.55);
+    }
+
+    .subscription-row.is-ended:hover {
+        opacity: .9;
+    }
