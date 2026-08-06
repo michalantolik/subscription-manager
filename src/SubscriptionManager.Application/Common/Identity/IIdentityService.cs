@@ -26,6 +26,10 @@ public interface IIdentityService
         Guid userId,
         CancellationToken cancellationToken = default);
 
+    Task<SubscriptionPlan?> GetSubscriptionPlanAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     Task<string?> GenerateEmailConfirmationTokenAsync(
         Guid userId,
         CancellationToken cancellationToken = default);

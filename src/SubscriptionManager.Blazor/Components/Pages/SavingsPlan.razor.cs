@@ -16,6 +16,7 @@ public partial class SavingsPlan
         default!;
 
     private IReadOnlyList<SubscriptionResponse> Subscriptions = [];
+
     private IReadOnlyDictionary<Guid, string> SubscriptionColors =
         new Dictionary<Guid, string>();
 
@@ -28,8 +29,10 @@ public partial class SavingsPlan
     private Currency _baseCurrency = Currency.PLN;
     private PlanStage _stage = PlanStage.Goal;
     private PlanStage _furthestStage = PlanStage.Goal;
-    private SavingsPlanGoalType _goalKind = SavingsPlanGoalType.MonthlyBudget;
-    private SavingsPlanStrategy _strategy = SavingsPlanStrategy.Balanced;
+    private SavingsPlanGoalType _goalKind =
+        SavingsPlanGoalType.MonthlyBudget;
+    private SavingsPlanStrategy _strategy =
+        SavingsPlanStrategy.Balanced;
     private DialogKind _dialog;
     private decimal _targetAmount;
     private string _additionalPreference = string.Empty;
@@ -37,18 +40,47 @@ public partial class SavingsPlan
     private int _analysisStep;
     private SavingsPlanScenarioResponse? _recommendedPlan;
     private SavingsPlanScenarioResponse? _alternativePlan;
+    private SubscriptionPlan _subscriptionPlan =
+        SubscriptionPlan.Free;
+    private int _dailyRequestLimit;
+    private int _remainingRequestCount;
 
     private decimal CurrentMonthlyCost =>
         _currentMonthlyCost;
 
-    private IReadOnlyList<(int Number, PlanStage Stage, string LabelKey)> FormSteps =>
+    private bool HasUsageInformation =>
+        _dailyRequestLimit > 0;
+
+    private bool IsDailyLimitReached =>
+        HasUsageInformation &&
+        _remainingRequestCount == 0;
+
+    private string SubscriptionPlanLabelKey =>
+        _subscriptionPlan switch
+        {
+            SubscriptionPlan.Plus =>
+                "SavingsPlan.Usage.Plan.Plus",
+
+            SubscriptionPlan.Premium =>
+                "SavingsPlan.Usage.Plan.Premium",
+
+            _ =>
+                "SavingsPlan.Usage.Plan.Free"
+        };
+
+    private IReadOnlyList<(
+        int Number,
+        PlanStage Stage,
+        string LabelKey)> FormSteps =>
     [
         (1, PlanStage.Goal, "SavingsPlan.Steps.Goal"),
         (2, PlanStage.Preferences, "SavingsPlan.Steps.Preferences"),
         (3, PlanStage.Review, "SavingsPlan.Steps.Review")
     ];
 
-    private IReadOnlyList<(int Number, string LabelKey)> AnalysisSteps =>
+    private IReadOnlyList<(
+        int Number,
+        string LabelKey)> AnalysisSteps =>
     [
         (1, "SavingsPlan.Analysis.StepSubscriptions"),
         (2, "SavingsPlan.Analysis.StepPreferences"),
@@ -58,35 +90,69 @@ public partial class SavingsPlan
 
     private decimal RequiredSavings =>
         _goalKind == SavingsPlanGoalType.MonthlyBudget
-            ? Math.Max(0m, CurrentMonthlyCost - _targetAmount)
-            : Math.Max(0m, _targetAmount);
+            ? Math.Max(
+                0m,
+                CurrentMonthlyCost - _targetAmount)
+            : Math.Max(
+                0m,
+                _targetAmount);
 
     private string GoalSummary =>
         _goalKind == SavingsPlanGoalType.MonthlyBudget
-            ? T["SavingsPlan.Summary.BudgetValue", Money(_targetAmount)]
-            : T["SavingsPlan.Summary.SavingsValue", Money(_targetAmount)];
+            ? T[
+                "SavingsPlan.Summary.BudgetValue",
+                Money(_targetAmount)]
+            : T[
+                "SavingsPlan.Summary.SavingsValue",
+                Money(_targetAmount)];
 
     private string ProtectedSummary =>
         _protectedSubscriptionIds.Count == 0
             ? T["SavingsPlan.Summary.None"]
-            : T["SavingsPlan.Summary.Selected", _protectedSubscriptionIds.Count];
+            : T[
+                "SavingsPlan.Summary.Selected",
+                _protectedSubscriptionIds.Count];
 
-    private string StrategyLabelKey => _strategy switch
-    {
-        SavingsPlanStrategy.FewerChanges => "SavingsPlan.Strategy.Fewer.Title",
-        SavingsPlanStrategy.MaximumSavings => "SavingsPlan.Strategy.Maximum.Title",
-        _ => "SavingsPlan.Strategy.Balanced.Title"
-    };
+    private string StrategyLabelKey =>
+        _strategy switch
+        {
+            SavingsPlanStrategy.FewerChanges =>
+                "SavingsPlan.Strategy.Fewer.Title",
 
-    private IEnumerable<SubscriptionResponse> ProtectedSubscriptions =>
-        Subscriptions.Where(subscription => _protectedSubscriptionIds.Contains(subscription.Id));
+            SavingsPlanStrategy.MaximumSavings =>
+                "SavingsPlan.Strategy.Maximum.Title",
 
-    private string ResultsDescription => _recommendedPlan switch
-    {
-        null => T["SavingsPlan.Results.NoPlanDescription"],
-        { TargetReached: true } => T["SavingsPlan.Results.ReachedDescription", Money(_recommendedPlan.ProjectedMonthlyCost)],
-        _ => T["SavingsPlan.Results.CloseDescription", Money(_recommendedPlan.ProjectedMonthlyCost)]
-    };
+            _ =>
+                "SavingsPlan.Strategy.Balanced.Title"
+        };
+
+    private IEnumerable<SubscriptionResponse>
+        ProtectedSubscriptions =>
+            Subscriptions.Where(
+                subscription =>
+                    _protectedSubscriptionIds.Contains(
+                        subscription.Id));
+
+    private string ResultsDescription =>
+        _recommendedPlan switch
+        {
+            null =>
+                T["SavingsPlan.Results.NoPlanDescription"],
+
+            { TargetReached: true } =>
+                T[
+                    "SavingsPlan.Results.ReachedDescription",
+                    Money(
+                        _recommendedPlan
+                            .ProjectedMonthlyCost)],
+
+            _ =>
+                T[
+                    "SavingsPlan.Results.CloseDescription",
+                    Money(
+                        _recommendedPlan
+                            .ProjectedMonthlyCost)]
+        };
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,11 +185,14 @@ public partial class SavingsPlan
 
             Subscriptions =
                 subscriptionsTask.Result
-                    .Where(subscription => subscription.IsActive)
-                    .OrderBy(subscription => subscription.Name)
+                    .Where(subscription =>
+                        subscription.IsActive)
+                    .OrderBy(subscription =>
+                        subscription.Name)
                     .ToArray();
 
-            SubscriptionColors = CreateSubscriptionColors();
+            SubscriptionColors =
+                CreateSubscriptionColors();
 
             var summary =
                 summaryTask.Result;
@@ -153,7 +222,8 @@ public partial class SavingsPlan
         }
     }
 
-    private void SelectGoal(SavingsPlanGoalType kind)
+    private void SelectGoal(
+        SavingsPlanGoalType kind)
     {
         _goalKind = kind;
         SetDefaultTarget();
@@ -163,7 +233,8 @@ public partial class SavingsPlan
     private void SetDefaultTarget()
     {
         _targetAmount =
-            _goalKind == SavingsPlanGoalType.MonthlyBudget
+            _goalKind ==
+            SavingsPlanGoalType.MonthlyBudget
                 ? Math.Round(
                     CurrentMonthlyCost * 0.75m,
                     2)
@@ -178,36 +249,57 @@ public partial class SavingsPlan
 
         if (_targetAmount <= 0)
         {
-            _validationMessage = T["SavingsPlan.Validation.PositiveAmount"];
+            _validationMessage =
+                T[
+                    "SavingsPlan.Validation.PositiveAmount"];
+
             return;
         }
 
-        if (_goalKind == SavingsPlanGoalType.MonthlyBudget && _targetAmount >= CurrentMonthlyCost)
+        if (_goalKind ==
+                SavingsPlanGoalType.MonthlyBudget &&
+            _targetAmount >= CurrentMonthlyCost)
         {
-            _validationMessage = T["SavingsPlan.Validation.BudgetTooHigh", Money(CurrentMonthlyCost)];
+            _validationMessage =
+                T[
+                    "SavingsPlan.Validation.BudgetTooHigh",
+                    Money(CurrentMonthlyCost)];
+
             return;
         }
 
-        if (_goalKind == SavingsPlanGoalType.MonthlySavings && _targetAmount >= CurrentMonthlyCost)
+        if (_goalKind ==
+                SavingsPlanGoalType.MonthlySavings &&
+            _targetAmount >= CurrentMonthlyCost)
         {
-            _validationMessage = T["SavingsPlan.Validation.SavingsTooHigh", Money(CurrentMonthlyCost)];
+            _validationMessage =
+                T[
+                    "SavingsPlan.Validation.SavingsTooHigh",
+                    Money(CurrentMonthlyCost)];
+
             return;
         }
 
-        MoveTo(PlanStage.Preferences);
+        MoveTo(
+            PlanStage.Preferences);
     }
 
     private void ContinueFromPreferences()
     {
         _validationMessage = null;
 
-        if (_protectedSubscriptionIds.Count == Subscriptions.Count)
+        if (_protectedSubscriptionIds.Count ==
+            Subscriptions.Count)
         {
-            _validationMessage = T["SavingsPlan.Validation.AllProtected"];
+            _validationMessage =
+                T[
+                    "SavingsPlan.Validation.AllProtected"];
+
             return;
         }
 
-        MoveTo(PlanStage.Review);
+        MoveTo(
+            PlanStage.Review);
     }
 
     private async Task CreatePlanAsync()
@@ -227,7 +319,8 @@ public partial class SavingsPlan
                 new CreateSavingsPlanRequest(
                     _goalKind,
                     _targetAmount,
-                    _protectedSubscriptionIds.ToArray(),
+                    _protectedSubscriptionIds
+                        .ToArray(),
                     _strategy,
                     string.IsNullOrWhiteSpace(
                         _additionalPreference)
@@ -242,11 +335,33 @@ public partial class SavingsPlan
                     _user);
 
             _analysisStep = 4;
-            _baseCurrency = plan.BaseCurrency;
-            _currentMonthlyCost = plan.CurrentMonthlyCost;
-            _recommendedPlan = plan.Recommended;
-            _alternativePlan = plan.Alternative;
-            _stage = PlanStage.Results;
+            _baseCurrency =
+                plan.BaseCurrency;
+            _currentMonthlyCost =
+                plan.CurrentMonthlyCost;
+            _recommendedPlan =
+                plan.Recommended;
+            _alternativePlan =
+                plan.Alternative;
+            _subscriptionPlan =
+                plan.SubscriptionPlan;
+            _dailyRequestLimit =
+                plan.DailyRequestLimit;
+            _remainingRequestCount =
+                plan.RemainingRequestCount;
+            _stage =
+                PlanStage.Results;
+        }
+        catch (SavingsPlanUsageLimitExceededException exception)
+        {
+            _dailyRequestLimit =
+                exception.DailyLimit;
+
+            _remainingRequestCount = 0;
+            _stage = PlanStage.Review;
+
+            _validationMessage =
+                T["SavingsPlan.Error.DailyLimitReached"];
         }
         catch (HttpRequestException exception)
             when (exception.StatusCode ==
@@ -261,128 +376,225 @@ public partial class SavingsPlan
         {
             _stage = PlanStage.Review;
             _validationMessage =
-                T["SavingsPlan.Error.Unavailable"];
+                T[
+                    "SavingsPlan.Error.Unavailable"];
         }
         catch
         {
             _stage = PlanStage.Review;
             _validationMessage =
-                T["SavingsPlan.Error.Generate"];
+                T[
+                    "SavingsPlan.Error.Generate"];
         }
     }
 
-    private void ToggleProtected(Guid id)
+    private void ToggleProtected(
+        Guid id)
     {
         _validationMessage = null;
+
         if (!_protectedSubscriptionIds.Add(id))
         {
             _protectedSubscriptionIds.Remove(id);
         }
     }
 
-    private void GoToStage(PlanStage stage)
+    private void GoToStage(
+        PlanStage stage)
     {
-        if ((int)stage <= (int)_furthestStage)
+        if ((int)stage <=
+            (int)_furthestStage)
         {
             _stage = stage;
             _validationMessage = null;
         }
     }
 
-    private void MoveTo(PlanStage stage)
+    private void MoveTo(
+        PlanStage stage)
     {
         _stage = stage;
-        if ((int)stage > (int)_furthestStage)
+
+        if ((int)stage >
+            (int)_furthestStage)
         {
             _furthestStage = stage;
         }
     }
 
-    private void BackToGoal() => GoToStage(PlanStage.Goal);
-    private void BackToPreferences() => GoToStage(PlanStage.Preferences);
+    private void BackToGoal()
+    {
+        GoToStage(
+            PlanStage.Goal);
+    }
+
+    private void BackToPreferences()
+    {
+        GoToStage(
+            PlanStage.Preferences);
+    }
 
     private void BackToPreferencesFromResults()
     {
-        _stage = PlanStage.Preferences;
-        _furthestStage = PlanStage.Review;
+        _stage =
+            PlanStage.Preferences;
+
+        _furthestStage =
+            PlanStage.Review;
+
         _validationMessage = null;
     }
 
     private void StartOver()
     {
-        _stage = PlanStage.Goal;
-        _furthestStage = PlanStage.Goal;
-        _goalKind = SavingsPlanGoalType.MonthlyBudget;
-        _strategy = SavingsPlanStrategy.Balanced;
+        _stage =
+            PlanStage.Goal;
+
+        _furthestStage =
+            PlanStage.Goal;
+
+        _goalKind =
+            SavingsPlanGoalType.MonthlyBudget;
+
+        _strategy =
+            SavingsPlanStrategy.Balanced;
+
         SetDefaultTarget();
-        _additionalPreference = string.Empty;
+
+        _additionalPreference =
+            string.Empty;
+
         _protectedSubscriptionIds.Clear();
+
         _recommendedPlan = null;
         _alternativePlan = null;
         _validationMessage = null;
     }
 
-    private void ReviewChanges() => _dialog = DialogKind.ReviewChanges;
-    private void CloseDialog() => _dialog = DialogKind.None;
+    private void ReviewChanges()
+    {
+        _dialog =
+            DialogKind.ReviewChanges;
+    }
+
+    private void CloseDialog()
+    {
+        _dialog =
+            DialogKind.None;
+    }
 
     private void GoToSubscriptions()
     {
         CloseDialog();
-        Navigation.NavigateTo("/subscriptions");
+
+        Navigation.NavigateTo(
+            "/subscriptions");
     }
 
-    private string StepState(PlanStage stage) => stage switch
-    {
-        _ when stage == _stage => "active",
-        _ when (int)stage < (int)_stage || (int)stage < (int)_furthestStage => "complete",
-        _ => string.Empty
-    };
+    private string StepState(
+        PlanStage stage) =>
+        stage switch
+        {
+            _ when stage == _stage =>
+                "active",
 
+            _ when
+                (int)stage < (int)_stage ||
+                (int)stage < (int)_furthestStage =>
+                "complete",
 
-    private IReadOnlyDictionary<Guid, string> CreateSubscriptionColors()
+            _ =>
+                string.Empty
+        };
+
+    private IReadOnlyDictionary<Guid, string>
+        CreateSubscriptionColors()
     {
         return Subscriptions
-            .OrderByDescending(subscription => subscription.MonthlyEquivalentAmount)
-            .ThenBy(subscription => subscription.Name)
-            .Select((subscription, index) => new
-            {
-                subscription.Id,
-                Color = SubscriptionColorPalette.GetColor(index)
-            })
-            .ToDictionary(item => item.Id, item => item.Color);
+            .OrderByDescending(
+                subscription =>
+                    subscription
+                        .MonthlyEquivalentAmount)
+            .ThenBy(
+                subscription =>
+                    subscription.Name)
+            .Select(
+                (subscription, index) =>
+                    new
+                    {
+                        subscription.Id,
+                        Color =
+                            SubscriptionColorPalette
+                                .GetColor(index)
+                    })
+            .ToDictionary(
+                item => item.Id,
+                item => item.Color);
     }
 
-    private string ColorFor(SubscriptionResponse subscription) =>
-        SubscriptionColors.TryGetValue(subscription.Id, out var color)
-            ? color
-            : SubscriptionColorPalette.GetColor(0);
+    private string ColorFor(
+        SubscriptionResponse subscription) =>
+        SubscriptionColors.TryGetValue(
+            subscription.Id,
+            out var color)
+                ? color
+                : SubscriptionColorPalette
+                    .GetColor(0);
 
-    private string StyleFor(SubscriptionResponse subscription) =>
+    private string StyleFor(
+        SubscriptionResponse subscription) =>
         $"--subscription-color: {ColorFor(subscription)}";
 
-    private static string IconFor(SubscriptionResponse subscription) =>
-        SubscriptionCategoryIconMapper.GetIcon(subscription.Category ?? "Other");
+    private static string IconFor(
+        SubscriptionResponse subscription) =>
+        SubscriptionCategoryIconMapper.GetIcon(
+            subscription.Category ??
+            "Other");
 
-    private SubscriptionResponse? FindSubscription(Guid id) =>
-        Subscriptions.FirstOrDefault(subscription => subscription.Id == id);
+    private SubscriptionResponse? FindSubscription(
+        Guid id) =>
+        Subscriptions.FirstOrDefault(
+            subscription =>
+                subscription.Id == id);
 
-    private static string GoalTone(SavingsPlanGoalType kind) => kind switch
-    {
-        SavingsPlanGoalType.MonthlySavings => "growth",
-        _ => "control"
-    };
+    private static string GoalTone(
+        SavingsPlanGoalType kind) =>
+        kind switch
+        {
+            SavingsPlanGoalType.MonthlySavings =>
+                "growth",
 
-    private static string StrategyTone(SavingsPlanStrategy strategy) => strategy switch
-    {
-        SavingsPlanStrategy.FewerChanges => "calm",
-        SavingsPlanStrategy.MaximumSavings => "strong",
-        _ => "balanced"
-    };
+            _ =>
+                "control"
+        };
 
-    private static string Initials(string name) => string.Concat(
-        name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Take(2)
-            .Select(part => char.ToUpperInvariant(part[0])));
+    private static string StrategyTone(
+        SavingsPlanStrategy strategy) =>
+        strategy switch
+        {
+            SavingsPlanStrategy.FewerChanges =>
+                "calm",
+
+            SavingsPlanStrategy.MaximumSavings =>
+                "strong",
+
+            _ =>
+                "balanced"
+        };
+
+    private static string Initials(
+        string name) =>
+        string.Concat(
+            name
+                .Split(
+                    ' ',
+                    StringSplitOptions
+                        .RemoveEmptyEntries)
+                .Take(2)
+                .Select(
+                    part =>
+                        char.ToUpperInvariant(
+                            part[0])));
 
     private string CategoryLabel(
         SubscriptionResponse subscription)
@@ -390,7 +602,8 @@ public partial class SavingsPlan
         if (!string.IsNullOrWhiteSpace(
                 subscription.CustomCategoryName))
         {
-            return subscription.CustomCategoryName;
+            return subscription
+                .CustomCategoryName;
         }
 
         return CategoryLabel(
@@ -400,7 +613,8 @@ public partial class SavingsPlan
     private string CategoryLabel(
         string? category)
     {
-        if (string.IsNullOrWhiteSpace(category))
+        if (string.IsNullOrWhiteSpace(
+                category))
         {
             return T["Category.Other"];
         }
@@ -411,7 +625,8 @@ public partial class SavingsPlan
         var localizedCategory =
             T[localizationKey];
 
-        return localizedCategory == localizationKey
+        return localizedCategory ==
+               localizationKey
             ? category
             : localizedCategory;
     }

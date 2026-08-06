@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Subscriptions;
 
@@ -12,4 +13,7 @@ public sealed class ApplicationUser
 
     public Currency BaseCurrency { get; set; } =
         Currency.PLN;
+
+    public SubscriptionPlan SubscriptionPlan { get; set; } =
+        SubscriptionPlan.Free;
 }

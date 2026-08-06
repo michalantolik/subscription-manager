@@ -64,7 +64,10 @@ public sealed class SavingsPlansApiClientTests
                                         Explanation =
                                             "The selected scenario reaches the budget."
                                     },
-                                    Alternative = (object?)null
+                                    Alternative = (object?)null,
+                                    SubscriptionPlan = "Free",
+                                    DailyRequestLimit = 3,
+                                    RemainingRequestCount = 2
                                 })
                         };
                     }))
@@ -164,6 +167,18 @@ public sealed class SavingsPlansApiClientTests
             100m,
             result.CurrentMonthlyCost);
 
+        Assert.Equal(
+            SubscriptionPlan.Free,
+            result.SubscriptionPlan);
+
+        Assert.Equal(
+            3,
+            result.DailyRequestLimit);
+
+        Assert.Equal(
+            2,
+            result.RemainingRequestCount);
+
         var recommended =
             Assert.IsType<SavingsPlanScenarioResponse>(
                 result.Recommended);
@@ -197,6 +212,69 @@ public sealed class SavingsPlansApiClientTests
 
         Assert.Null(
             result.Alternative);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldThrowUsageLimitExceededException_WhenDailyLimitIsReached()
+    {
+        using var httpClient =
+            new HttpClient(
+                new StubHttpMessageHandler(
+                    (_, _) =>
+                        Task.FromResult(
+                            new HttpResponseMessage(
+                                HttpStatusCode.TooManyRequests)
+                            {
+                                Content = JsonContent.Create(
+                                    new
+                                    {
+                                        title =
+                                            "Daily savings plan limit reached.",
+                                        detail =
+                                            "The daily savings plan limit of 3 requests has been reached.",
+                                        dailyLimit = 3
+                                    })
+                            })))
+            {
+                BaseAddress =
+                    new Uri("https://api.example.com")
+            };
+
+        var apiClient =
+            new SavingsPlansApiClient(
+                httpClient);
+
+        var user =
+            new ClaimsPrincipal(
+                new ClaimsIdentity(
+                [
+                    new Claim(
+                        AuthenticationClaimTypes.AccessToken,
+                        "access-token")
+                ],
+                "Test"));
+
+        var exception =
+            await Assert.ThrowsAsync<
+                SavingsPlanUsageLimitExceededException>(
+                () =>
+                    apiClient.CreateAsync(
+                        new CreateSavingsPlanRequest(
+                            SavingsPlanGoalType.MonthlyBudget,
+                            50m,
+                            [],
+                            SavingsPlanStrategy.Balanced,
+                            null,
+                            "en"),
+                        user));
+
+        Assert.Equal(
+            "The daily savings plan limit of 3 requests has been reached.",
+            exception.Message);
+
+        Assert.Equal(
+            3,
+            exception.DailyLimit);
     }
 
     private sealed class StubHttpMessageHandler(

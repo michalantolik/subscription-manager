@@ -6,15 +6,15 @@
     margin-bottom: 18px;
 }
 
-.savings-plan-heading > div,
-.savings-results-heading > div > div {
-    min-width: 0;
-}
+    .savings-plan-heading > div,
+    .savings-results-heading > div > div {
+        min-width: 0;
+    }
 
-.savings-plan-heading p:last-child {
-    max-width: 780px;
-    line-height: 1.55;
-}
+    .savings-plan-heading p:last-child {
+        max-width: 780px;
+        line-height: 1.55;
+    }
 
 .savings-plan-eyebrow {
     display: flex;
@@ -22,13 +22,22 @@
     gap: 10px;
 }
 
-.savings-plan-eyebrow .eyebrow {
-    margin: 0;
-}
+    .savings-plan-eyebrow .eyebrow {
+        margin: 0;
+    }
 
-.savings-plan-eyebrow .ui-badge .app-icon {
-    width: 13px;
-    height: 13px;
+    .savings-plan-eyebrow .ui-badge .app-icon {
+        width: 13px;
+        height: 13px;
+    }
+
+.savings-result-account-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: 4px;
+    padding-left: 12px;
+    border-left: 1px solid var(--border);
 }
 
 .savings-overview {
@@ -39,31 +48,99 @@
     overflow: hidden;
 }
 
-.savings-overview > div {
-    min-height: 88px;
+    .savings-overview > div {
+        min-height: 88px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 7px;
+        padding: 18px 22px;
+        border-right: 1px solid var(--border);
+    }
+
+        .savings-overview > div:last-child {
+            border-right: 0;
+        }
+
+    .savings-overview span,
+    .savings-summary dt,
+    .savings-result-metric span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .savings-overview strong {
+        font-size: 20px;
+        letter-spacing: -.35px;
+    }
+
+
+.savings-usage-status {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+    .savings-usage-status.compact {
+        margin-top: 18px;
+        margin-bottom: 0;
+    }
+
+    .savings-usage-status.limit-reached {
+        background: var(--red-soft);
+        border-color: color-mix(in srgb, var(--red) 28%, var(--border));
+    }
+
+.savings-usage-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    color: var(--brand-strong);
+    background: var(--brand-soft);
+    border: 1px solid color-mix(in srgb, var(--brand) 24%, var(--border));
+    border-radius: 11px;
+}
+
+.savings-usage-status.limit-reached .savings-usage-icon {
+    color: var(--red);
+    background: color-mix(in srgb, var(--red) 12%, var(--surface));
+    border-color: color-mix(in srgb, var(--red) 24%, var(--border));
+}
+
+.savings-usage-icon .app-icon {
+    width: 19px;
+    height: 19px;
+}
+
+.savings-usage-status > div {
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 7px;
-    padding: 18px 22px;
-    border-right: 1px solid var(--border);
+    gap: 4px;
 }
 
-.savings-overview > div:last-child {
-    border-right: 0;
-}
-
-.savings-overview span,
-.savings-summary dt,
-.savings-result-metric span {
+.savings-usage-label {
     color: var(--muted);
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .04em;
+    text-transform: uppercase;
 }
 
-.savings-overview strong {
-    font-size: 20px;
-    letter-spacing: -.35px;
+.savings-usage-status strong {
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.savings-usage-status.limit-reached strong {
+    color: var(--red);
 }
 
 .savings-stepper {
@@ -86,66 +163,66 @@
     text-align: left;
 }
 
-.savings-step:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    top: 23px;
-    left: 50px;
-    right: 0;
-    height: 1px;
-    background: var(--border);
-}
+    .savings-step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 23px;
+        left: 50px;
+        right: 0;
+        height: 1px;
+        background: var(--border);
+    }
 
-.savings-step > span {
-    position: relative;
-    z-index: 1;
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    color: var(--muted);
-    background: var(--surface);
-    font-size: 12px;
-    font-weight: 800;
-}
+    .savings-step > span {
+        position: relative;
+        z-index: 1;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        color: var(--muted);
+        background: var(--surface);
+        font-size: 12px;
+        font-weight: 800;
+    }
 
-.savings-step > span .app-icon {
-    width: 15px;
-    height: 15px;
-}
+        .savings-step > span .app-icon {
+            width: 15px;
+            height: 15px;
+        }
 
-.savings-step strong {
-    position: relative;
-    z-index: 1;
-    padding-right: 12px;
-    background: var(--bg);
-    font-size: 12px;
-}
+    .savings-step strong {
+        position: relative;
+        z-index: 1;
+        padding-right: 12px;
+        background: var(--bg);
+        font-size: 12px;
+    }
 
-.savings-step.active,
-.savings-step.complete {
-    color: var(--text);
-}
+    .savings-step.active,
+    .savings-step.complete {
+        color: var(--text);
+    }
 
-.savings-step.active > span {
-    color: #fff;
-    border-color: var(--brand);
-    background: var(--brand);
-    box-shadow: var(--ui-focus-ring);
-}
+        .savings-step.active > span {
+            color: #fff;
+            border-color: var(--brand);
+            background: var(--brand);
+            box-shadow: var(--ui-focus-ring);
+        }
 
-.savings-step.complete > span {
-    color: var(--brand-strong);
-    border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
-    background: var(--brand-soft);
-}
+        .savings-step.complete > span {
+            color: var(--brand-strong);
+            border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
+            background: var(--brand-soft);
+        }
 
-.savings-step:disabled {
-    cursor: default;
-}
+    .savings-step:disabled {
+        cursor: default;
+    }
 
 .savings-workspace {
     display: grid;
@@ -183,10 +260,10 @@
     border-radius: 12px;
 }
 
-.savings-heading-icon .app-icon {
-    width: 20px;
-    height: 20px;
-}
+    .savings-heading-icon .app-icon {
+        width: 20px;
+        height: 20px;
+    }
 
 .savings-card-heading h2 {
     margin: 2px 0 6px;
@@ -232,20 +309,20 @@
     transition: border-color var(--ui-transition-fast), background var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
 }
 
-.savings-choice-card:hover,
-.savings-strategy-card:hover,
-.savings-subscription-choice:hover {
-    border-color: var(--border-strong);
-    background: var(--surface-soft);
-}
+    .savings-choice-card:hover,
+    .savings-strategy-card:hover,
+    .savings-subscription-choice:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-soft);
+    }
 
-.savings-choice-card.selected,
-.savings-strategy-card.selected,
-.savings-subscription-choice.selected {
-    border-color: var(--brand);
-    background: var(--brand-soft);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 13%, transparent);
-}
+    .savings-choice-card.selected,
+    .savings-strategy-card.selected,
+    .savings-subscription-choice.selected {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 13%, transparent);
+    }
 
 .savings-choice-icon {
     width: 40px;
@@ -274,20 +351,20 @@
     min-width: 0;
 }
 
-.savings-choice-card strong,
-.savings-strategy-card strong {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 13px;
-}
+    .savings-choice-card strong,
+    .savings-strategy-card strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+    }
 
-.savings-choice-card small,
-.savings-strategy-card small {
-    display: block;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.45;
-}
+    .savings-choice-card small,
+    .savings-strategy-card small {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+    }
 
 .savings-radio-mark {
     width: 19px;
@@ -320,19 +397,19 @@
     display: block;
 }
 
-.savings-money-input .ui-control {
-    padding-right: 62px;
-    font-weight: 750;
-}
+    .savings-money-input .ui-control {
+        padding-right: 62px;
+        font-weight: 750;
+    }
 
-.savings-money-input strong {
-    position: absolute;
-    top: 50%;
-    right: 14px;
-    color: var(--muted);
-    font-size: 12px;
-    transform: translateY(-50%);
-}
+    .savings-money-input strong {
+        position: absolute;
+        top: 50%;
+        right: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        transform: translateY(-50%);
+    }
 
 .savings-form-section {
     margin-top: 25px;
@@ -340,20 +417,20 @@
     border-top: 1px solid var(--border);
 }
 
-.savings-form-section:first-of-type {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-}
+    .savings-form-section:first-of-type {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+    }
 
 .savings-form-section-heading {
     margin-bottom: 14px;
 }
 
-.savings-form-section-heading h3 {
-    margin: 0 0 5px;
-    font-size: 14px;
-}
+    .savings-form-section-heading h3 {
+        margin: 0 0 5px;
+        font-size: 14px;
+    }
 
 .savings-subscription-list {
     display: grid;
@@ -375,15 +452,15 @@
     text-align: left;
 }
 
-.savings-subscription-choice .service-avatar,
-.savings-plan-subscriptions .service-avatar,
-.savings-dialog-list .service-avatar {
-    width: 42px;
-    height: 42px;
-    flex-basis: 42px;
-    border-radius: 11px;
-    font-size: 12px;
-}
+    .savings-subscription-choice .service-avatar,
+    .savings-plan-subscriptions .service-avatar,
+    .savings-dialog-list .service-avatar {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+        border-radius: 11px;
+        font-size: 12px;
+    }
 
 .savings-subscription-copy,
 .savings-subscription-price {
@@ -393,16 +470,16 @@
     min-width: 0;
 }
 
-.savings-subscription-copy strong,
-.savings-subscription-price strong {
-    font-size: 12px;
-}
+    .savings-subscription-copy strong,
+    .savings-subscription-price strong {
+        font-size: 12px;
+    }
 
-.savings-subscription-copy small,
-.savings-subscription-price small {
-    color: var(--muted);
-    font-size: 10px;
-}
+    .savings-subscription-copy small,
+    .savings-subscription-price small {
+        color: var(--muted);
+        font-size: 10px;
+    }
 
 .savings-subscription-price {
     align-items: flex-end;
@@ -454,11 +531,11 @@
     text-align: left;
 }
 
-.savings-strategy-card .savings-radio-mark {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-}
+    .savings-strategy-card .savings-radio-mark {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+    }
 
 .savings-textarea {
     min-height: 94px;
@@ -482,11 +559,11 @@
     line-height: 1.45;
 }
 
-.savings-validation .app-icon {
-    width: 17px;
-    height: 17px;
-    flex: 0 0 17px;
-}
+    .savings-validation .app-icon {
+        width: 17px;
+        height: 17px;
+        flex: 0 0 17px;
+    }
 
 .savings-actions,
 .savings-result-actions {
@@ -499,10 +576,10 @@
     border-top: 1px solid var(--border);
 }
 
-.savings-actions .ui-button,
-.savings-result-actions .ui-button {
-    min-width: 122px;
-}
+    .savings-actions .ui-button,
+    .savings-result-actions .ui-button {
+        min-width: 122px;
+    }
 
 
 .savings-summary .savings-card-heading {
@@ -515,10 +592,10 @@
     flex-basis: 38px;
 }
 
-.savings-summary .savings-heading-icon .app-icon {
-    width: 18px;
-    height: 18px;
-}
+    .savings-summary .savings-heading-icon .app-icon {
+        width: 18px;
+        height: 18px;
+    }
 
 .savings-summary .savings-card-heading h2 {
     margin-top: 1px;
@@ -529,13 +606,13 @@
     margin: 0;
 }
 
-.savings-summary dl > div {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-}
+    .savings-summary dl > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+    }
 
 .savings-summary dd {
     margin: 0;
@@ -558,19 +635,19 @@
     border-radius: 11px;
 }
 
-.savings-safety-note .app-icon,
-.savings-dialog-note .app-icon {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 16px;
-}
+    .savings-safety-note .app-icon,
+    .savings-dialog-note .app-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+    }
 
-.savings-safety-note p,
-.savings-dialog-note p {
-    margin: 0;
-    font-size: 11px;
-    line-height: 1.45;
-}
+    .savings-safety-note p,
+    .savings-dialog-note p {
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.45;
+    }
 
 .savings-review-list {
     border: 1px solid var(--border);
@@ -578,51 +655,51 @@
     overflow: hidden;
 }
 
-.savings-review-list section {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-}
+    .savings-review-list section {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+    }
 
-.savings-review-list section:last-child {
-    border-bottom: 0;
-}
+        .savings-review-list section:last-child {
+            border-bottom: 0;
+        }
 
-.savings-review-list section > div {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    min-width: 0;
-}
+        .savings-review-list section > div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
 
-.savings-review-list section > div > span {
-    color: var(--muted);
-    font-size: 10px;
-    font-weight: 750;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-}
+            .savings-review-list section > div > span {
+                color: var(--muted);
+                font-size: 10px;
+                font-weight: 750;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+            }
 
-.savings-review-list strong {
-    font-size: 13px;
-}
+    .savings-review-list strong {
+        font-size: 13px;
+    }
 
-.savings-review-list small {
-    color: var(--muted);
-    font-size: 11px;
-}
+    .savings-review-list small {
+        color: var(--muted);
+        font-size: 11px;
+    }
 
-.savings-review-list section > button {
-    padding: 3px;
-    color: var(--brand-strong);
-    background: transparent;
-    border: 0;
-    font-size: 11px;
-    font-weight: 750;
-}
+    .savings-review-list section > button {
+        padding: 3px;
+        color: var(--brand-strong);
+        background: transparent;
+        border: 0;
+        font-size: 11px;
+        font-weight: 750;
+    }
 
 .savings-review-tags {
     display: flex;
@@ -630,15 +707,15 @@
     gap: 6px;
 }
 
-.savings-review-tags span {
-    padding: 5px 8px;
-    color: var(--brand-strong);
-    background: var(--brand-soft);
-    border: 1px solid color-mix(in srgb, var(--brand) 22%, var(--border));
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 750;
-}
+    .savings-review-tags span {
+        padding: 5px 8px;
+        color: var(--brand-strong);
+        background: var(--brand-soft);
+        border: 1px solid color-mix(in srgb, var(--brand) 22%, var(--border));
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 750;
+    }
 
 .savings-review-instruction {
     max-width: 520px;
@@ -658,25 +735,25 @@
     border-radius: 13px;
 }
 
-.savings-review-notice > .app-icon {
-    width: 20px;
-    height: 20px;
-    flex: 0 0 20px;
-    color: var(--blue);
-}
+    .savings-review-notice > .app-icon {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        color: var(--blue);
+    }
 
-.savings-review-notice strong,
-.savings-limitations strong {
-    font-size: 12px;
-}
+    .savings-review-notice strong,
+    .savings-limitations strong {
+        font-size: 12px;
+    }
 
-.savings-review-notice p,
-.savings-limitations p {
-    margin: 4px 0 0;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.5;
-}
+    .savings-review-notice p,
+    .savings-limitations p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+    }
 
 .savings-analysis {
     max-width: 720px;
@@ -705,11 +782,11 @@
     animation: savings-pulse 1.6s ease-in-out infinite;
 }
 
-.savings-analysis-mark .app-icon,
-.savings-result-mark .app-icon {
-    width: 26px;
-    height: 26px;
-}
+    .savings-analysis-mark .app-icon,
+    .savings-result-mark .app-icon {
+        width: 26px;
+        height: 26px;
+    }
 
 .savings-analysis h2 {
     margin: 19px 0 7px;
@@ -731,14 +808,14 @@
     border-radius: 999px;
 }
 
-.savings-analysis-progress span {
-    display: block;
-    width: 42%;
-    height: 100%;
-    background: var(--brand);
-    border-radius: inherit;
-    animation: savings-progress 1.25s ease-in-out infinite;
-}
+    .savings-analysis-progress span {
+        display: block;
+        width: 42%;
+        height: 100%;
+        background: var(--brand);
+        border-radius: inherit;
+        animation: savings-progress 1.25s ease-in-out infinite;
+    }
 
 .savings-analysis-steps {
     width: min(430px, 100%);
@@ -757,36 +834,36 @@
     border-radius: 10px;
 }
 
-.savings-analysis-step.complete {
-    color: var(--text);
-    background: var(--surface-soft);
-}
+    .savings-analysis-step.complete {
+        color: var(--text);
+        background: var(--surface-soft);
+    }
 
-.savings-analysis-step > span {
-    width: 23px;
-    height: 23px;
-    flex: 0 0 23px;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    font-size: 10px;
-}
+    .savings-analysis-step > span {
+        width: 23px;
+        height: 23px;
+        flex: 0 0 23px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        font-size: 10px;
+    }
 
-.savings-analysis-step.complete > span {
-    color: var(--brand-strong);
-    border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
-    background: var(--brand-soft);
-}
+    .savings-analysis-step.complete > span {
+        color: var(--brand-strong);
+        border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
+        background: var(--brand-soft);
+    }
 
-.savings-analysis-step .app-icon {
-    width: 13px;
-    height: 13px;
-}
+    .savings-analysis-step .app-icon {
+        width: 13px;
+        height: 13px;
+    }
 
-.savings-analysis-step strong {
-    font-size: 11px;
-}
+    .savings-analysis-step strong {
+        font-size: 11px;
+    }
 
 .savings-analysis > small {
     margin-top: 23px;
@@ -802,23 +879,23 @@
     margin-bottom: 22px;
 }
 
-.savings-results-heading > div {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
+    .savings-results-heading > div {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
 
-.savings-results-heading h1 {
-    margin: 5px 0 5px;
-    font-size: 29px;
-    letter-spacing: -.65px;
-}
+    .savings-results-heading h1 {
+        margin: 5px 0 5px;
+        font-size: 29px;
+        letter-spacing: -.65px;
+    }
 
-.savings-results-heading p {
-    margin: 0;
-    color: var(--muted);
-    font-size: 13px;
-}
+    .savings-results-heading p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+    }
 
 .savings-result-mark {
     flex: 0 0 56px;
@@ -839,16 +916,16 @@
     padding: 17px;
 }
 
-.savings-result-metric strong {
-    margin: 10px 0 3px;
-    font-size: 20px;
-    letter-spacing: -.35px;
-}
+    .savings-result-metric strong {
+        margin: 10px 0 3px;
+        font-size: 20px;
+        letter-spacing: -.35px;
+    }
 
-.savings-result-metric small {
-    color: var(--muted);
-    font-size: 10px;
-}
+    .savings-result-metric small {
+        color: var(--muted);
+        font-size: 10px;
+    }
 
 .savings-plans-grid {
     display: grid;
@@ -860,29 +937,29 @@
     padding: 22px;
 }
 
-.savings-plan-card.recommended {
-    border-color: color-mix(in srgb, var(--brand) 38%, var(--border));
-}
+    .savings-plan-card.recommended {
+        border-color: color-mix(in srgb, var(--brand) 38%, var(--border));
+    }
 
-.savings-plan-card > header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
-}
+    .savings-plan-card > header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+    }
 
-.savings-plan-card h2 {
-    margin: 10px 0 0;
-    font-size: 17px;
-}
+    .savings-plan-card h2 {
+        margin: 10px 0 0;
+        font-size: 17px;
+    }
 
-.savings-plan-card > p {
-    min-height: 38px;
-    margin: 12px 0 17px;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.55;
-}
+    .savings-plan-card > p {
+        min-height: 38px;
+        margin: 12px 0 17px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.55;
+    }
 
 .savings-target-status {
     display: inline-flex;
@@ -895,14 +972,14 @@
     white-space: nowrap;
 }
 
-.savings-target-status.reached {
-    color: var(--brand-strong);
-}
+    .savings-target-status.reached {
+        color: var(--brand-strong);
+    }
 
-.savings-target-status .app-icon {
-    width: 14px;
-    height: 14px;
-}
+    .savings-target-status .app-icon {
+        width: 14px;
+        height: 14px;
+    }
 
 .savings-plan-subscriptions {
     border: 1px solid var(--border);
@@ -910,36 +987,36 @@
     overflow: hidden;
 }
 
-.savings-plan-subscriptions > div {
-    min-height: 64px;
-    display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 11px;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-}
+    .savings-plan-subscriptions > div {
+        min-height: 64px;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+    }
 
-.savings-plan-subscriptions > div:last-child {
-    border-bottom: 0;
-}
+        .savings-plan-subscriptions > div:last-child {
+            border-bottom: 0;
+        }
 
-.savings-plan-subscriptions > div > span:nth-child(2) {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-}
+        .savings-plan-subscriptions > div > span:nth-child(2) {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
 
-.savings-plan-subscriptions strong,
-.savings-plan-subscriptions b {
-    font-size: 11px;
-}
+    .savings-plan-subscriptions strong,
+    .savings-plan-subscriptions b {
+        font-size: 11px;
+    }
 
-.savings-plan-subscriptions small {
-    color: var(--muted);
-    font-size: 9px;
-}
+    .savings-plan-subscriptions small {
+        color: var(--muted);
+        font-size: 9px;
+    }
 
 .savings-plan-card dl {
     display: grid;
@@ -947,20 +1024,20 @@
     margin: 17px 0 0;
 }
 
-.savings-plan-card dl > div {
-    padding: 0 10px;
-    border-right: 1px solid var(--border);
-    text-align: center;
-}
+    .savings-plan-card dl > div {
+        padding: 0 10px;
+        border-right: 1px solid var(--border);
+        text-align: center;
+    }
 
-.savings-plan-card dl > div:first-child {
-    padding-left: 0;
-}
+        .savings-plan-card dl > div:first-child {
+            padding-left: 0;
+        }
 
-.savings-plan-card dl > div:last-child {
-    padding-right: 0;
-    border-right: 0;
-}
+        .savings-plan-card dl > div:last-child {
+            padding-right: 0;
+            border-right: 0;
+        }
 
 .savings-plan-card dt {
     margin-bottom: 6px;
@@ -980,21 +1057,21 @@
     border-color: var(--border);
 }
 
-.savings-limitations > span {
-    width: 34px;
-    height: 34px;
-    flex: 0 0 34px;
-    display: grid;
-    place-items: center;
-    color: var(--blue);
-    background: var(--blue-soft);
-    border-radius: 10px;
-}
+    .savings-limitations > span {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: grid;
+        place-items: center;
+        color: var(--blue);
+        background: var(--blue-soft);
+        border-radius: 10px;
+    }
 
-.savings-limitations .app-icon {
-    width: 17px;
-    height: 17px;
-}
+    .savings-limitations .app-icon {
+        width: 17px;
+        height: 17px;
+    }
 
 .savings-result-actions {
     justify-content: flex-end;
@@ -1005,39 +1082,51 @@
     gap: 8px;
 }
 
-.savings-dialog-list > div {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
-    background: var(--surface-soft);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-}
+    .savings-dialog-list > div {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+    }
 
-.savings-dialog-list > div > span:nth-child(2) {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
+        .savings-dialog-list > div > span:nth-child(2) {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
 
-.savings-dialog-list strong {
-    font-size: 12px;
-}
+    .savings-dialog-list strong {
+        font-size: 12px;
+    }
 
-.savings-dialog-list small {
-    color: var(--muted);
-    font-size: 10px;
-}
+    .savings-dialog-list small {
+        color: var(--muted);
+        font-size: 10px;
+    }
 
 @keyframes savings-pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 18%, transparent); }
-    50% { transform: scale(1.03); box-shadow: 0 0 0 10px transparent; }
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 18%, transparent);
+    }
+
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 0 10px transparent;
+    }
 }
 
 @keyframes savings-progress {
-    from { transform: translateX(-105%); }
-    to { transform: translateX(245%); }
+    from {
+        transform: translateX(-105%);
+    }
+
+    to {
+        transform: translateX(245%);
+    }
 }
 
 @media (max-width: 1000px) {
@@ -1050,11 +1139,11 @@
         grid-row: 1;
     }
 
-    .savings-summary dl {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0 18px;
-    }
+        .savings-summary dl {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 18px;
+        }
 
     .savings-result-metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1069,29 +1158,37 @@
         grid-template-columns: 1fr;
     }
 
+    .savings-usage-status {
+        grid-template-columns: 40px minmax(0, 1fr);
+    }
+
+        .savings-usage-status > div:last-child {
+            grid-column: 2;
+        }
+
     .savings-overview > div {
         min-height: 70px;
         border-right: 0;
         border-bottom: 1px solid var(--border);
     }
 
-    .savings-overview > div:last-child {
-        border-bottom: 0;
-    }
+        .savings-overview > div:last-child {
+            border-bottom: 0;
+        }
 
     .savings-step {
         justify-content: center;
         padding: 0 4px;
     }
 
-    .savings-step strong {
-        display: none;
-    }
+        .savings-step strong {
+            display: none;
+        }
 
-    .savings-step:not(:last-child)::after {
-        left: calc(50% + 18px);
-        right: calc(-50% + 18px);
-    }
+        .savings-step:not(:last-child)::after {
+            left: calc(50% + 18px);
+            right: calc(-50% + 18px);
+        }
 
     .savings-form-card,
     .savings-summary,
@@ -1099,9 +1196,9 @@
         padding: 18px;
     }
 
-    .savings-summary dl {
-        grid-template-columns: 1fr;
-    }
+        .savings-summary dl {
+            grid-template-columns: 1fr;
+        }
 
     .savings-results-heading,
     .savings-results-heading > div {
@@ -1112,9 +1209,9 @@
         flex-direction: column;
     }
 
-    .savings-results-heading > .ui-button {
-        width: 100%;
-    }
+        .savings-results-heading > .ui-button {
+            width: 100%;
+        }
 
     .savings-result-mark {
         width: 48px;
@@ -1145,6 +1242,28 @@
         flex-direction: column;
     }
 
+    .savings-result-account-status {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .savings-usage-status {
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 11px;
+        padding: 13px;
+    }
+
+    .savings-usage-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+        .savings-usage-icon .app-icon {
+            width: 17px;
+            height: 17px;
+        }
+
     .savings-subscription-choice {
         grid-template-columns: 42px minmax(0, 1fr) 22px;
     }
@@ -1164,10 +1283,10 @@
         flex-direction: column-reverse;
     }
 
-    .savings-actions .ui-button,
-    .savings-result-actions .ui-button {
-        width: 100%;
-    }
+        .savings-actions .ui-button,
+        .savings-result-actions .ui-button {
+            width: 100%;
+        }
 
     .savings-analysis {
         min-height: 430px;
@@ -1178,20 +1297,20 @@
         grid-template-columns: 1fr;
     }
 
-    .savings-plan-card dl > div,
-    .savings-plan-card dl > div:first-child,
-    .savings-plan-card dl > div:last-child {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
-        text-align: left;
-    }
+        .savings-plan-card dl > div,
+        .savings-plan-card dl > div:first-child,
+        .savings-plan-card dl > div:last-child {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-right: 0;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
 
-    .savings-plan-card dl > div:last-child {
-        border-bottom: 0;
-    }
+            .savings-plan-card dl > div:last-child {
+                border-bottom: 0;
+            }
 
     .savings-plan-card dt {
         margin: 0;
@@ -1213,53 +1332,53 @@
     --selection-soft: var(--brand-soft);
 }
 
-.savings-choice-card.goal-control {
-    --selection-accent: var(--blue);
-    --selection-soft: var(--blue-soft);
-}
+    .savings-choice-card.goal-control {
+        --selection-accent: var(--blue);
+        --selection-soft: var(--blue-soft);
+    }
 
-.savings-choice-card.goal-growth {
-    --selection-accent: var(--brand);
-    --selection-soft: var(--brand-soft);
-}
+    .savings-choice-card.goal-growth {
+        --selection-accent: var(--brand);
+        --selection-soft: var(--brand-soft);
+    }
 
-.savings-strategy-card.strategy-calm {
-    --selection-accent: var(--blue);
-    --selection-soft: var(--blue-soft);
-}
+    .savings-strategy-card.strategy-calm {
+        --selection-accent: var(--blue);
+        --selection-soft: var(--blue-soft);
+    }
 
-.savings-strategy-card.strategy-balanced {
-    --selection-accent: var(--brand);
-    --selection-soft: var(--brand-soft);
-}
+    .savings-strategy-card.strategy-balanced {
+        --selection-accent: var(--brand);
+        --selection-soft: var(--brand-soft);
+    }
 
-.savings-strategy-card.strategy-strong {
-    --selection-accent: var(--orange);
-    --selection-soft: color-mix(in srgb, var(--orange) 14%, var(--surface));
-}
+    .savings-strategy-card.strategy-strong {
+        --selection-accent: var(--orange);
+        --selection-soft: color-mix(in srgb, var(--orange) 14%, var(--surface));
+    }
 
-.savings-choice-card.selected,
-.savings-strategy-card.selected {
-    border-color: var(--selection-accent);
-    background: var(--selection-soft);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--selection-accent) 13%, transparent);
-}
+    .savings-choice-card.selected,
+    .savings-strategy-card.selected {
+        border-color: var(--selection-accent);
+        background: var(--selection-soft);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--selection-accent) 13%, transparent);
+    }
 
-.savings-choice-card.selected .savings-choice-icon {
-    color: var(--selection-accent);
-    background: color-mix(in srgb, var(--surface) 54%, var(--selection-soft));
-    border-color: color-mix(in srgb, var(--selection-accent) 28%, var(--border));
-}
+        .savings-choice-card.selected .savings-choice-icon {
+            color: var(--selection-accent);
+            background: color-mix(in srgb, var(--surface) 54%, var(--selection-soft));
+            border-color: color-mix(in srgb, var(--selection-accent) 28%, var(--border));
+        }
 
-.savings-choice-card.selected .savings-radio-mark,
-.savings-strategy-card.selected .savings-radio-mark {
-    border-color: var(--selection-accent);
-}
+        .savings-choice-card.selected .savings-radio-mark,
+        .savings-strategy-card.selected .savings-radio-mark {
+            border-color: var(--selection-accent);
+        }
 
-.savings-choice-card.selected .savings-radio-mark i,
-.savings-strategy-card.selected .savings-radio-mark i {
-    background: var(--selection-accent);
-}
+            .savings-choice-card.selected .savings-radio-mark i,
+            .savings-strategy-card.selected .savings-radio-mark i {
+                background: var(--selection-accent);
+            }
 
 .savings-subscription-choice {
     position: relative;
@@ -1267,31 +1386,31 @@
     transition: border-color var(--ui-transition-fast), background var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
 }
 
-.savings-subscription-choice::before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--subscription-color);
-    opacity: 0;
-    transition: opacity var(--ui-transition-fast);
-}
+    .savings-subscription-choice::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: var(--subscription-color);
+        opacity: 0;
+        transition: opacity var(--ui-transition-fast);
+    }
 
-.savings-subscription-choice:hover {
-    border-color: color-mix(in srgb, var(--subscription-color) 35%, var(--border));
-    background: color-mix(in srgb, var(--subscription-color) 7%, var(--surface));
-}
+    .savings-subscription-choice:hover {
+        border-color: color-mix(in srgb, var(--subscription-color) 35%, var(--border));
+        background: color-mix(in srgb, var(--subscription-color) 7%, var(--surface));
+    }
 
-.savings-subscription-choice:hover::before,
-.savings-subscription-choice.selected::before {
-    opacity: 1;
-}
+        .savings-subscription-choice:hover::before,
+        .savings-subscription-choice.selected::before {
+            opacity: 1;
+        }
 
-.savings-subscription-choice.selected {
-    border-color: color-mix(in srgb, var(--subscription-color) 45%, var(--border));
-    background: color-mix(in srgb, var(--subscription-color) 11%, var(--surface));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--subscription-color) 10%, transparent);
-}
+    .savings-subscription-choice.selected {
+        border-color: color-mix(in srgb, var(--subscription-color) 45%, var(--border));
+        background: color-mix(in srgb, var(--subscription-color) 11%, var(--surface));
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--subscription-color) 10%, transparent);
+    }
 
 .savings-service-mark {
     width: 42px;
@@ -1305,11 +1424,11 @@
     border-radius: 11px;
 }
 
-.savings-service-mark .digital-service-icon,
-.savings-service-mark .app-icon {
-    width: 23px;
-    height: 23px;
-}
+    .savings-service-mark .digital-service-icon,
+    .savings-service-mark .app-icon {
+        width: 23px;
+        height: 23px;
+    }
 
 .savings-subscription-choice.selected .savings-selection-mark {
     color: var(--surface);
@@ -1322,13 +1441,13 @@
     overflow: hidden;
 }
 
-.savings-plan-subscription::before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--subscription-color, var(--brand));
-}
+    .savings-plan-subscription::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: var(--subscription-color, var(--brand));
+    }
 
 .savings-plan-card:not(.recommended) {
     border-top: 2px solid color-mix(in srgb, var(--blue) 55%, var(--border));

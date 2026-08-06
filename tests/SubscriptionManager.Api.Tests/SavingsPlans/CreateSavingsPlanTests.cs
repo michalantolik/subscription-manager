@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SubscriptionManager.Api.Tests.Authentication;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
 using SubscriptionManager.Domain.DigitalServices;
@@ -213,6 +214,91 @@ public sealed class CreateSavingsPlanTests
             problem.Detail);
     }
 
+    [Fact]
+    public async Task PostAsync_ShouldReturnTooManyRequests_WhenDailyLimitIsReached()
+    {
+        await using var factory =
+            _factory.WithWebHostBuilder(
+                builder =>
+                {
+                    builder.ConfigureTestServices(
+                        services =>
+                        {
+                            services.RemoveAll<
+                                ISavingsPlanAgent>();
+
+                            services.AddScoped<
+                                ISavingsPlanAgent,
+                                SuccessfulSavingsPlanAgent>();
+                        });
+                });
+
+        var userId =
+            Guid.NewGuid();
+
+        await SeedAsync(
+            factory.Services,
+            userId);
+
+        await SeedUsageAsync(
+            factory.Services,
+            userId,
+            SubscriptionPlanLimits
+                .FreeDailySavingsPlanLimit);
+
+        using var client =
+            factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            TestAuthenticationHandler.UserIdHeaderName,
+            userId.ToString());
+
+        var response =
+            await client.PostAsJsonAsync(
+                "/api/savings-plans",
+                CreateRequest(),
+                JsonOptions);
+
+        Assert.Equal(
+            HttpStatusCode.TooManyRequests,
+            response.StatusCode);
+
+        var problem =
+            await response.Content
+                .ReadFromJsonAsync<ProblemDetails>(
+                    JsonOptions);
+
+        Assert.NotNull(problem);
+
+        Assert.Equal(
+            StatusCodes.Status429TooManyRequests,
+            problem.Status);
+
+        Assert.Equal(
+            "Daily savings plan limit reached.",
+            problem.Title);
+
+        Assert.Equal(
+            $"The daily savings plan limit of {SubscriptionPlanLimits.FreeDailySavingsPlanLimit} requests has been reached.",
+            problem.Detail);
+
+        var hasDailyLimit =
+            problem.Extensions.TryGetValue(
+                "dailyLimit",
+                out var dailyLimitValue);
+
+        Assert.True(hasDailyLimit);
+
+        var dailyLimit =
+            Assert.IsType<JsonElement>(
+                dailyLimitValue);
+
+        Assert.Equal(
+            SubscriptionPlanLimits
+                .FreeDailySavingsPlanLimit,
+            dailyLimit.GetInt32());
+    }
+
     private static CreateSavingsPlanCommand CreateRequest()
     {
         return new CreateSavingsPlanCommand(
@@ -240,9 +326,12 @@ public sealed class CreateSavingsPlanTests
             new ApplicationUser
             {
                 Id = userId,
-                UserName = $"{userId}@example.com",
-                Email = $"{userId}@example.com",
-                BaseCurrency = Currency.PLN
+                UserName =
+                    $"{userId}@example.com",
+                Email =
+                    $"{userId}@example.com",
+                BaseCurrency =
+                    Currency.PLN
             });
 
         dbContext.Subscriptions.AddRange(
@@ -256,6 +345,39 @@ public sealed class CreateSavingsPlanTests
                 "Spotify",
                 40m,
                 DigitalServiceCategory.Music));
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedUsageAsync(
+        IServiceProvider services,
+        Guid userId,
+        int requestCount)
+    {
+        await using var scope =
+            services.CreateAsyncScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<
+                    SubscriptionManagerDbContext>();
+
+        var usage =
+            new Domain.SavingsPlans.SavingsPlanUsage(
+                userId,
+                DateOnly.FromDateTime(
+                    DateTime.UtcNow));
+
+        for (var index = 0;
+             index < requestCount;
+             index++)
+        {
+            usage.RegisterRequest(
+                requestCount);
+        }
+
+        dbContext.SavingsPlanUsages.Add(
+            usage);
 
         await dbContext.SaveChangesAsync();
     }
@@ -296,7 +418,8 @@ public sealed class CreateSavingsPlanTests
             var netflix =
                 request.Subscriptions.Single(
                     subscription =>
-                        subscription.Name == "Netflix");
+                        subscription.Name ==
+                        "Netflix");
 
             return Task.FromResult(
                 new SavingsPlanAgentResult(
@@ -314,7 +437,8 @@ public sealed class CreateSavingsPlanTests
             SavingsPlanAgentRequest request,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromException<SavingsPlanAgentResult>(
+            return Task.FromException<
+                SavingsPlanAgentResult>(
                 new SavingsPlanUnavailableException(
                     "Technical provider details."));
         }

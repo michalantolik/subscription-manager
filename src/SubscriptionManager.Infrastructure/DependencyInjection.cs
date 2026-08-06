@@ -125,8 +125,13 @@ public static class DependencyInjection
             ISavingsPlanAgent,
             OpenAiSavingsPlanAgent>();
 
-        services.AddScoped<IIdentityService, IdentityService>();
-        services.AddScoped<IEmailSender, DevelopmentEmailSender>();
+        services.AddScoped<
+            IIdentityService,
+            IdentityService>();
+
+        services.AddScoped<
+            IEmailSender,
+            DevelopmentEmailSender>();
 
         services.AddScoped<
             IAccessTokenGenerator,
@@ -139,6 +144,10 @@ public static class DependencyInjection
         services.AddScoped<
             ISubscriptionRepository,
             SubscriptionRepository>();
+
+        services.AddScoped<
+            ISavingsPlanUsageRepository,
+            SavingsPlanUsageRepository>();
 
         services.AddScoped<
             IExchangeRateRepository,

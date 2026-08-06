@@ -1,5 +1,6 @@
 ﻿using SubscriptionManager.Blazor.Features.Authentication;
 using SubscriptionManager.Blazor.Features.Currencies;
+using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,6 +22,14 @@ public enum SavingsPlanStrategy
     MaximumSavings = 3
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum SubscriptionPlan
+{
+    Free = 1,
+    Plus = 2,
+    Premium = 3
+}
+
 public sealed record CreateSavingsPlanRequest(
     SavingsPlanGoalType GoalType,
     decimal TargetAmount,
@@ -33,7 +42,10 @@ public sealed record SavingsPlanResponse(
     Currency BaseCurrency,
     decimal CurrentMonthlyCost,
     SavingsPlanScenarioResponse? Recommended,
-    SavingsPlanScenarioResponse? Alternative);
+    SavingsPlanScenarioResponse? Alternative,
+    SubscriptionPlan SubscriptionPlan,
+    int DailyRequestLimit,
+    int RemainingRequestCount);
 
 public sealed record SavingsPlanScenarioResponse(
     IReadOnlyList<SavingsPlanSubscriptionResponse> Subscriptions,
@@ -48,6 +60,23 @@ public sealed record SavingsPlanSubscriptionResponse(
     string Name,
     string Category,
     decimal MonthlyCost);
+
+public sealed class SavingsPlanUsageLimitExceededException
+    : Exception
+{
+    public SavingsPlanUsageLimitExceededException(
+        string? message,
+        int dailyLimit)
+        : base(
+            string.IsNullOrWhiteSpace(message)
+                ? "The daily savings plan limit has been reached."
+                : message)
+    {
+        DailyLimit = dailyLimit;
+    }
+
+    public int DailyLimit { get; }
+}
 
 public sealed class SavingsPlansApiClient(
     HttpClient httpClient)
@@ -67,6 +96,7 @@ public sealed class SavingsPlansApiClient(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(user);
 
         using var request =
             new HttpRequestMessage(
@@ -87,6 +117,20 @@ public sealed class SavingsPlansApiClient(
                 request,
                 cancellationToken);
 
+        if (response.StatusCode ==
+            HttpStatusCode.TooManyRequests)
+        {
+            var problemDetails =
+                await response.Content
+                    .ReadFromJsonAsync<ApiProblemDetails>(
+                        JsonOptions,
+                        cancellationToken);
+
+            throw new SavingsPlanUsageLimitExceededException(
+                problemDetails?.Detail,
+                problemDetails?.DailyLimit ?? 0);
+        }
+
         response.EnsureSuccessStatusCode();
 
         return await response.Content
@@ -96,4 +140,8 @@ public sealed class SavingsPlansApiClient(
                ?? throw new InvalidOperationException(
                    "The savings plan response was empty.");
     }
+
+    private sealed record ApiProblemDetails(
+        string? Detail,
+        int DailyLimit);
 }

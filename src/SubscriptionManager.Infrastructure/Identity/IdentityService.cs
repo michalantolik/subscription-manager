@@ -42,15 +42,13 @@ public sealed class IdentityService(
             BaseCurrency = baseCurrency
         };
 
-        var result =
-            await userManager.CreateAsync(
-                user,
-                password);
+        var result = await userManager.CreateAsync(
+            user,
+            password);
 
         if (result.Succeeded)
         {
-            return CreateUserResult.Success(
-                user.Id);
+            return CreateUserResult.Success(user.Id);
         }
 
         return CreateUserResult.Failure(
@@ -85,6 +83,19 @@ public sealed class IdentityService(
                 cancellationToken);
     }
 
+    public async Task<SubscriptionPlan?> GetSubscriptionPlanAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user =>
+                (SubscriptionPlan?)user.SubscriptionPlan)
+            .SingleOrDefaultAsync(
+                cancellationToken);
+    }
+
     public async Task<bool> UpdateAccountPreferencesAsync(
         Guid userId,
         Language language,
@@ -105,12 +116,10 @@ public sealed class IdentityService(
                 "The base currency is not supported.");
         }
 
-        var user =
-            await dbContext.Users
-                .SingleOrDefaultAsync(
-                    currentUser =>
-                        currentUser.Id == userId,
-                    cancellationToken);
+        var user = await dbContext.Users
+            .SingleOrDefaultAsync(
+                currentUser => currentUser.Id == userId,
+                cancellationToken);
 
         if (user is null)
         {
@@ -130,18 +139,16 @@ public sealed class IdentityService(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var user =
-            await userManager.FindByIdAsync(
-                userId.ToString());
+        var user = await userManager.FindByIdAsync(
+            userId.ToString());
 
         if (user is null)
         {
             return null;
         }
 
-        return await userManager
-            .GenerateEmailConfirmationTokenAsync(
-                user);
+        return await userManager.GenerateEmailConfirmationTokenAsync(
+            user);
     }
 
     public async Task<ConfirmEmailResult> ConfirmEmailAsync(
@@ -149,9 +156,8 @@ public sealed class IdentityService(
         string confirmationToken,
         CancellationToken cancellationToken = default)
     {
-        var user =
-            await userManager.FindByIdAsync(
-                userId.ToString());
+        var user = await userManager.FindByIdAsync(
+            userId.ToString());
 
         if (user is null)
         {
@@ -163,10 +169,9 @@ public sealed class IdentityService(
             ]);
         }
 
-        var result =
-            await userManager.ConfirmEmailAsync(
-                user,
-                confirmationToken);
+        var result = await userManager.ConfirmEmailAsync(
+            user,
+            confirmationToken);
 
         if (result.Succeeded)
         {
@@ -182,9 +187,7 @@ public sealed class IdentityService(
         string password,
         CancellationToken cancellationToken = default)
     {
-        var user =
-            await userManager.FindByEmailAsync(
-                email);
+        var user = await userManager.FindByEmailAsync(email);
 
         if (user is null)
         {
@@ -220,9 +223,7 @@ public sealed class IdentityService(
         string email,
         CancellationToken cancellationToken = default)
     {
-        var user =
-            await userManager.FindByEmailAsync(
-                email);
+        var user = await userManager.FindByEmailAsync(email);
 
         if (user is null)
         {
@@ -230,9 +231,8 @@ public sealed class IdentityService(
         }
 
         var token =
-            await userManager
-                .GeneratePasswordResetTokenAsync(
-                    user);
+            await userManager.GeneratePasswordResetTokenAsync(
+                user);
 
         return new PasswordResetToken(
             user.Id,
@@ -246,9 +246,8 @@ public sealed class IdentityService(
         string newPassword,
         CancellationToken cancellationToken = default)
     {
-        var user =
-            await userManager.FindByIdAsync(
-                userId.ToString());
+        var user = await userManager.FindByIdAsync(
+            userId.ToString());
 
         if (user is null)
         {
@@ -260,11 +259,10 @@ public sealed class IdentityService(
             ]);
         }
 
-        var result =
-            await userManager.ResetPasswordAsync(
-                user,
-                resetToken,
-                newPassword);
+        var result = await userManager.ResetPasswordAsync(
+            user,
+            resetToken,
+            newPassword);
 
         if (result.Succeeded)
         {
@@ -276,31 +274,35 @@ public sealed class IdentityService(
     }
 
     public async Task<DeleteUserResult> DeleteUserAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
+    Guid userId,
+    CancellationToken cancellationToken = default)
     {
-        var user =
-            await userManager.FindByIdAsync(
-                userId.ToString());
+        var user = await userManager.FindByIdAsync(
+            userId.ToString());
 
         if (user is null)
         {
             return DeleteUserResult.Failure(
             [
                 new IdentityServiceError(
-                    "UserNotFound",
-                    "The user was not found.")
+                "UserNotFound",
+                "The user was not found.")
             ]);
         }
 
         await using var transaction =
-            await dbContext.Database
-                .BeginTransactionAsync(
-                    cancellationToken);
+            await dbContext.Database.BeginTransactionAsync(
+                cancellationToken);
 
         await dbContext.Subscriptions
             .Where(subscription =>
                 subscription.OwnerId == userId)
+            .ExecuteDeleteAsync(
+                cancellationToken);
+
+        await dbContext.SavingsPlanUsages
+            .Where(usage =>
+                usage.UserId == userId)
             .ExecuteDeleteAsync(
                 cancellationToken);
 
@@ -311,9 +313,7 @@ public sealed class IdentityService(
             .ExecuteDeleteAsync(
                 cancellationToken);
 
-        var result =
-            await userManager.DeleteAsync(
-                user);
+        var result = await userManager.DeleteAsync(user);
 
         if (!result.Succeeded)
         {

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.ExchangeRates;
+using SubscriptionManager.Domain.SavingsPlans;
 using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Identity;
 
@@ -25,6 +26,9 @@ public sealed class SubscriptionManagerDbContext
 
     public DbSet<ExchangeRate> ExchangeRates =>
         Set<ExchangeRate>();
+
+    public DbSet<SavingsPlanUsage> SavingsPlanUsages =>
+        Set<SavingsPlanUsage>();
 
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)

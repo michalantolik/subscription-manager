@@ -25,6 +25,21 @@ internal sealed class ApiExceptionHandler(
                     "Subscription costs could not be converted at this time.",
                 Instance = httpContext.Request.Path
             },
+
+            SavingsPlanUsageLimitExceededException limitException =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status429TooManyRequests,
+                    Title = "Daily savings plan limit reached.",
+                    Detail = limitException.Message,
+                    Instance = httpContext.Request.Path,
+                    Extensions =
+                    {
+                        ["dailyLimit"] =
+                            limitException.DailyLimit
+                    }
+                },
+
             SavingsPlanUnavailableException => new ProblemDetails
             {
                 Status = StatusCodes.Status503ServiceUnavailable,
@@ -33,6 +48,7 @@ internal sealed class ApiExceptionHandler(
                     "The savings plan could not be generated at this time. Please try again later.",
                 Instance = httpContext.Request.Path
             },
+
             ArgumentException => new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
@@ -40,6 +56,7 @@ internal sealed class ApiExceptionHandler(
                 Detail = exception.Message,
                 Instance = httpContext.Request.Path
             },
+
             InvalidOperationException => new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,
@@ -47,7 +64,9 @@ internal sealed class ApiExceptionHandler(
                 Detail = exception.Message,
                 Instance = httpContext.Request.Path
             },
-            _ => CreateInternalServerError(httpContext)
+
+            _ => CreateInternalServerError(
+                httpContext)
         };
 
         if (exception is ExchangeRatesUnavailableException)
@@ -95,10 +114,14 @@ internal sealed class ApiExceptionHandler(
     {
         return new ProblemDetails
         {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "An unexpected error occurred.",
-            Detail = "The request could not be completed.",
-            Instance = httpContext.Request.Path
+            Status =
+                StatusCodes.Status500InternalServerError,
+            Title =
+                "An unexpected error occurred.",
+            Detail =
+                "The request could not be completed.",
+            Instance =
+                httpContext.Request.Path
         };
     }
 }

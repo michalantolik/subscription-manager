@@ -15,19 +15,24 @@ public sealed class CreateSavingsPlanHandler
     private readonly IExchangeRateService _exchangeRateService;
     private readonly ICurrentUser _currentUser;
     private readonly ISavingsPlanAgent _savingsPlanAgent;
+    private readonly ISavingsPlanUsageRepository
+        _savingsPlanUsageRepository;
 
     public CreateSavingsPlanHandler(
         ISubscriptionRepository subscriptionRepository,
         IIdentityService identityService,
         IExchangeRateService exchangeRateService,
         ICurrentUser currentUser,
-        ISavingsPlanAgent savingsPlanAgent)
+        ISavingsPlanAgent savingsPlanAgent,
+        ISavingsPlanUsageRepository savingsPlanUsageRepository)
     {
         _subscriptionRepository = subscriptionRepository;
         _identityService = identityService;
         _exchangeRateService = exchangeRateService;
         _currentUser = currentUser;
         _savingsPlanAgent = savingsPlanAgent;
+        _savingsPlanUsageRepository =
+            savingsPlanUsageRepository;
     }
 
     public async Task<SavingsPlanDto> HandleAsync(
@@ -38,14 +43,18 @@ public sealed class CreateSavingsPlanHandler
 
         ValidateCommand(command);
 
+        var userId = _currentUser.UserId;
+        var usageDateUtc =
+            DateOnly.FromDateTime(DateTime.UtcNow);
+
         var subscriptions =
             await _subscriptionRepository.GetAllAsync(
-                _currentUser.UserId,
+                userId,
                 cancellationToken);
 
         var baseCurrency =
             await _identityService.GetBaseCurrencyAsync(
-                _currentUser.UserId,
+                userId,
                 cancellationToken);
 
         if (baseCurrency is null)
@@ -54,18 +63,46 @@ public sealed class CreateSavingsPlanHandler
                 "The current user's base currency is unavailable.");
         }
 
+        var subscriptionPlan =
+            await _identityService.GetSubscriptionPlanAsync(
+                userId,
+                cancellationToken);
+
+        if (subscriptionPlan is null)
+        {
+            throw new InvalidOperationException(
+                "The current user's subscription plan is unavailable.");
+        }
+
+        var dailyRequestLimit =
+            SubscriptionPlanLimits
+                .GetDailySavingsPlanLimit(
+                    subscriptionPlan.Value);
+
         var activeSubscriptions =
             subscriptions
-                .Where(subscription => subscription.IsActive)
+                .Where(subscription =>
+                    subscription.IsActive)
                 .ToArray();
 
         if (activeSubscriptions.Length == 0)
         {
+            var remainingRequests =
+                await _savingsPlanUsageRepository
+                    .GetRemainingRequestCountAsync(
+                        userId,
+                        usageDateUtc,
+                        dailyRequestLimit,
+                        cancellationToken);
+
             return new SavingsPlanDto(
                 baseCurrency.Value,
                 0m,
                 null,
-                null);
+                null,
+                subscriptionPlan.Value,
+                dailyRequestLimit,
+                remainingRequests);
         }
 
         CurrentExchangeRates? exchangeRates = null;
@@ -89,7 +126,8 @@ public sealed class CreateSavingsPlanHandler
 
         var currentMonthlyCost =
             availableSubscriptions.Sum(
-                subscription => subscription.MonthlyCost);
+                subscription =>
+                    subscription.MonthlyCost);
 
         ValidateTarget(
             command,
@@ -117,6 +155,20 @@ public sealed class CreateSavingsPlanHandler
                 currentMonthlyCost,
                 protectedSubscriptionIds,
                 availableSubscriptions);
+
+        var remainingRequestCount =
+            await _savingsPlanUsageRepository
+                .TryRegisterRequestAsync(
+                    userId,
+                    usageDateUtc,
+                    dailyRequestLimit,
+                    cancellationToken);
+
+        if (remainingRequestCount is null)
+        {
+            throw new SavingsPlanUsageLimitExceededException(
+                dailyRequestLimit);
+        }
 
         var agentResult =
             await _savingsPlanAgent.CreatePlanAsync(
@@ -146,11 +198,13 @@ public sealed class CreateSavingsPlanHandler
         if (recommended is not null &&
             alternative is not null &&
             recommended.Subscriptions
-                .Select(subscription => subscription.Id)
+                .Select(subscription =>
+                    subscription.Id)
                 .Order()
                 .SequenceEqual(
                     alternative.Subscriptions
-                        .Select(subscription => subscription.Id)
+                        .Select(subscription =>
+                            subscription.Id)
                         .Order()))
         {
             alternative = null;
@@ -160,7 +214,10 @@ public sealed class CreateSavingsPlanHandler
             baseCurrency.Value,
             currentMonthlyCost,
             recommended,
-            alternative);
+            alternative,
+            subscriptionPlan.Value,
+            dailyRequestLimit,
+            remainingRequestCount.Value);
     }
 
     private static void ValidateCommand(
@@ -235,7 +292,8 @@ public sealed class CreateSavingsPlanHandler
     {
         var availableIds =
             availableSubscriptions
-                .Select(subscription => subscription.Id)
+                .Select(subscription =>
+                    subscription.Id)
                 .ToHashSet();
 
         if (protectedSubscriptionIds.Any(
@@ -325,7 +383,8 @@ public sealed class CreateSavingsPlanHandler
 
         var monthlySavings =
             selectedSubscriptions.Sum(
-                subscription => subscription.MonthlyCost);
+                subscription =>
+                    subscription.MonthlyCost);
 
         var projectedMonthlyCost =
             Math.Max(

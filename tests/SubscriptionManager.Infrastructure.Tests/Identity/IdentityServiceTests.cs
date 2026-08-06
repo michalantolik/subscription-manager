@@ -2,8 +2,10 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.DigitalServices;
+using SubscriptionManager.Domain.SavingsPlans;
 using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
@@ -90,6 +92,89 @@ public sealed class IdentityServiceTests
 
         var result =
             await identityService.GetBaseCurrencyAsync(
+                Guid.NewGuid());
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetSubscriptionPlanAsync_ShouldReturnUserSubscriptionPlan_WhenUserExists()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com",
+            SubscriptionPlan = SubscriptionPlan.Plus
+        };
+
+        var createResult =
+            await userManager.CreateAsync(user);
+
+        Assert.True(createResult.Succeeded);
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.GetSubscriptionPlanAsync(
+                user.Id);
+
+        Assert.Equal(
+            SubscriptionPlan.Plus,
+            result);
+    }
+
+    [Fact]
+    public async Task GetSubscriptionPlanAsync_ShouldReturnNull_WhenUserDoesNotExist()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.GetSubscriptionPlanAsync(
                 Guid.NewGuid());
 
         Assert.Null(result);
@@ -400,6 +485,17 @@ public sealed class IdentityServiceTests
             subscription,
             otherUserSubscription);
 
+        var savingsPlanUsage =
+            new SavingsPlanUsage(
+                userId,
+                new DateOnly(2026, 8, 6));
+
+        savingsPlanUsage.RegisterRequest(
+            SubscriptionPlanLimits.FreeDailySavingsPlanLimit);
+
+        dbContext.SavingsPlanUsages.Add(
+            savingsPlanUsage);
+
         await dbContext.SaveChangesAsync();
 
         var identityService =
@@ -431,6 +527,12 @@ public sealed class IdentityServiceTests
                 .AsNoTracking()
                 .AnyAsync(currentSubscription =>
                     currentSubscription.OwnerId == userId));
+
+        Assert.False(
+            await dbContext.SavingsPlanUsages
+                .AsNoTracking()
+                .AnyAsync(usage =>
+                    usage.UserId == userId));
 
         Assert.True(
             await dbContext.Subscriptions
