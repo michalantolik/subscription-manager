@@ -12,6 +12,19 @@ using SubscriptionManager.Blazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var applicationInsightsConnectionString =
+    builder.Configuration[
+        "ApplicationInsights:ConnectionString"];
+
+if (!string.IsNullOrWhiteSpace(
+        applicationInsightsConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
+
+var apiRequestTimeout =
+    TimeSpan.FromSeconds(45);
+
 var authenticationOptions =
     builder.Configuration
         .GetSection(AuthenticationCookieOptions.SectionName)
@@ -27,13 +40,31 @@ builder.Services
             builder.Environment.IsDevelopment();
     });
 
-builder.Services.Configure<ApiOptions>(
-    builder.Configuration.GetSection(
-        ApiOptions.SectionName));
+builder.Services
+    .AddOptions<ApiOptions>()
+    .Bind(
+        builder.Configuration.GetSection(
+            ApiOptions.SectionName))
+    .Validate(
+        options =>
+            Uri.TryCreate(
+                options.BaseUrl,
+                UriKind.Absolute,
+                out var baseUri) &&
+            baseUri.Scheme is "http" or "https",
+        "Api:BaseUrl must be an absolute HTTP or HTTPS URL.")
+    .ValidateOnStart();
 
-builder.Services.Configure<AuthenticationCookieOptions>(
-    builder.Configuration.GetSection(
-        AuthenticationCookieOptions.SectionName));
+builder.Services
+    .AddOptions<AuthenticationCookieOptions>()
+    .Bind(
+        builder.Configuration.GetSection(
+            AuthenticationCookieOptions.SectionName))
+    .Validate(
+        options =>
+            options.AuthenticationCookieExpirationInMinutes > 0,
+        "Authentication:AuthenticationCookieExpirationInMinutes must be greater than zero.")
+    .ValidateOnStart();
 
 builder.Services.Configure<RequestLocalizationOptions>(
     options =>
@@ -103,63 +134,22 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<Localizer>();
 builder.Services.AddScoped<AppState>();
 
-builder.Services.AddScoped<AccountApiClient>();
-builder.Services.AddScoped<AuthenticationApiClient>();
-
-builder.Services.AddHttpClient<SubscriptionsApiClient>(
-    (serviceProvider, client) =>
-    {
-        var options = serviceProvider
-            .GetRequiredService<IOptions<ApiOptions>>()
-            .Value;
-
-        client.BaseAddress =
-            new Uri(options.BaseUrl);
-    });
-
-builder.Services.AddHttpClient<DigitalServicesApiClient>(
-    (serviceProvider, client) =>
-    {
-        var options = serviceProvider
-            .GetRequiredService<IOptions<ApiOptions>>()
-            .Value;
-
-        client.BaseAddress =
-            new Uri(options.BaseUrl);
-    });
-
-builder.Services.AddHttpClient<SavingsPlansApiClient>(
-    (serviceProvider, client) =>
-    {
-        var options = serviceProvider
-            .GetRequiredService<IOptions<ApiOptions>>()
-            .Value;
-
-        client.BaseAddress =
-            new Uri(options.BaseUrl);
-    });
+builder.Services.AddHealthChecks();
 
 builder.Services.AddHttpClient<AccountApiClient>(
-    (serviceProvider, client) =>
-    {
-        var options = serviceProvider
-            .GetRequiredService<IOptions<ApiOptions>>()
-            .Value;
-
-        client.BaseAddress =
-            new Uri(options.BaseUrl);
-    });
+    ConfigureApiClient);
 
 builder.Services.AddHttpClient<AuthenticationApiClient>(
-    (serviceProvider, client) =>
-    {
-        var options = serviceProvider
-            .GetRequiredService<IOptions<ApiOptions>>()
-            .Value;
+    ConfigureApiClient);
 
-        client.BaseAddress =
-            new Uri(options.BaseUrl);
-    });
+builder.Services.AddHttpClient<DigitalServicesApiClient>(
+    ConfigureApiClient);
+
+builder.Services.AddHttpClient<SavingsPlansApiClient>(
+    ConfigureApiClient);
+
+builder.Services.AddHttpClient<SubscriptionsApiClient>(
+    ConfigureApiClient);
 
 var app = builder.Build();
 
@@ -242,6 +232,8 @@ app.MapGet(
             safeRedirect);
     });
 
+app.MapHealthChecks("/health");
+
 app.MapStaticAssets();
 
 app.MapAuthenticationEndpoints();
@@ -250,5 +242,20 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+void ConfigureApiClient(
+    IServiceProvider serviceProvider,
+    HttpClient client)
+{
+    var options = serviceProvider
+        .GetRequiredService<IOptions<ApiOptions>>()
+        .Value;
+
+    client.BaseAddress =
+        new Uri(options.BaseUrl);
+
+    client.Timeout =
+        apiRequestTimeout;
+}
 
 public partial class Program;

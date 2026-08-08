@@ -128,6 +128,18 @@ public sealed class ApiHardeningTests
             info.GetProperty("version").GetString());
     }
 
+    [Fact]
+    public async Task Health_ShouldReturnOk()
+    {
+        var response =
+            await _client.GetAsync(
+                "/health");
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+    }
+
     private async Task<Guid> CreateDigitalServiceAsync()
     {
         var uniqueKey =

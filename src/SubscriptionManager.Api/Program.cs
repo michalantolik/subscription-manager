@@ -21,6 +21,16 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        var applicationInsightsConnectionString =
+            builder.Configuration[
+                "ApplicationInsights:ConnectionString"];
+
+        if (!string.IsNullOrWhiteSpace(
+                applicationInsightsConnectionString))
+        {
+            builder.Services.AddApplicationInsightsTelemetry();
+        }
+
         builder.Services.AddApplication();
 
         builder.Services.AddInfrastructure(
@@ -38,8 +48,6 @@ public partial class Program
             .Get<JwtOptions>()
             ?? throw new InvalidOperationException(
                 "JWT configuration is missing.");
-
-        ValidateJwtOptions(jwtOptions);
 
         builder.Services
             .AddAuthentication(
@@ -135,7 +143,8 @@ public partial class Program
                                 new FixedWindowRateLimiterOptions
                                 {
                                     PermitLimit = 300,
-                                    Window = TimeSpan.FromMinutes(1),
+                                    Window =
+                                        TimeSpan.FromMinutes(1),
                                     QueueLimit = 0,
                                     AutoReplenishment = true
                                 }));
@@ -254,36 +263,8 @@ public partial class Program
 
         app.MapControllers();
 
+        app.MapHealthChecks("/health");
+
         await app.RunAsync();
-    }
-
-    private static void ValidateJwtOptions(
-        JwtOptions jwtOptions)
-    {
-        if (string.IsNullOrWhiteSpace(jwtOptions.Issuer))
-        {
-            throw new InvalidOperationException(
-                "JWT issuer is missing.");
-        }
-
-        if (string.IsNullOrWhiteSpace(jwtOptions.Audience))
-        {
-            throw new InvalidOperationException(
-                "JWT audience is missing.");
-        }
-
-        if (string.IsNullOrWhiteSpace(jwtOptions.SigningKey)
-            || Encoding.UTF8.GetByteCount(
-                jwtOptions.SigningKey) < 32)
-        {
-            throw new InvalidOperationException(
-                "JWT signing key must contain at least 32 bytes.");
-        }
-
-        if (jwtOptions.ExpirationInMinutes <= 0)
-        {
-            throw new InvalidOperationException(
-                "JWT expiration must be greater than zero.");
-        }
     }
 }

@@ -1,4 +1,5 @@
 using System.ClientModel;
+using System.Text;
 using Azure.Communication.Email;
 using Azure.Identity;
 using Microsoft.AspNetCore.Hosting;
@@ -38,10 +39,20 @@ public static class DependencyInjection
             configuration.GetConnectionString(
                 "SubscriptionManager");
 
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Connection string 'SubscriptionManager' is missing.");
+        }
+
         services.AddDbContext<SubscriptionManagerDbContext>(
             options =>
                 options.UseSqlServer(
                     connectionString));
+
+        services
+            .AddHealthChecks()
+            .AddDbContextCheck<SubscriptionManagerDbContext>();
 
         services
             .AddIdentityCore<ApplicationUser>(
@@ -63,9 +74,33 @@ public static class DependencyInjection
                 SubscriptionManagerDbContext>()
             .AddDefaultTokenProviders();
 
-        services.Configure<JwtOptions>(
-            configuration.GetSection(
-                JwtOptions.SectionName));
+        services
+            .AddOptions<JwtOptions>()
+            .Bind(
+                configuration.GetSection(
+                    JwtOptions.SectionName))
+            .Validate(
+                options =>
+                    !string.IsNullOrWhiteSpace(
+                        options.Issuer),
+                "Jwt:Issuer is required.")
+            .Validate(
+                options =>
+                    !string.IsNullOrWhiteSpace(
+                        options.Audience),
+                "Jwt:Audience is required.")
+            .Validate(
+                options =>
+                    !string.IsNullOrWhiteSpace(
+                        options.SigningKey) &&
+                    Encoding.UTF8.GetByteCount(
+                        options.SigningKey) >= 32,
+                "Jwt:SigningKey must contain at least 32 bytes.")
+            .Validate(
+                options =>
+                    options.ExpirationInMinutes > 0,
+                "Jwt:ExpirationInMinutes must be greater than zero.")
+            .ValidateOnStart();
 
         services
             .AddOptions<EmailOptions>()
