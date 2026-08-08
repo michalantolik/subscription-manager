@@ -53,4 +53,3 @@ public enum DigitalServiceCategory
     Navigation = 35,
     Automotive = 36
 }
- 
