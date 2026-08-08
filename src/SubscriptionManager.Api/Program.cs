@@ -1,8 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using SubscriptionManager.Api.Authentication;
@@ -12,6 +8,10 @@ using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Infrastructure;
 using SubscriptionManager.Infrastructure.Authentication;
 using SubscriptionManager.Infrastructure.Persistence;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 namespace SubscriptionManager.Api;
 
@@ -108,28 +108,99 @@ public partial class Program
 
         builder.Services.AddRateLimiter(options =>
         {
-            options.OnRejected = async (context, cancellationToken) =>
+            options.OnRejected = async (
+                context,
+                cancellationToken) =>
             {
                 await Results.Problem(
-                    statusCode: StatusCodes.Status429TooManyRequests,
-                    title: "Too many requests.",
-                    detail: "Rate limit exceeded. Please try again later.")
-                .ExecuteAsync(context.HttpContext);
+                    statusCode:
+                        StatusCodes.Status429TooManyRequests,
+                    title:
+                        "Too many requests.",
+                    detail:
+                        "Rate limit exceeded. Please try again later.")
+                    .ExecuteAsync(
+                        context.HttpContext);
             };
 
-            options.AddFixedWindowLimiter("api", limiterOptions =>
-            {
-                limiterOptions.PermitLimit = 300;
-                limiterOptions.Window = TimeSpan.FromMinutes(1);
-                limiterOptions.QueueLimit = 0;
-                limiterOptions.AutoReplenishment = true;
-            });
+            options.GlobalLimiter =
+                PartitionedRateLimiter.Create<HttpContext, string>(
+                    _ =>
+                        RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: "api",
+                            factory: _ =>
+                                new FixedWindowRateLimiterOptions
+                                {
+                                    PermitLimit = 300,
+                                    Window = TimeSpan.FromMinutes(1),
+                                    QueueLimit = 0,
+                                    AutoReplenishment = true
+                                }));
+
+            options.AddFixedWindowLimiter(
+                "login",
+                limiterOptions =>
+                {
+                    limiterOptions.PermitLimit = 10;
+
+                    limiterOptions.Window =
+                        TimeSpan.FromMinutes(1);
+
+                    limiterOptions.QueueLimit = 0;
+
+                    limiterOptions.AutoReplenishment = true;
+                });
+
+            options.AddFixedWindowLimiter(
+                "register",
+                limiterOptions =>
+                {
+                    limiterOptions.PermitLimit = 5;
+
+                    limiterOptions.Window =
+                        TimeSpan.FromMinutes(5);
+
+                    limiterOptions.QueueLimit = 0;
+
+                    limiterOptions.AutoReplenishment = true;
+                });
+
+            options.AddFixedWindowLimiter(
+                "forgot-password",
+                limiterOptions =>
+                {
+                    limiterOptions.PermitLimit = 5;
+
+                    limiterOptions.Window =
+                        TimeSpan.FromMinutes(5);
+
+                    limiterOptions.QueueLimit = 0;
+
+                    limiterOptions.AutoReplenishment = true;
+                });
+
+            options.AddFixedWindowLimiter(
+                "reset-password",
+                limiterOptions =>
+                {
+                    limiterOptions.PermitLimit = 5;
+
+                    limiterOptions.Window =
+                        TimeSpan.FromMinutes(5);
+
+                    limiterOptions.QueueLimit = 0;
+
+                    limiterOptions.AutoReplenishment = true;
+                });
         });
 
         builder.Services.AddOpenApi(options =>
         {
             options.AddDocumentTransformer(
-                (document, context, cancellationToken) =>
+                (
+                    document,
+                    context,
+                    cancellationToken) =>
                 {
                     document.Info.Title =
                         "Subscription Manager API";
@@ -178,8 +249,7 @@ public partial class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapControllers()
-            .RequireRateLimiting("api");
+        app.MapControllers();
 
         await app.RunAsync();
     }

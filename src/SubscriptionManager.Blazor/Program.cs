@@ -100,8 +100,8 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<AppState>();
-builder.Services.AddScoped<Localizer>();
+builder.Services.AddScoped<AccountApiClient>();
+builder.Services.AddScoped<AuthenticationApiClient>();
 
 builder.Services.AddHttpClient<SubscriptionsApiClient>(
     (serviceProvider, client) =>
@@ -114,7 +114,7 @@ builder.Services.AddHttpClient<SubscriptionsApiClient>(
             new Uri(options.BaseUrl);
     });
 
-builder.Services.AddHttpClient<SavingsPlansApiClient>(
+builder.Services.AddHttpClient<DigitalServicesApiClient>(
     (serviceProvider, client) =>
     {
         var options = serviceProvider
@@ -125,7 +125,7 @@ builder.Services.AddHttpClient<SavingsPlansApiClient>(
             new Uri(options.BaseUrl);
     });
 
-builder.Services.AddHttpClient<DigitalServicesApiClient>(
+builder.Services.AddHttpClient<SavingsPlansApiClient>(
     (serviceProvider, client) =>
     {
         var options = serviceProvider
@@ -159,6 +159,23 @@ builder.Services.AddHttpClient<AuthenticationApiClient>(
     });
 
 var app = builder.Build();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.XContentTypeOptions =
+        "nosniff";
+
+    context.Response.Headers.XFrameOptions =
+        "DENY";
+
+    context.Response.Headers["Referrer-Policy"] =
+        "no-referrer";
+
+    context.Response.Headers["Permissions-Policy"] =
+        "camera=(), microphone=(), geolocation=()";
+
+    await next();
+});
 
 if (!app.Environment.IsDevelopment())
 {

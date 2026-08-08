@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Application.Identity.ConfirmEmail;
@@ -24,6 +25,7 @@ public sealed class AuthController(
     ICurrentUser currentUser)
     : ControllerBase
 {
+    [EnableRateLimiting("register")]
     [HttpPost("register")]
     public async Task<ActionResult<RegisterUserResponse>> RegisterAsync(
         RegisterUserRequest request,
@@ -75,6 +77,7 @@ public sealed class AuthController(
         return NoContent();
     }
 
+    [EnableRateLimiting("login")]
     [HttpPost("login")]
     public async Task<ActionResult<LoginUserResponse>> LoginAsync(
         LoginUserRequest request,
@@ -102,6 +105,7 @@ public sealed class AuthController(
         return Ok(response);
     }
 
+    [EnableRateLimiting("forgot-password")]
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPasswordAsync(
         ForgotPasswordRequest request,
@@ -118,6 +122,7 @@ public sealed class AuthController(
         return NoContent();
     }
 
+    [EnableRateLimiting("reset-password")]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPasswordAsync(
         ResetPasswordRequest request,

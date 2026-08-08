@@ -194,14 +194,9 @@ public sealed class IdentityService(
             return AuthenticationFailed();
         }
 
-        if (!user.EmailConfirmed)
+        if (await userManager.IsLockedOutAsync(user))
         {
-            return AuthenticateUserResult.Failure(
-            [
-                new IdentityServiceError(
-                    "EmailNotConfirmed",
-                    "The email address has not been confirmed.")
-            ]);
+            return AuthenticationFailed();
         }
 
         var passwordIsValid =
@@ -211,7 +206,21 @@ public sealed class IdentityService(
 
         if (!passwordIsValid)
         {
+            await userManager.AccessFailedAsync(user);
+
             return AuthenticationFailed();
+        }
+
+        await userManager.ResetAccessFailedCountAsync(user);
+
+        if (!user.EmailConfirmed)
+        {
+            return AuthenticateUserResult.Failure(
+            [
+                new IdentityServiceError(
+                    "EmailNotConfirmed",
+                    "The email address has not been confirmed.")
+            ]);
         }
 
         return AuthenticateUserResult.Success(
@@ -275,8 +284,8 @@ public sealed class IdentityService(
     }
 
     public async Task<DeleteUserResult> DeleteUserAsync(
-    Guid userId,
-    CancellationToken cancellationToken = default)
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
         var user = await userManager.FindByIdAsync(
             userId.ToString());
@@ -286,8 +295,8 @@ public sealed class IdentityService(
             return DeleteUserResult.Failure(
             [
                 new IdentityServiceError(
-                "UserNotFound",
-                "The user was not found.")
+                    "UserNotFound",
+                    "The user was not found.")
             ]);
         }
 

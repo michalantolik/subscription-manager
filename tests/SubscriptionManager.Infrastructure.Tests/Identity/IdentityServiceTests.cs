@@ -605,6 +605,129 @@ public sealed class IdentityServiceTests
             error.Description);
     }
 
+    [Fact]
+    public async Task AuthenticateUserAsync_ShouldLockUserOut_AfterMaximumFailedAttempts()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com",
+            EmailConfirmed = true
+        };
+
+        var createResult =
+            await userManager.CreateAsync(
+                user,
+                "Password123!");
+
+        Assert.True(createResult.Succeeded);
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var result =
+                await identityService.AuthenticateUserAsync(
+                    user.Email!,
+                    "WrongPassword123!");
+
+            Assert.False(result.Succeeded);
+        }
+
+        var storedUser =
+            await userManager.FindByIdAsync(
+                user.Id.ToString());
+
+        Assert.NotNull(storedUser);
+
+        Assert.True(
+            await userManager.IsLockedOutAsync(
+                storedUser));
+    }
+
+    [Fact]
+    public async Task AuthenticateUserAsync_ShouldReturnInvalidCredentials_WhenEmailIsNotConfirmedAndPasswordIsInvalid()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com",
+            EmailConfirmed = false
+        };
+
+        var createResult =
+            await userManager.CreateAsync(
+                user,
+                "Password123!");
+
+        Assert.True(createResult.Succeeded);
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.AuthenticateUserAsync(
+                user.Email!,
+                "WrongPassword123!");
+
+        Assert.False(result.Succeeded);
+
+        var error = Assert.Single(result.Errors);
+
+        Assert.Equal(
+            "InvalidCredentials",
+            error.Code);
+
+        Assert.Equal(
+            "The email address or password is invalid.",
+            error.Description);
+    }
+
     private static ServiceProvider CreateServiceProvider(
         SqliteConnection connection)
     {
@@ -617,7 +740,16 @@ public sealed class IdentityServiceTests
                 options.UseSqlite(connection));
 
         services
-            .AddIdentityCore<ApplicationUser>()
+            .AddIdentityCore<ApplicationUser>(
+                options =>
+                {
+                    options.Lockout.AllowedForNewUsers = true;
+
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+
+                    options.Lockout.DefaultLockoutTimeSpan =
+                        TimeSpan.FromMinutes(5);
+                })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<SubscriptionManagerDbContext>();
 

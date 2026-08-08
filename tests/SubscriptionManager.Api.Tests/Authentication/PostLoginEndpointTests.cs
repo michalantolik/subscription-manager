@@ -136,6 +136,36 @@ public sealed class PostLoginEndpointTests
                     "EmailNotConfirmed"]));
     }
 
+    [Fact]
+    public async Task PostAsync_ShouldReturnTooManyRequests_WhenLoginRateLimitIsExceeded()
+    {
+        using var client =
+            _factory.CreateUnauthenticatedClient();
+
+        var request = new LoginRequest(
+            "missing-user@example.com",
+            "WrongPassword123!");
+
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            var response = await client.PostAsJsonAsync(
+                "/api/auth/login",
+                request);
+
+            Assert.Equal(
+                HttpStatusCode.BadRequest,
+                response.StatusCode);
+        }
+
+        var limitedResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            request);
+
+        Assert.Equal(
+            HttpStatusCode.TooManyRequests,
+            limitedResponse.StatusCode);
+    }
+
     private async Task CreateUserAsync(
         string email,
         string password,

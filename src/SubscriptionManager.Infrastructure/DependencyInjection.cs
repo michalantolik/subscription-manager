@@ -43,8 +43,15 @@ public static class DependencyInjection
                 options =>
                 {
                     options.SignIn.RequireConfirmedEmail = true;
+
                     options.User.RequireUniqueEmail = true;
+
                     options.Password.RequiredLength = 8;
+
+                    options.Lockout.AllowedForNewUsers = true;
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+                    options.Lockout.DefaultLockoutTimeSpan =
+                        TimeSpan.FromMinutes(5);
                 })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<
