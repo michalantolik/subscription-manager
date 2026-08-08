@@ -1,17 +1,13 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
 using SubscriptionManager.Application.Common.Email;
 
 namespace SubscriptionManager.Infrastructure.Email;
 
 public sealed class DevelopmentEmailSender(
-    IOptions<EmailOptions> options,
+    AccountEmailLinkBuilder linkBuilder,
     ILogger<DevelopmentEmailSender> logger)
     : IEmailSender
 {
-    private readonly EmailOptions _options = options.Value;
-
     public Task SendEmailConfirmationAsync(
         string email,
         Guid userId,
@@ -19,15 +15,15 @@ public sealed class DevelopmentEmailSender(
         string languageCode,
         CancellationToken cancellationToken = default)
     {
-        var link = BuildLink(
-            "/confirm-email",
-            userId,
-            "token",
-            confirmationToken);
+        var link =
+            linkBuilder.BuildEmailConfirmationLink(
+                userId,
+                confirmationToken);
 
-        var content = AccountEmailTemplates.EmailConfirmation(
-            languageCode,
-            link);
+        var content =
+            AccountEmailTemplates.EmailConfirmation(
+                languageCode,
+                link);
 
         LogDevelopmentEmail(
             email,
@@ -44,15 +40,15 @@ public sealed class DevelopmentEmailSender(
         string languageCode,
         CancellationToken cancellationToken = default)
     {
-        var link = BuildLink(
-            "/reset-password",
-            userId,
-            "token",
-            resetToken);
+        var link =
+            linkBuilder.BuildPasswordResetLink(
+                userId,
+                resetToken);
 
-        var content = AccountEmailTemplates.PasswordReset(
-            languageCode,
-            link);
+        var content =
+            AccountEmailTemplates.PasswordReset(
+                languageCode,
+                link);
 
         LogDevelopmentEmail(
             email,
@@ -60,24 +56,6 @@ public sealed class DevelopmentEmailSender(
             link);
 
         return Task.CompletedTask;
-    }
-
-    private string BuildLink(
-        string path,
-        Guid userId,
-        string tokenParameterName,
-        string token)
-    {
-        var baseUrl = _options.ApplicationBaseUrl.TrimEnd('/');
-        var url = $"{baseUrl}{path}";
-
-        return QueryHelpers.AddQueryString(
-            url,
-            new Dictionary<string, string?>
-            {
-                ["userId"] = userId.ToString(),
-                [tokenParameterName] = token
-            });
     }
 
     private void LogDevelopmentEmail(

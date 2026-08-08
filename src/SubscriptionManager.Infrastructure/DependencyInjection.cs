@@ -1,9 +1,13 @@
 using System.ClientModel;
+using Azure.Communication.Email;
+using Azure.Identity;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OpenAI;
 using SubscriptionManager.Application.Common.Authentication;
@@ -27,7 +31,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         var connectionString =
             configuration.GetConnectionString(
@@ -76,6 +81,32 @@ public static class DependencyInjection
                     applicationUri.Scheme is "http" or "https",
                 "Email:ApplicationBaseUrl must be an absolute HTTP or HTTPS URL.")
             .ValidateOnStart();
+
+        var azureEmailOptions =
+            services
+                .AddOptions<AzureEmailOptions>()
+                .Bind(
+                    configuration.GetSection(
+                        AzureEmailOptions.SectionName));
+
+        if (!environment.IsDevelopment())
+        {
+            azureEmailOptions
+                .Validate(
+                    options =>
+                        Uri.TryCreate(
+                            options.Endpoint,
+                            UriKind.Absolute,
+                            out var endpoint) &&
+                        endpoint.Scheme == Uri.UriSchemeHttps,
+                    "AzureEmail:Endpoint must be an absolute HTTPS URL.")
+                .Validate(
+                    options =>
+                        !string.IsNullOrWhiteSpace(
+                            options.SenderAddress),
+                    "AzureEmail:SenderAddress is required.")
+                .ValidateOnStart();
+        }
 
         services
             .AddOptions<SavingsPlanAiOptions>()
@@ -162,9 +193,38 @@ public static class DependencyInjection
             IIdentityService,
             IdentityService>();
 
-        services.AddScoped<
-            IEmailSender,
-            DevelopmentEmailSender>();
+        services.AddSingleton<
+            AccountEmailLinkBuilder>();
+
+        if (environment.IsDevelopment())
+        {
+            services.AddScoped<
+                IEmailSender,
+                DevelopmentEmailSender>();
+        }
+        else
+        {
+            services.AddSingleton(
+                serviceProvider =>
+                {
+                    var options =
+                        serviceProvider
+                            .GetRequiredService<
+                                IOptions<AzureEmailOptions>>()
+                            .Value;
+
+                    var credential =
+                        new DefaultAzureCredential();
+
+                    return new EmailClient(
+                        new Uri(options.Endpoint),
+                        credential);
+                });
+
+            services.AddScoped<
+                IEmailSender,
+                AzureEmailSender>();
+        }
 
         services.AddScoped<
             IAccessTokenGenerator,
