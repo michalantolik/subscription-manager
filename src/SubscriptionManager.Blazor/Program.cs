@@ -100,6 +100,9 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddSingleton<Localizer>();
+builder.Services.AddScoped<AppState>();
+
 builder.Services.AddScoped<AccountApiClient>();
 builder.Services.AddScoped<AuthenticationApiClient>();
 

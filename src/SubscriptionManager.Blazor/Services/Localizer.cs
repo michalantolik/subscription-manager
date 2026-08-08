@@ -420,7 +420,15 @@ public sealed class Localizer
         ["Authentication.ConfirmEmail.Confirming"] = "Potwierdzanie adresu e-mail...",
         ["Authentication.ConfirmEmail.Success"] = "Adres e-mail został potwierdzony. Możesz teraz się zalogować.",
         ["Authentication.ConfirmEmail.Error"] = "Nie udało się potwierdzić adresu e-mail. Link może być nieprawidłowy lub został już wykorzystany.",
-        ["Authentication.ConfirmEmail.BackToRegister"] = "Powrót do rejestracji"
+        ["Authentication.ConfirmEmail.BackToRegister"] = "Powrót do rejestracji",
+        ["Reconnect.RejoiningServer"] = "Ponowne łączenie z serwerem...",
+        ["Reconnect.RejoinFailedPrefix"] = "Nie udało się połączyć. Ponowna próba za",
+        ["Reconnect.SecondsSuffix"] = "s.",
+        ["Reconnect.FailedToRejoin"] = "Nie udało się ponownie połączyć z serwerem.",
+        ["Shared.Actions.Retry"] = "Spróbuj ponownie",
+        ["Reconnect.SessionPaused"] = "Sesja została wstrzymana.",
+        ["Reconnect.FailedToResume"] = "Nie udało się wznowić sesji.",
+        ["Shared.Actions.Resume"] = "Wznów"
     };
 
     private static readonly IReadOnlyDictionary<string, string> English = new Dictionary<string, string>
@@ -823,7 +831,15 @@ public sealed class Localizer
         ["Authentication.ConfirmEmail.Confirming"] = "Confirming your email address...",
         ["Authentication.ConfirmEmail.Success"] = "Your email address has been confirmed. You can now sign in.",
         ["Authentication.ConfirmEmail.Error"] = "The email address could not be confirmed. The link may be invalid or already used.",
-        ["Authentication.ConfirmEmail.BackToRegister"] = "Back to registration"
+        ["Authentication.ConfirmEmail.BackToRegister"] = "Back to registration",
+        ["Reconnect.RejoiningServer"] = "Reconnecting to the server...",
+        ["Reconnect.RejoinFailedPrefix"] = "Connection failed. Retrying in",
+        ["Reconnect.SecondsSuffix"] = "s.",
+        ["Reconnect.FailedToRejoin"] = "Failed to reconnect to the server.",
+        ["Shared.Actions.Retry"] = "Retry",
+        ["Reconnect.SessionPaused"] = "The session has been paused.",
+        ["Reconnect.FailedToResume"] = "Failed to resume the session.",
+        ["Shared.Actions.Resume"] = "Resume"
     };
 
     private static readonly IReadOnlyDictionary<string, string> German = new Dictionary<string, string>
@@ -1226,6 +1242,14 @@ public sealed class Localizer
         ["Authentication.ConfirmEmail.Confirming"] = "E-Mail-Adresse wird bestätigt...",
         ["Authentication.ConfirmEmail.Success"] = "Ihre E-Mail-Adresse wurde bestätigt. Sie können sich jetzt anmelden.",
         ["Authentication.ConfirmEmail.Error"] = "Die E-Mail-Adresse konnte nicht bestätigt werden. Der Link ist möglicherweise ungültig oder wurde bereits verwendet.",
-        ["Authentication.ConfirmEmail.BackToRegister"] = "Zurück zur Registrierung"
+        ["Authentication.ConfirmEmail.BackToRegister"] = "Zurück zur Registrierung",
+        ["Reconnect.RejoiningServer"] = "Verbindung zum Server wird wiederhergestellt...",
+        ["Reconnect.RejoinFailedPrefix"] = "Verbindung fehlgeschlagen. Neuer Versuch in",
+        ["Reconnect.SecondsSuffix"] = "s.",
+        ["Reconnect.FailedToRejoin"] = "Die Verbindung zum Server konnte nicht wiederhergestellt werden.",
+        ["Shared.Actions.Retry"] = "Erneut versuchen",
+        ["Reconnect.SessionPaused"] = "Die Sitzung wurde angehalten.",
+        ["Reconnect.FailedToResume"] = "Die Sitzung konnte nicht fortgesetzt werden.",
+        ["Shared.Actions.Resume"] = "Fortsetzen"
     };
 }
