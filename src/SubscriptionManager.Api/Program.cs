@@ -228,7 +228,10 @@ public partial class Program
 
         var app = builder.Build();
 
-        await app.Services.InitializeDatabaseAsync();
+        if (app.Environment.IsDevelopment())
+        {
+            await app.Services.InitializeDatabaseAsync();
+        }
 
         app.UseExceptionHandler();
 
