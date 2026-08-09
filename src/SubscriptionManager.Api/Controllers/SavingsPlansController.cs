@@ -12,19 +12,12 @@ namespace SubscriptionManager.Api.Controllers;
 public sealed class SavingsPlansController
     : ControllerBase
 {
-    private readonly CreateSavingsPlanHandler
-        _createSavingsPlanHandler;
-
     private readonly GetSavingsPlanUsageHandler
         _getSavingsPlanUsageHandler;
 
     public SavingsPlansController(
-        CreateSavingsPlanHandler createSavingsPlanHandler,
         GetSavingsPlanUsageHandler getSavingsPlanUsageHandler)
     {
-        _createSavingsPlanHandler =
-            createSavingsPlanHandler;
-
         _getSavingsPlanUsageHandler =
             getSavingsPlanUsageHandler;
     }
@@ -44,10 +37,12 @@ public sealed class SavingsPlansController
     [HttpPost]
     public async Task<ActionResult<SavingsPlanDto>> CreateAsync(
         CreateSavingsPlanCommand command,
+        [FromServices]
+        CreateSavingsPlanHandler createSavingsPlanHandler,
         CancellationToken cancellationToken)
     {
         var savingsPlan =
-            await _createSavingsPlanHandler.HandleAsync(
+            await createSavingsPlanHandler.HandleAsync(
                 command,
                 cancellationToken);
 
