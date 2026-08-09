@@ -99,7 +99,7 @@ public sealed class IdentityServiceTests
     }
 
     [Fact]
-    public async Task GetSubscriptionPlanAsync_ShouldReturnUserSubscriptionPlan_WhenUserExists()
+    public async Task GetSubscriptionPlanAsync_ShouldReturnFree_WhenUserHasNoBillingSubscription()
     {
         await using var connection =
             new SqliteConnection("Data Source=:memory:");
@@ -124,14 +124,219 @@ public sealed class IdentityServiceTests
         {
             Id = Guid.NewGuid(),
             UserName = "user@example.com",
-            Email = "user@example.com",
-            SubscriptionPlan = SubscriptionPlan.Plus
+            Email = "user@example.com"
         };
 
         var createResult =
             await userManager.CreateAsync(user);
 
         Assert.True(createResult.Succeeded);
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.GetSubscriptionPlanAsync(
+                user.Id);
+
+        Assert.Equal(
+            SubscriptionPlan.Free,
+            result);
+    }
+
+    [Fact]
+    public async Task GetSubscriptionPlanAsync_ShouldReturnPaidPlan_WhenBillingSubscriptionIsActive()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com"
+        };
+
+        var createResult =
+            await userManager.CreateAsync(user);
+
+        Assert.True(createResult.Succeeded);
+
+        var periodStart =
+            DateTimeOffset.UtcNow.AddDays(-1);
+
+        var periodEnd =
+            DateTimeOffset.UtcNow.AddMonths(1);
+
+        var billingSubscription =
+            new BillingSubscription(
+                Guid.NewGuid(),
+                user.Id,
+                SubscriptionPlan.Plus,
+                BillingInterval.Monthly,
+                periodStart,
+                periodEnd);
+
+        dbContext.BillingSubscriptions.Add(
+            billingSubscription);
+
+        await dbContext.SaveChangesAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.GetSubscriptionPlanAsync(
+                user.Id);
+
+        Assert.Equal(
+            SubscriptionPlan.Plus,
+            result);
+    }
+
+    [Fact]
+    public async Task GetSubscriptionPlanAsync_ShouldReturnFree_WhenBillingSubscriptionHasExpired()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com"
+        };
+
+        var createResult =
+            await userManager.CreateAsync(user);
+
+        Assert.True(createResult.Succeeded);
+
+        var periodStart =
+            DateTimeOffset.UtcNow.AddMonths(-1);
+
+        var periodEnd =
+            DateTimeOffset.UtcNow.AddDays(-1);
+
+        var billingSubscription =
+            new BillingSubscription(
+                Guid.NewGuid(),
+                user.Id,
+                SubscriptionPlan.Plus,
+                BillingInterval.Monthly,
+                periodStart,
+                periodEnd);
+
+        dbContext.BillingSubscriptions.Add(
+            billingSubscription);
+
+        await dbContext.SaveChangesAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.GetSubscriptionPlanAsync(
+                user.Id);
+
+        Assert.Equal(
+            SubscriptionPlan.Free,
+            result);
+    }
+
+    [Fact]
+    public async Task GetSubscriptionPlanAsync_ShouldReturnPaidPlan_WhenCanceledSubscriptionIsStillWithinPaidPeriod()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com"
+        };
+
+        var createResult =
+            await userManager.CreateAsync(user);
+
+        Assert.True(createResult.Succeeded);
+
+        var periodStart =
+            DateTimeOffset.UtcNow.AddDays(-1);
+
+        var periodEnd =
+            DateTimeOffset.UtcNow.AddMonths(1);
+
+        var billingSubscription =
+            new BillingSubscription(
+                Guid.NewGuid(),
+                user.Id,
+                SubscriptionPlan.Plus,
+                BillingInterval.Monthly,
+                periodStart,
+                periodEnd);
+
+        billingSubscription.Cancel();
+
+        dbContext.BillingSubscriptions.Add(
+            billingSubscription);
+
+        await dbContext.SaveChangesAsync();
 
         var identityService =
             new IdentityService(
@@ -727,6 +932,74 @@ public sealed class IdentityServiceTests
         Assert.Equal(
             "The email address or password is invalid.",
             error.Description);
+    }
+
+    [Fact]
+    public async Task AuthenticateUserAsync_ShouldReturnPaidPlan_FromBillingSubscription()
+    {
+        await using var connection =
+            new SqliteConnection("Data Source=:memory:");
+
+        await connection.OpenAsync();
+
+        await using var serviceProvider =
+            CreateServiceProvider(connection);
+
+        await using var scope =
+            serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
+
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<ApplicationUser>>();
+
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "user@example.com",
+            Email = "user@example.com",
+            EmailConfirmed = true
+        };
+
+        var createResult =
+            await userManager.CreateAsync(
+                user,
+                "Password123!");
+
+        Assert.True(createResult.Succeeded);
+
+        var billingSubscription =
+            new BillingSubscription(
+                Guid.NewGuid(),
+                user.Id,
+                SubscriptionPlan.Premium,
+                BillingInterval.Monthly,
+                DateTimeOffset.UtcNow.AddDays(-1),
+                DateTimeOffset.UtcNow.AddMonths(1));
+
+        dbContext.BillingSubscriptions.Add(
+            billingSubscription);
+
+        await dbContext.SaveChangesAsync();
+
+        var identityService =
+            new IdentityService(
+                userManager,
+                dbContext);
+
+        var result =
+            await identityService.AuthenticateUserAsync(
+                user.Email!,
+                "Password123!");
+
+        Assert.True(result.Succeeded);
+
+        Assert.Equal(
+            SubscriptionPlan.Premium,
+            result.SubscriptionPlan);
     }
 
     private static ServiceProvider CreateServiceProvider(

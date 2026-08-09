@@ -158,9 +158,7 @@ public sealed class GetSavingsPlanUsageTests
                 UserName =
                     $"{userId}@example.com",
                 Email =
-                    $"{userId}@example.com",
-                SubscriptionPlan =
-                    SubscriptionPlan.Free
+                    $"{userId}@example.com"
             });
 
         await dbContext.SaveChangesAsync();

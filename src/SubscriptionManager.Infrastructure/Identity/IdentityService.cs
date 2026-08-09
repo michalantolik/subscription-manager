@@ -88,13 +88,37 @@ public sealed class IdentityService(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return await dbContext.Users
+        var userExists = await dbContext.Users
             .AsNoTracking()
-            .Where(user => user.Id == userId)
-            .Select(user =>
-                (SubscriptionPlan?)user.SubscriptionPlan)
-            .SingleOrDefaultAsync(
+            .AnyAsync(
+                user => user.Id == userId,
                 cancellationToken);
+
+        if (!userExists)
+        {
+            return null;
+        }
+
+        var billingSubscription =
+            await dbContext.BillingSubscriptions
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    subscription =>
+                        subscription.UserId == userId,
+                    cancellationToken);
+
+        if (billingSubscription is null)
+        {
+            return SubscriptionPlan.Free;
+        }
+
+        if (billingSubscription.CurrentPeriodEnd
+            <= DateTimeOffset.UtcNow)
+        {
+            return SubscriptionPlan.Free;
+        }
+
+        return billingSubscription.Plan;
     }
 
     public async Task<bool> UpdateAccountPreferencesAsync(
@@ -224,10 +248,20 @@ public sealed class IdentityService(
             ]);
         }
 
+        var subscriptionPlan =
+            await GetSubscriptionPlanAsync(
+                user.Id,
+                cancellationToken);
+
+        if (subscriptionPlan is null)
+        {
+            return AuthenticationFailed();
+        }
+
         return AuthenticateUserResult.Success(
             user.Id,
             user.Language,
-            user.SubscriptionPlan);
+            subscriptionPlan.Value);
     }
 
     public async Task<PasswordResetToken?> GeneratePasswordResetTokenAsync(

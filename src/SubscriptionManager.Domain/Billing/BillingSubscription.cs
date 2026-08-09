@@ -44,6 +44,13 @@ public sealed class BillingSubscription
                 nameof(userId));
         }
 
+        if (plan == SubscriptionPlan.Free)
+        {
+            throw new ArgumentException(
+                "Billing subscription requires a paid plan.",
+                nameof(plan));
+        }
+
         if (currentPeriodEnd <= currentPeriodStart)
         {
             throw new ArgumentException(

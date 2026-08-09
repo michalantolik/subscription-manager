@@ -70,4 +70,26 @@ public sealed class BillingSubscriptionTests
             "currentPeriodEnd",
             exception.ParamName);
     }
+
+    [Fact]
+    public void Create_WithFreePlan_ShouldThrow()
+    {
+        var periodStart = new DateTimeOffset(
+            2026, 8, 9, 0, 0, 0, TimeSpan.Zero);
+
+        var periodEnd = periodStart.AddMonths(1);
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            new BillingSubscription(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                SubscriptionPlan.Free,
+                BillingInterval.Monthly,
+                periodStart,
+                periodEnd));
+
+        Assert.Equal(
+            "plan",
+            exception.ParamName);
+    }
 }

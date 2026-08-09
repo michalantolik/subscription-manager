@@ -19,10 +19,5 @@ internal sealed class ApplicationUserConfiguration
             .HasConversion<string>()
             .HasMaxLength(3)
             .IsRequired();
-
-        builder.Property(x => x.SubscriptionPlan)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
     }
 }
