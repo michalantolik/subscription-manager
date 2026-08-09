@@ -1,4 +1,5 @@
 using SubscriptionManager.Application.Common.Localization;
+using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Common.Identity;

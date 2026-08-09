@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
+using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Persistence;
 

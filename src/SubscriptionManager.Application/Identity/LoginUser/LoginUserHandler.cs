@@ -1,6 +1,7 @@
 using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
+using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Identity.LoginUser;
 

@@ -2,6 +2,7 @@
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
+using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Tests.SavingsPlans.GetSavingsPlanUsage;
 

@@ -9,6 +9,7 @@ using SubscriptionManager.Application.Identity.ForgotPassword;
 using SubscriptionManager.Application.Identity.LoginUser;
 using SubscriptionManager.Application.Identity.RegisterUser;
 using SubscriptionManager.Application.Identity.ResetPassword;
+using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Api.Controllers;

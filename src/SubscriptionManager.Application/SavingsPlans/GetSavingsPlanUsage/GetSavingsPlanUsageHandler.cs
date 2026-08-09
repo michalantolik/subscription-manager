@@ -1,4 +1,5 @@
 ﻿using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
 

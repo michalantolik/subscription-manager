@@ -1,4 +1,5 @@
-﻿namespace SubscriptionManager.Application.Common.Identity;
+﻿namespace SubscriptionManager.Domain.Billing;
+
 
 public enum SubscriptionPlan
 {

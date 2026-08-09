@@ -3,6 +3,7 @@ using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Application.Identity.LoginUser;
+using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Tests.Identity.LoginUser;
 

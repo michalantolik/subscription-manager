@@ -7,6 +7,7 @@ using SubscriptionManager.Api.Tests.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
+using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Infrastructure.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
 

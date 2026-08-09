@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.ExchangeRates;
 using SubscriptionManager.Domain.SavingsPlans;
@@ -13,7 +14,7 @@ public sealed class SubscriptionManagerDbContext
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public SubscriptionManagerDbContext(
-        DbContextOptions<SubscriptionManagerDbContext> options)
+        DbContextOptions options)
         : base(options)
     {
     }
@@ -29,6 +30,9 @@ public sealed class SubscriptionManagerDbContext
 
     public DbSet<SavingsPlanUsage> SavingsPlanUsages =>
         Set<SavingsPlanUsage>();
+
+    public DbSet<BillingSubscription> BillingSubscriptions =>
+        Set<BillingSubscription>();
 
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)

@@ -1,4 +1,6 @@
-﻿namespace SubscriptionManager.Application.Common.Identity;
+﻿using SubscriptionManager.Domain.Billing;
+
+namespace SubscriptionManager.Application.Common.Identity;
 
 public static class SubscriptionPlanLimits
 {
