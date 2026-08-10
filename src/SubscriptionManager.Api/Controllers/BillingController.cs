@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
 using SubscriptionManager.Application.Billing.GetBillingOverview;
+using SubscriptionManager.Application.Billing.ProcessWebhook;
 
 namespace SubscriptionManager.Api.Controllers;
 
@@ -10,9 +12,13 @@ namespace SubscriptionManager.Api.Controllers;
 [Authorize]
 public sealed class BillingController(
     GetBillingOverviewHandler getBillingOverviewHandler,
-    CreateCheckoutSessionHandler createCheckoutSessionHandler)
+    CreateCheckoutSessionHandler createCheckoutSessionHandler,
+    ProcessPaymentWebhookHandler processPaymentWebhookHandler)
     : ControllerBase
 {
+    private const string StripeSignatureHeader =
+        "Stripe-Signature";
+
     [HttpGet]
     public async Task<ActionResult<BillingOverviewDto>> GetBillingOverviewAsync(
         CancellationToken cancellationToken)
@@ -47,6 +53,34 @@ public sealed class BillingController(
         return Ok(
             new CreateCheckoutSessionResponse(
                 checkoutUrl.ToString()));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("webhook")]
+    public async Task<IActionResult> ProcessWebhookAsync(
+        CancellationToken cancellationToken)
+    {
+        var signature =
+            Request.Headers[
+                StripeSignatureHeader]
+                .ToString();
+
+        using var reader =
+            new StreamReader(
+                Request.Body,
+                Encoding.UTF8);
+
+        var payload =
+            await reader.ReadToEndAsync(
+                cancellationToken);
+
+        await processPaymentWebhookHandler.HandleAsync(
+            new ProcessPaymentWebhookCommand(
+                payload,
+                signature),
+            cancellationToken);
+
+        return NoContent();
     }
 }
 

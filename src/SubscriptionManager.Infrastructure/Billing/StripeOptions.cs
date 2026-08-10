@@ -6,6 +6,8 @@ public sealed class StripeOptions
 
     public string SecretKey { get; init; } = string.Empty;
 
+    public string WebhookSecret { get; init; } = string.Empty;
+
     public string PlusMonthlyPriceId { get; init; } = string.Empty;
 
     public string PlusYearlyPriceId { get; init; } = string.Empty;

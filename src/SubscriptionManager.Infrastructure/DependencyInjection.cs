@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OpenAI;
 using SubscriptionManager.Application.Billing;
+using SubscriptionManager.Application.Billing.ProcessWebhook;
 using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
@@ -245,6 +246,10 @@ public static class DependencyInjection
             IPaymentProvider,
             StripePaymentProvider>();
 
+        services.AddScoped<
+            IPaymentWebhookParser,
+            StripePaymentWebhookParser>();
+
         services.AddSingleton<
             AccountEmailLinkBuilder>();
 
@@ -293,6 +298,10 @@ public static class DependencyInjection
         services.AddScoped<
             IBillingSubscriptionRepository,
             BillingSubscriptionRepository>();
+
+        services.AddScoped<
+            IBillingWebhookRepository,
+            BillingWebhookRepository>();
 
         services.AddScoped<
             ISavingsPlanUsageRepository,

@@ -15,65 +15,84 @@ public sealed class BillingSubscriptionConfiguration
             "BillingSubscriptions");
 
         builder.HasKey(
-            subscription => subscription.Id);
+            subscription =>
+                subscription.Id);
 
         builder.Property(
-                subscription => subscription.Plan)
+                subscription =>
+                    subscription.Plan)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(
-                subscription => subscription.BillingInterval)
+                subscription =>
+                    subscription.BillingInterval)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(
-                subscription => subscription.Status)
+                subscription =>
+                    subscription.Status)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(
-                subscription => subscription.ProviderCustomerId)
+                subscription =>
+                    subscription.ProviderCustomerId)
             .HasMaxLength(255);
 
         builder.Property(
-                subscription => subscription.ProviderSubscriptionId)
+                subscription =>
+                    subscription.ProviderSubscriptionId)
             .HasMaxLength(255);
 
         builder.Property(
-                subscription => subscription.ProviderPriceId)
+                subscription =>
+                    subscription.ProviderPriceId)
             .HasMaxLength(255);
 
         builder.Property(
-                subscription => subscription.CurrentPeriodStart)
+                subscription =>
+                    subscription.CurrentPeriodStart)
             .IsRequired();
 
         builder.Property(
-                subscription => subscription.CurrentPeriodEnd)
+                subscription =>
+                    subscription.CurrentPeriodEnd)
             .IsRequired();
 
         builder.Property(
-                subscription => subscription.CancelAtPeriodEnd)
+            subscription =>
+                subscription.LastProviderEventCreatedAt);
+
+        builder.Property(
+                subscription =>
+                    subscription.CancelAtPeriodEnd)
             .IsRequired();
 
         builder.HasIndex(
-                subscription => subscription.UserId)
+                subscription =>
+                    subscription.UserId)
             .IsUnique();
 
         builder.HasIndex(
-            subscription => subscription.ProviderCustomerId);
+            subscription =>
+                subscription.ProviderCustomerId);
 
         builder.HasIndex(
-                subscription => subscription.ProviderSubscriptionId)
+                subscription =>
+                    subscription.ProviderSubscriptionId)
             .IsUnique();
 
         builder.HasOne<ApplicationUser>()
             .WithOne()
             .HasForeignKey<BillingSubscription>(
-                subscription => subscription.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+                subscription =>
+                    subscription.UserId)
+            .OnDelete(
+                DeleteBehavior.Cascade);
     }
 }

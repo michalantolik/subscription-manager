@@ -3,6 +3,7 @@ using SubscriptionManager.Application.Account.GetAccountPreferences;
 using SubscriptionManager.Application.Account.UpdateAccountPreferences;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
 using SubscriptionManager.Application.Billing.GetBillingOverview;
+using SubscriptionManager.Application.Billing.ProcessWebhook;
 using SubscriptionManager.Application.DigitalServices.CreateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeactivateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
@@ -38,6 +39,7 @@ public static class DependencyInjection
 
         services.AddScoped<CreateCheckoutSessionHandler>();
         services.AddScoped<GetBillingOverviewHandler>();
+        services.AddScoped<ProcessPaymentWebhookHandler>();
 
         services.AddScoped<CreateDigitalServiceHandler>();
         services.AddScoped<GetDigitalServicesHandler>();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using SubscriptionManager.Application.Billing.ProcessWebhook;
 using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.SavingsPlans;
 
@@ -17,6 +18,15 @@ internal sealed class ApiExceptionHandler(
     {
         var problemDetails = exception switch
         {
+            InvalidPaymentWebhookException => new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Invalid payment webhook.",
+                Detail =
+                    "The payment webhook could not be verified or processed.",
+                Instance = httpContext.Request.Path
+            },
+
             ExchangeRatesUnavailableException => new ProblemDetails
             {
                 Status = StatusCodes.Status503ServiceUnavailable,

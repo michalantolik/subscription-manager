@@ -10,15 +10,17 @@ public sealed class BillingSubscriptionTests
         var periodStart = new DateTimeOffset(
             2026, 8, 9, 0, 0, 0, TimeSpan.Zero);
 
-        var periodEnd = periodStart.AddMonths(1);
+        var periodEnd =
+            periodStart.AddMonths(1);
 
-        var subscription = new BillingSubscription(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            SubscriptionPlan.Plus,
-            BillingInterval.Monthly,
-            periodStart,
-            periodEnd);
+        var subscription =
+            new BillingSubscription(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                SubscriptionPlan.Plus,
+                BillingInterval.Monthly,
+                periodStart,
+                periodEnd);
 
         Assert.Equal(
             SubscriptionPlan.Plus,
@@ -40,6 +42,9 @@ public sealed class BillingSubscriptionTests
             periodEnd,
             subscription.CurrentPeriodEnd);
 
+        Assert.Null(
+            subscription.LastProviderEventCreatedAt);
+
         Assert.False(
             subscription.CancelAtPeriodEnd);
     }
@@ -47,7 +52,8 @@ public sealed class BillingSubscriptionTests
     [Fact]
     public void LinkToPaymentProvider_ShouldStoreProviderIdentifiers()
     {
-        var subscription = CreateSubscription();
+        var subscription =
+            CreateSubscription();
 
         subscription.LinkToPaymentProvider(
             "cus_123",
@@ -70,7 +76,8 @@ public sealed class BillingSubscriptionTests
     [Fact]
     public void Synchronize_ShouldUpdateSubscriptionFromPaymentProvider()
     {
-        var subscription = CreateSubscription();
+        var subscription =
+            CreateSubscription();
 
         subscription.LinkToPaymentProvider(
             "cus_123",
@@ -80,7 +87,8 @@ public sealed class BillingSubscriptionTests
         var periodStart = new DateTimeOffset(
             2026, 9, 9, 0, 0, 0, TimeSpan.Zero);
 
-        var periodEnd = periodStart.AddYears(1);
+        var periodEnd =
+            periodStart.AddYears(1);
 
         subscription.Synchronize(
             SubscriptionPlan.Premium,
@@ -125,6 +133,161 @@ public sealed class BillingSubscriptionTests
         Assert.Equal(
             "sub_123",
             subscription.ProviderSubscriptionId);
+    }
+
+    [Fact]
+    public void ApplyProviderEvent_ShouldApplyNewerEvent()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var providerEventCreatedAt =
+            new DateTimeOffset(
+                2026,
+                9,
+                10,
+                12,
+                0,
+                0,
+                TimeSpan.Zero);
+
+        var periodStart =
+            providerEventCreatedAt;
+
+        var periodEnd =
+            periodStart.AddYears(1);
+
+        var applied =
+            subscription.ApplyProviderEvent(
+                providerEventCreatedAt,
+                SubscriptionPlan.Premium,
+                BillingInterval.Yearly,
+                BillingSubscriptionStatus.Active,
+                "price_premium_yearly",
+                periodStart,
+                periodEnd,
+                false);
+
+        Assert.True(
+            applied);
+
+        Assert.Equal(
+            SubscriptionPlan.Premium,
+            subscription.Plan);
+
+        Assert.Equal(
+            BillingInterval.Yearly,
+            subscription.BillingInterval);
+
+        Assert.Equal(
+            BillingSubscriptionStatus.Active,
+            subscription.Status);
+
+        Assert.Equal(
+            "price_premium_yearly",
+            subscription.ProviderPriceId);
+
+        Assert.Equal(
+            periodStart,
+            subscription.CurrentPeriodStart);
+
+        Assert.Equal(
+            periodEnd,
+            subscription.CurrentPeriodEnd);
+
+        Assert.Equal(
+            providerEventCreatedAt,
+            subscription.LastProviderEventCreatedAt);
+
+        Assert.False(
+            subscription.CancelAtPeriodEnd);
+    }
+
+    [Fact]
+    public void ApplyProviderEvent_ShouldIgnoreOlderEvent()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var newerEventCreatedAt =
+            new DateTimeOffset(
+                2026,
+                9,
+                10,
+                12,
+                0,
+                0,
+                TimeSpan.Zero);
+
+        var newerPeriodStart =
+            newerEventCreatedAt;
+
+        var newerPeriodEnd =
+            newerPeriodStart.AddYears(1);
+
+        subscription.ApplyProviderEvent(
+            newerEventCreatedAt,
+            SubscriptionPlan.Premium,
+            BillingInterval.Yearly,
+            BillingSubscriptionStatus.Active,
+            "price_premium_yearly",
+            newerPeriodStart,
+            newerPeriodEnd,
+            false);
+
+        var olderEventCreatedAt =
+            newerEventCreatedAt.AddMinutes(-1);
+
+        var olderPeriodStart =
+            olderEventCreatedAt;
+
+        var olderPeriodEnd =
+            olderPeriodStart.AddMonths(1);
+
+        var applied =
+            subscription.ApplyProviderEvent(
+                olderEventCreatedAt,
+                SubscriptionPlan.Plus,
+                BillingInterval.Monthly,
+                BillingSubscriptionStatus.Canceled,
+                "price_plus_monthly",
+                olderPeriodStart,
+                olderPeriodEnd,
+                true);
+
+        Assert.False(
+            applied);
+
+        Assert.Equal(
+            SubscriptionPlan.Premium,
+            subscription.Plan);
+
+        Assert.Equal(
+            BillingInterval.Yearly,
+            subscription.BillingInterval);
+
+        Assert.Equal(
+            BillingSubscriptionStatus.Active,
+            subscription.Status);
+
+        Assert.Equal(
+            "price_premium_yearly",
+            subscription.ProviderPriceId);
+
+        Assert.Equal(
+            newerPeriodStart,
+            subscription.CurrentPeriodStart);
+
+        Assert.Equal(
+            newerPeriodEnd,
+            subscription.CurrentPeriodEnd);
+
+        Assert.Equal(
+            newerEventCreatedAt,
+            subscription.LastProviderEventCreatedAt);
+
+        Assert.False(
+            subscription.CancelAtPeriodEnd);
     }
 
     [Fact]

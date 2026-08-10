@@ -6,6 +6,7 @@ using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.ExchangeRates;
 using SubscriptionManager.Domain.SavingsPlans;
 using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Infrastructure.Billing;
 using SubscriptionManager.Infrastructure.Identity;
 
 namespace SubscriptionManager.Infrastructure.Persistence;
@@ -34,10 +35,14 @@ public sealed class SubscriptionManagerDbContext
     public DbSet<BillingSubscription> BillingSubscriptions =>
         Set<BillingSubscription>();
 
+    internal DbSet<ProcessedBillingEvent> ProcessedBillingEvents =>
+        Set<ProcessedBillingEvent>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
+        base.OnModelCreating(
+            modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(SubscriptionManagerDbContext).Assembly);

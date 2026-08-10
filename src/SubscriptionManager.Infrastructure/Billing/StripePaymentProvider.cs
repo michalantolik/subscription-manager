@@ -10,6 +10,8 @@ public sealed class StripePaymentProvider(
     IOptions<StripeOptions> options)
     : IPaymentProvider
 {
+    private const string UserIdMetadataKey = "userId";
+
     private readonly StripeOptions _options = options.Value;
 
     public async Task<Uri> CreateCheckoutSessionAsync(
@@ -38,6 +40,16 @@ public sealed class StripePaymentProvider(
                 SuccessUrl = successUrl.ToString(),
                 CancelUrl = cancelUrl.ToString(),
                 ClientReferenceId = userId.ToString(),
+                SubscriptionData =
+                    new SessionSubscriptionDataOptions
+                    {
+                        Metadata =
+                            new Dictionary<string, string>
+                            {
+                                [UserIdMetadataKey] =
+                                    userId.ToString()
+                            }
+                    },
                 LineItems =
                 [
                     new SessionLineItemOptions
@@ -53,7 +65,8 @@ public sealed class StripePaymentProvider(
                 sessionOptions,
                 cancellationToken: cancellationToken);
 
-        return new Uri(session.Url);
+        return new Uri(
+            session.Url);
     }
 
     private string GetPriceId(

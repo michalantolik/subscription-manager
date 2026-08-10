@@ -22,6 +22,8 @@ public sealed class BillingSubscription
 
     public DateTimeOffset CurrentPeriodEnd { get; private set; }
 
+    public DateTimeOffset? LastProviderEventCreatedAt { get; private set; }
+
     public bool CancelAtPeriodEnd { get; private set; }
 
     private BillingSubscription()
@@ -97,6 +99,108 @@ public sealed class BillingSubscription
         DateTimeOffset currentPeriodEnd,
         bool cancelAtPeriodEnd)
     {
+        ValidateSynchronization(
+            plan,
+            billingInterval,
+            status,
+            priceId,
+            currentPeriodStart,
+            currentPeriodEnd);
+
+        ApplySynchronization(
+            plan,
+            billingInterval,
+            status,
+            priceId,
+            currentPeriodStart,
+            currentPeriodEnd,
+            cancelAtPeriodEnd);
+    }
+
+    public bool ApplyProviderEvent(
+        DateTimeOffset providerEventCreatedAt,
+        SubscriptionPlan plan,
+        BillingInterval billingInterval,
+        BillingSubscriptionStatus status,
+        string priceId,
+        DateTimeOffset currentPeriodStart,
+        DateTimeOffset currentPeriodEnd,
+        bool cancelAtPeriodEnd)
+    {
+        if (providerEventCreatedAt == default)
+        {
+            throw new ArgumentException(
+                "Provider event creation time is required.",
+                nameof(providerEventCreatedAt));
+        }
+
+        ValidateSynchronization(
+            plan,
+            billingInterval,
+            status,
+            priceId,
+            currentPeriodStart,
+            currentPeriodEnd);
+
+        if (LastProviderEventCreatedAt >=
+            providerEventCreatedAt)
+        {
+            return false;
+        }
+
+        ApplySynchronization(
+            plan,
+            billingInterval,
+            status,
+            priceId,
+            currentPeriodStart,
+            currentPeriodEnd,
+            cancelAtPeriodEnd);
+
+        LastProviderEventCreatedAt =
+            providerEventCreatedAt;
+
+        return true;
+    }
+
+    public void ScheduleCancellation()
+    {
+        if (Status is BillingSubscriptionStatus.Canceled or
+            BillingSubscriptionStatus.IncompleteExpired)
+        {
+            throw new InvalidOperationException(
+                "An ended billing subscription cannot be canceled again.");
+        }
+
+        CancelAtPeriodEnd = true;
+    }
+
+    private void ApplySynchronization(
+        SubscriptionPlan plan,
+        BillingInterval billingInterval,
+        BillingSubscriptionStatus status,
+        string priceId,
+        DateTimeOffset currentPeriodStart,
+        DateTimeOffset currentPeriodEnd,
+        bool cancelAtPeriodEnd)
+    {
+        Plan = plan;
+        BillingInterval = billingInterval;
+        Status = status;
+        ProviderPriceId = priceId;
+        CurrentPeriodStart = currentPeriodStart;
+        CurrentPeriodEnd = currentPeriodEnd;
+        CancelAtPeriodEnd = cancelAtPeriodEnd;
+    }
+
+    private static void ValidateSynchronization(
+        SubscriptionPlan plan,
+        BillingInterval billingInterval,
+        BillingSubscriptionStatus status,
+        string priceId,
+        DateTimeOffset currentPeriodStart,
+        DateTimeOffset currentPeriodEnd)
+    {
         ValidatePlan(
             plan);
 
@@ -117,26 +221,6 @@ public sealed class BillingSubscription
         ValidatePeriod(
             currentPeriodStart,
             currentPeriodEnd);
-
-        Plan = plan;
-        BillingInterval = billingInterval;
-        Status = status;
-        ProviderPriceId = priceId;
-        CurrentPeriodStart = currentPeriodStart;
-        CurrentPeriodEnd = currentPeriodEnd;
-        CancelAtPeriodEnd = cancelAtPeriodEnd;
-    }
-
-    public void ScheduleCancellation()
-    {
-        if (Status is BillingSubscriptionStatus.Canceled or
-            BillingSubscriptionStatus.IncompleteExpired)
-        {
-            throw new InvalidOperationException(
-                "An ended billing subscription cannot be canceled again.");
-        }
-
-        CancelAtPeriodEnd = true;
     }
 
     private static void ValidatePlan(
