@@ -283,7 +283,7 @@ public sealed class IdentityServiceTests
     }
 
     [Fact]
-    public async Task GetSubscriptionPlanAsync_ShouldReturnPaidPlan_WhenCanceledSubscriptionIsStillWithinPaidPeriod()
+    public async Task GetSubscriptionPlanAsync_ShouldReturnPaidPlan_WhenCancellationIsScheduled()
     {
         await using var connection =
             new SqliteConnection("Data Source=:memory:");
@@ -331,7 +331,7 @@ public sealed class IdentityServiceTests
                 periodStart,
                 periodEnd);
 
-        billingSubscription.Cancel();
+        billingSubscription.ScheduleCancellation();
 
         dbContext.BillingSubscriptions.Add(
             billingSubscription);

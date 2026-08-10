@@ -38,7 +38,8 @@ public sealed class BillingSubscriptionPersistenceTests
             NormalizedEmail = "BILLING-TEST@EXAMPLE.COM"
         };
 
-        dbContext.Users.Add(user);
+        dbContext.Users.Add(
+            user);
 
         var periodStart =
             new DateTimeOffset(
@@ -62,6 +63,11 @@ public sealed class BillingSubscriptionPersistenceTests
                 periodStart,
                 periodEnd);
 
+        subscription.LinkToPaymentProvider(
+            "cus_123",
+            "sub_123",
+            "price_123");
+
         dbContext.BillingSubscriptions.Add(
             subscription);
 
@@ -72,7 +78,13 @@ public sealed class BillingSubscriptionPersistenceTests
         {
             command.CommandText =
                 """
-                SELECT Plan, BillingInterval, Status
+                SELECT
+                    Plan,
+                    BillingInterval,
+                    Status,
+                    ProviderCustomerId,
+                    ProviderSubscriptionId,
+                    ProviderPriceId
                 FROM BillingSubscriptions
                 """;
 
@@ -93,6 +105,18 @@ public sealed class BillingSubscriptionPersistenceTests
             Assert.Equal(
                 "Active",
                 reader.GetString(2));
+
+            Assert.Equal(
+                "cus_123",
+                reader.GetString(3));
+
+            Assert.Equal(
+                "sub_123",
+                reader.GetString(4));
+
+            Assert.Equal(
+                "price_123",
+                reader.GetString(5));
         }
 
         dbContext.ChangeTracker.Clear();
@@ -100,8 +124,8 @@ public sealed class BillingSubscriptionPersistenceTests
         var loadedSubscription =
             await dbContext.BillingSubscriptions
                 .AsNoTracking()
-                .SingleAsync(x =>
-                    x.UserId == user.Id);
+                .SingleAsync(subscription =>
+                    subscription.UserId == user.Id);
 
         Assert.Equal(
             SubscriptionPlan.Plus,
@@ -114,6 +138,18 @@ public sealed class BillingSubscriptionPersistenceTests
         Assert.Equal(
             BillingSubscriptionStatus.Active,
             loadedSubscription.Status);
+
+        Assert.Equal(
+            "cus_123",
+            loadedSubscription.ProviderCustomerId);
+
+        Assert.Equal(
+            "sub_123",
+            loadedSubscription.ProviderSubscriptionId);
+
+        Assert.Equal(
+            "price_123",
+            loadedSubscription.ProviderPriceId);
 
         Assert.Equal(
             periodStart,

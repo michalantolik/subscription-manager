@@ -291,6 +291,10 @@ public static class DependencyInjection
             SubscriptionRepository>();
 
         services.AddScoped<
+            IBillingSubscriptionRepository,
+            BillingSubscriptionRepository>();
+
+        services.AddScoped<
             ISavingsPlanUsageRepository,
             SavingsPlanUsageRepository>();
 

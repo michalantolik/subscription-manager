@@ -8,42 +8,72 @@ namespace SubscriptionManager.Infrastructure.Persistence.Configurations;
 public sealed class BillingSubscriptionConfiguration
     : IEntityTypeConfiguration<BillingSubscription>
 {
-    public void Configure(EntityTypeBuilder<BillingSubscription> builder)
+    public void Configure(
+        EntityTypeBuilder<BillingSubscription> builder)
     {
-        builder.ToTable("BillingSubscriptions");
+        builder.ToTable(
+            "BillingSubscriptions");
 
-        builder.HasKey(x => x.Id);
+        builder.HasKey(
+            subscription => subscription.Id);
 
-        builder.Property(x => x.Plan)
+        builder.Property(
+                subscription => subscription.Plan)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
-        builder.Property(x => x.BillingInterval)
+        builder.Property(
+                subscription => subscription.BillingInterval)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
-        builder.Property(x => x.Status)
+        builder.Property(
+                subscription => subscription.Status)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
-        builder.Property(x => x.CurrentPeriodStart)
+        builder.Property(
+                subscription => subscription.ProviderCustomerId)
+            .HasMaxLength(255);
+
+        builder.Property(
+                subscription => subscription.ProviderSubscriptionId)
+            .HasMaxLength(255);
+
+        builder.Property(
+                subscription => subscription.ProviderPriceId)
+            .HasMaxLength(255);
+
+        builder.Property(
+                subscription => subscription.CurrentPeriodStart)
             .IsRequired();
 
-        builder.Property(x => x.CurrentPeriodEnd)
+        builder.Property(
+                subscription => subscription.CurrentPeriodEnd)
             .IsRequired();
 
-        builder.Property(x => x.CancelAtPeriodEnd)
+        builder.Property(
+                subscription => subscription.CancelAtPeriodEnd)
             .IsRequired();
 
-        builder.HasIndex(x => x.UserId)
+        builder.HasIndex(
+                subscription => subscription.UserId)
+            .IsUnique();
+
+        builder.HasIndex(
+            subscription => subscription.ProviderCustomerId);
+
+        builder.HasIndex(
+                subscription => subscription.ProviderSubscriptionId)
             .IsUnique();
 
         builder.HasOne<ApplicationUser>()
             .WithOne()
-            .HasForeignKey<BillingSubscription>(x => x.UserId)
+            .HasForeignKey<BillingSubscription>(
+                subscription => subscription.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SubscriptionManager.Application.Account.GetAccountPreferences;
 using SubscriptionManager.Application.Account.UpdateAccountPreferences;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
+using SubscriptionManager.Application.Billing.GetBillingOverview;
 using SubscriptionManager.Application.DigitalServices.CreateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeactivateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
@@ -36,6 +37,7 @@ public static class DependencyInjection
             TimeProvider.System);
 
         services.AddScoped<CreateCheckoutSessionHandler>();
+        services.AddScoped<GetBillingOverviewHandler>();
 
         services.AddScoped<CreateDigitalServiceHandler>();
         services.AddScoped<GetDigitalServicesHandler>();

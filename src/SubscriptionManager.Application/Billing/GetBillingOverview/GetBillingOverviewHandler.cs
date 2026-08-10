@@ -3,37 +3,19 @@ using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Billing.GetBillingOverview;
 
-public sealed class GetBillingOverviewHandler
+public sealed class GetBillingOverviewHandler(
+    IBillingSubscriptionRepository billingSubscriptionRepository,
+    ICurrentUser currentUser)
 {
-    private readonly IIdentityService _identityService;
-    private readonly ICurrentUser _currentUser;
-
-    public GetBillingOverviewHandler(
-        IIdentityService identityService,
-        ICurrentUser currentUser)
-    {
-        _identityService = identityService;
-        _currentUser = currentUser;
-    }
-
     public async Task<BillingOverviewDto> HandleAsync(
         CancellationToken cancellationToken = default)
     {
-        var userId =
-            _currentUser.UserId;
-
-        var subscriptionPlan =
-            await _identityService.GetSubscriptionPlanAsync(
-                userId,
+        var subscription =
+            await billingSubscriptionRepository.GetByUserIdAsync(
+                currentUser.UserId,
                 cancellationToken);
 
-        if (subscriptionPlan is null)
-        {
-            throw new InvalidOperationException(
-                "The current user's subscription plan is unavailable.");
-        }
-
-        if (subscriptionPlan == SubscriptionPlan.Free)
+        if (subscription is null)
         {
             return new BillingOverviewDto(
                 SubscriptionPlan.Free,
@@ -44,6 +26,12 @@ public sealed class GetBillingOverviewHandler
                 false);
         }
 
-        throw new NotImplementedException();
+        return new BillingOverviewDto(
+            subscription.Plan,
+            subscription.BillingInterval,
+            subscription.Status,
+            subscription.CurrentPeriodStart,
+            subscription.CurrentPeriodEnd,
+            subscription.CancelAtPeriodEnd);
     }
 }

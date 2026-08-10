@@ -20,35 +20,219 @@ public sealed class BillingSubscriptionTests
             periodStart,
             periodEnd);
 
-        Assert.Equal(SubscriptionPlan.Plus, subscription.Plan);
-        Assert.Equal(BillingInterval.Monthly, subscription.BillingInterval);
-        Assert.Equal(BillingSubscriptionStatus.Active, subscription.Status);
-        Assert.Equal(periodStart, subscription.CurrentPeriodStart);
-        Assert.Equal(periodEnd, subscription.CurrentPeriodEnd);
-        Assert.False(subscription.CancelAtPeriodEnd);
+        Assert.Equal(
+            SubscriptionPlan.Plus,
+            subscription.Plan);
+
+        Assert.Equal(
+            BillingInterval.Monthly,
+            subscription.BillingInterval);
+
+        Assert.Equal(
+            BillingSubscriptionStatus.Active,
+            subscription.Status);
+
+        Assert.Equal(
+            periodStart,
+            subscription.CurrentPeriodStart);
+
+        Assert.Equal(
+            periodEnd,
+            subscription.CurrentPeriodEnd);
+
+        Assert.False(
+            subscription.CancelAtPeriodEnd);
     }
 
     [Fact]
-    public void Cancel_ShouldKeepSubscriptionUntilPeriodEnd()
+    public void LinkToPaymentProvider_ShouldStoreProviderIdentifiers()
     {
+        var subscription = CreateSubscription();
+
+        subscription.LinkToPaymentProvider(
+            "cus_123",
+            "sub_123",
+            "price_123");
+
+        Assert.Equal(
+            "cus_123",
+            subscription.ProviderCustomerId);
+
+        Assert.Equal(
+            "sub_123",
+            subscription.ProviderSubscriptionId);
+
+        Assert.Equal(
+            "price_123",
+            subscription.ProviderPriceId);
+    }
+
+    [Fact]
+    public void Synchronize_ShouldUpdateSubscriptionFromPaymentProvider()
+    {
+        var subscription = CreateSubscription();
+
+        subscription.LinkToPaymentProvider(
+            "cus_123",
+            "sub_123",
+            "price_plus_monthly");
+
         var periodStart = new DateTimeOffset(
-            2026, 8, 9, 0, 0, 0, TimeSpan.Zero);
+            2026, 9, 9, 0, 0, 0, TimeSpan.Zero);
 
-        var periodEnd = periodStart.AddMonths(1);
+        var periodEnd = periodStart.AddYears(1);
 
-        var subscription = new BillingSubscription(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+        subscription.Synchronize(
+            SubscriptionPlan.Premium,
+            BillingInterval.Yearly,
+            BillingSubscriptionStatus.PastDue,
+            "price_premium_yearly",
+            periodStart,
+            periodEnd,
+            true);
+
+        Assert.Equal(
+            SubscriptionPlan.Premium,
+            subscription.Plan);
+
+        Assert.Equal(
+            BillingInterval.Yearly,
+            subscription.BillingInterval);
+
+        Assert.Equal(
+            BillingSubscriptionStatus.PastDue,
+            subscription.Status);
+
+        Assert.Equal(
+            "price_premium_yearly",
+            subscription.ProviderPriceId);
+
+        Assert.Equal(
+            periodStart,
+            subscription.CurrentPeriodStart);
+
+        Assert.Equal(
+            periodEnd,
+            subscription.CurrentPeriodEnd);
+
+        Assert.True(
+            subscription.CancelAtPeriodEnd);
+
+        Assert.Equal(
+            "cus_123",
+            subscription.ProviderCustomerId);
+
+        Assert.Equal(
+            "sub_123",
+            subscription.ProviderSubscriptionId);
+    }
+
+    [Fact]
+    public void ScheduleCancellation_ShouldKeepSubscriptionActiveUntilPeriodEnd()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var periodEnd =
+            subscription.CurrentPeriodEnd;
+
+        subscription.ScheduleCancellation();
+
+        Assert.Equal(
+            BillingSubscriptionStatus.Active,
+            subscription.Status);
+
+        Assert.True(
+            subscription.CancelAtPeriodEnd);
+
+        Assert.Equal(
+            periodEnd,
+            subscription.CurrentPeriodEnd);
+    }
+
+    [Fact]
+    public void ScheduleCancellation_WhenSubscriptionHasEnded_ShouldThrow()
+    {
+        var subscription =
+            CreateSubscription();
+
+        subscription.Synchronize(
             SubscriptionPlan.Plus,
             BillingInterval.Monthly,
-            periodStart,
-            periodEnd);
+            BillingSubscriptionStatus.Canceled,
+            "price_plus_monthly",
+            subscription.CurrentPeriodStart,
+            subscription.CurrentPeriodEnd,
+            true);
 
-        subscription.Cancel();
+        Assert.Throws<InvalidOperationException>(
+            subscription.ScheduleCancellation);
+    }
 
-        Assert.Equal(BillingSubscriptionStatus.Canceled, subscription.Status);
-        Assert.True(subscription.CancelAtPeriodEnd);
-        Assert.Equal(periodEnd, subscription.CurrentPeriodEnd);
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void LinkToPaymentProvider_WithInvalidCustomerId_ShouldThrow(
+        string? customerId)
+    {
+        var subscription =
+            CreateSubscription();
+
+        var exception =
+            Assert.ThrowsAny<ArgumentException>(() =>
+                subscription.LinkToPaymentProvider(
+                    customerId!,
+                    "sub_123",
+                    "price_123"));
+
+        Assert.Equal(
+            "customerId",
+            exception.ParamName);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void LinkToPaymentProvider_WithInvalidSubscriptionId_ShouldThrow(
+        string? subscriptionId)
+    {
+        var subscription =
+            CreateSubscription();
+
+        var exception =
+            Assert.ThrowsAny<ArgumentException>(() =>
+                subscription.LinkToPaymentProvider(
+                    "cus_123",
+                    subscriptionId!,
+                    "price_123"));
+
+        Assert.Equal(
+            "subscriptionId",
+            exception.ParamName);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void LinkToPaymentProvider_WithInvalidPriceId_ShouldThrow(
+        string? priceId)
+    {
+        var subscription =
+            CreateSubscription();
+
+        var exception =
+            Assert.ThrowsAny<ArgumentException>(() =>
+                subscription.LinkToPaymentProvider(
+                    "cus_123",
+                    "sub_123",
+                    priceId!));
+
+        Assert.Equal(
+            "priceId",
+            exception.ParamName);
     }
 
     [Fact]
@@ -57,14 +241,15 @@ public sealed class BillingSubscriptionTests
         var periodStart = new DateTimeOffset(
             2026, 8, 9, 0, 0, 0, TimeSpan.Zero);
 
-        var exception = Assert.Throws<ArgumentException>(() =>
-            new BillingSubscription(
-                Guid.NewGuid(),
-                Guid.NewGuid(),
-                SubscriptionPlan.Plus,
-                BillingInterval.Monthly,
-                periodStart,
-                periodStart));
+        var exception =
+            Assert.Throws<ArgumentException>(() =>
+                new BillingSubscription(
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    SubscriptionPlan.Plus,
+                    BillingInterval.Monthly,
+                    periodStart,
+                    periodStart));
 
         Assert.Equal(
             "currentPeriodEnd",
@@ -77,19 +262,35 @@ public sealed class BillingSubscriptionTests
         var periodStart = new DateTimeOffset(
             2026, 8, 9, 0, 0, 0, TimeSpan.Zero);
 
-        var periodEnd = periodStart.AddMonths(1);
+        var periodEnd =
+            periodStart.AddMonths(1);
 
-        var exception = Assert.Throws<ArgumentException>(() =>
-            new BillingSubscription(
-                Guid.NewGuid(),
-                Guid.NewGuid(),
-                SubscriptionPlan.Free,
-                BillingInterval.Monthly,
-                periodStart,
-                periodEnd));
+        var exception =
+            Assert.Throws<ArgumentException>(() =>
+                new BillingSubscription(
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    SubscriptionPlan.Free,
+                    BillingInterval.Monthly,
+                    periodStart,
+                    periodEnd));
 
         Assert.Equal(
             "plan",
             exception.ParamName);
+    }
+
+    private static BillingSubscription CreateSubscription()
+    {
+        var periodStart = new DateTimeOffset(
+            2026, 8, 9, 0, 0, 0, TimeSpan.Zero);
+
+        return new BillingSubscription(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            SubscriptionPlan.Plus,
+            BillingInterval.Monthly,
+            periodStart,
+            periodStart.AddMonths(1));
     }
 }
