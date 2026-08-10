@@ -27,6 +27,10 @@ public interface IIdentityService
         Guid userId,
         CancellationToken cancellationToken = default);
 
+    Task<string?> GetEmailAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     Task<SubscriptionPlan?> GetSubscriptionPlanAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
@@ -71,11 +75,17 @@ public sealed record CreateUserResult(
 {
     public static CreateUserResult Success(
         Guid userId)
-        => new(true, userId, []);
+        => new(
+            true,
+            userId,
+            []);
 
     public static CreateUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
-        => new(false, null, errors.ToArray());
+        => new(
+            false,
+            null,
+            errors.ToArray());
 }
 
 public sealed record ConfirmEmailResult(
@@ -83,11 +93,15 @@ public sealed record ConfirmEmailResult(
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static ConfirmEmailResult Success()
-        => new(true, []);
+        => new(
+            true,
+            []);
 
     public static ConfirmEmailResult Failure(
         IEnumerable<IdentityServiceError> errors)
-        => new(false, errors.ToArray());
+        => new(
+            false,
+            errors.ToArray());
 }
 
 public sealed record AuthenticateUserResult(
@@ -128,11 +142,15 @@ public sealed record ResetPasswordResult(
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static ResetPasswordResult Success()
-        => new(true, []);
+        => new(
+            true,
+            []);
 
     public static ResetPasswordResult Failure(
         IEnumerable<IdentityServiceError> errors)
-        => new(false, errors.ToArray());
+        => new(
+            false,
+            errors.ToArray());
 }
 
 public sealed record DeleteUserResult(
@@ -140,9 +158,13 @@ public sealed record DeleteUserResult(
     IReadOnlyCollection<IdentityServiceError> Errors)
 {
     public static DeleteUserResult Success()
-        => new(true, []);
+        => new(
+            true,
+            []);
 
     public static DeleteUserResult Failure(
         IEnumerable<IdentityServiceError> errors)
-        => new(false, errors.ToArray());
+        => new(
+            false,
+            errors.ToArray());
 }

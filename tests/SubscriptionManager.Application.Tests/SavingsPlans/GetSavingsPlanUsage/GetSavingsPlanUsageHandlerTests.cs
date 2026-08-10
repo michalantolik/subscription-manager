@@ -9,7 +9,7 @@ namespace SubscriptionManager.Application.Tests.SavingsPlans.GetSavingsPlanUsage
 public sealed class GetSavingsPlanUsageHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ShouldReturnCurrentUsage()
+    public async Task HandleAsync_ShouldReturnZeroUsageForFreePlan()
     {
         var userId =
             Guid.NewGuid();
@@ -36,16 +36,6 @@ public sealed class GetSavingsPlanUsageHandlerTests
             .ReturnsAsync(
                 SubscriptionPlan.Free);
 
-        usageRepository
-            .Setup(repository =>
-                repository.GetRemainingRequestCountAsync(
-                    userId,
-                    It.IsAny<DateOnly>(),
-                    SubscriptionPlanLimits
-                        .FreeDailySavingsPlanLimit,
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(2);
-
         var handler =
             new GetSavingsPlanUsageHandler(
                 identityService.Object,
@@ -60,12 +50,11 @@ public sealed class GetSavingsPlanUsageHandlerTests
             result.SubscriptionPlan);
 
         Assert.Equal(
-            SubscriptionPlanLimits
-                .FreeDailySavingsPlanLimit,
+            0,
             result.DailyRequestLimit);
 
         Assert.Equal(
-            2,
+            0,
             result.RemainingRequestCount);
 
         identityService.Verify(
@@ -78,10 +67,151 @@ public sealed class GetSavingsPlanUsageHandlerTests
         usageRepository.Verify(
             repository =>
                 repository.GetRemainingRequestCountAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<DateOnly>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldReturnCurrentUsageForPlusPlan()
+    {
+        var userId =
+            Guid.NewGuid();
+
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
+
+        var usageRepository =
+            new Mock<ISavingsPlanUsageRepository>();
+
+        currentUser
+            .SetupGet(user =>
+                user.UserId)
+            .Returns(userId);
+
+        identityService
+            .Setup(service =>
+                service.GetSubscriptionPlanAsync(
+                    userId,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                SubscriptionPlan.Plus);
+
+        usageRepository
+            .Setup(repository =>
+                repository.GetRemainingRequestCountAsync(
                     userId,
                     It.IsAny<DateOnly>(),
                     SubscriptionPlanLimits
-                        .FreeDailySavingsPlanLimit,
+                        .PlusDailySavingsPlanLimit,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
+
+        var handler =
+            new GetSavingsPlanUsageHandler(
+                identityService.Object,
+                currentUser.Object,
+                usageRepository.Object);
+
+        var result =
+            await handler.HandleAsync();
+
+        Assert.Equal(
+            SubscriptionPlan.Plus,
+            result.SubscriptionPlan);
+
+        Assert.Equal(
+            SubscriptionPlanLimits
+                .PlusDailySavingsPlanLimit,
+            result.DailyRequestLimit);
+
+        Assert.Equal(
+            3,
+            result.RemainingRequestCount);
+
+        usageRepository.Verify(
+            repository =>
+                repository.GetRemainingRequestCountAsync(
+                    userId,
+                    It.IsAny<DateOnly>(),
+                    SubscriptionPlanLimits
+                        .PlusDailySavingsPlanLimit,
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldReturnCurrentUsageForPremiumPlan()
+    {
+        var userId =
+            Guid.NewGuid();
+
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
+
+        var usageRepository =
+            new Mock<ISavingsPlanUsageRepository>();
+
+        currentUser
+            .SetupGet(user =>
+                user.UserId)
+            .Returns(userId);
+
+        identityService
+            .Setup(service =>
+                service.GetSubscriptionPlanAsync(
+                    userId,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                SubscriptionPlan.Premium);
+
+        usageRepository
+            .Setup(repository =>
+                repository.GetRemainingRequestCountAsync(
+                    userId,
+                    It.IsAny<DateOnly>(),
+                    SubscriptionPlanLimits
+                        .PremiumDailySavingsPlanLimit,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(12);
+
+        var handler =
+            new GetSavingsPlanUsageHandler(
+                identityService.Object,
+                currentUser.Object,
+                usageRepository.Object);
+
+        var result =
+            await handler.HandleAsync();
+
+        Assert.Equal(
+            SubscriptionPlan.Premium,
+            result.SubscriptionPlan);
+
+        Assert.Equal(
+            SubscriptionPlanLimits
+                .PremiumDailySavingsPlanLimit,
+            result.DailyRequestLimit);
+
+        Assert.Equal(
+            12,
+            result.RemainingRequestCount);
+
+        usageRepository.Verify(
+            repository =>
+                repository.GetRemainingRequestCountAsync(
+                    userId,
+                    It.IsAny<DateOnly>(),
+                    SubscriptionPlanLimits
+                        .PremiumDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()),
             Times.Once);
     }

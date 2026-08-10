@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Api.Tests.Subscriptions;
 
@@ -12,13 +15,11 @@ public sealed class CreateSubscriptionTests
         Guid.Parse("7e25bbaa-130d-4f3a-8829-67592f433c01");
 
     private readonly CustomWebApplicationFactory _factory;
-    private readonly HttpClient _client;
 
     public CreateSubscriptionTests(
         CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -36,9 +37,10 @@ public sealed class CreateSubscriptionTests
             StartDate = new DateOnly(2026, 1, 1)
         };
 
-        var response = await client.PostAsJsonAsync(
-            "/api/subscriptions",
-            request);
+        var response =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                request);
 
         Assert.Equal(
             HttpStatusCode.Unauthorized,
@@ -49,18 +51,26 @@ public sealed class CreateSubscriptionTests
     public async Task PostAsync_ShouldReturnBadRequest_WhenDigitalServiceBelongsToAnotherUser()
     {
         var firstUserId =
-            Guid.Parse(
-                "22222222-2222-2222-2222-222222222222");
+            Guid.NewGuid();
 
         var secondUserId =
-            Guid.Parse(
-                "33333333-3333-3333-3333-333333333333");
+            Guid.NewGuid();
+
+        await SeedUserAsync(
+            _factory.Services,
+            firstUserId);
+
+        await SeedUserAsync(
+            _factory.Services,
+            secondUserId);
 
         using var firstUserClient =
-            _factory.CreateAuthenticatedClient(firstUserId);
+            _factory.CreateAuthenticatedClient(
+                firstUserId);
 
         using var secondUserClient =
-            _factory.CreateAuthenticatedClient(secondUserId);
+            _factory.CreateAuthenticatedClient(
+                secondUserId);
 
         var createDigitalServiceResponse =
             await firstUserClient.PostAsJsonAsync(
@@ -114,6 +124,17 @@ public sealed class CreateSubscriptionTests
     [Fact]
     public async Task PostAsync_ShouldCreateManualSubscription()
     {
+        var userId =
+            Guid.NewGuid();
+
+        await SeedUserAsync(
+            _factory.Services,
+            userId);
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var request = new
         {
             Name = "Netflix",
@@ -123,51 +144,107 @@ public sealed class CreateSubscriptionTests
             StartDate = new DateOnly(2026, 1, 1)
         };
 
-        var createResponse = await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            request);
+        var createResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                request);
 
-        Assert.Equal(
+        var responseContent =
+            await createResponse.Content
+                .ReadAsStringAsync();
+
+        Assert.True(
+            createResponse.StatusCode ==
             HttpStatusCode.Created,
-            createResponse.StatusCode);
+            $"Expected Created but received " +
+            $"{createResponse.StatusCode}. " +
+            $"Response: {responseContent}");
 
-        Assert.NotNull(createResponse.Headers.Location);
-
-        var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
-
-        Assert.NotEqual(Guid.Empty, subscriptionId);
-
-        var getResponse = await _client.GetAsync(
+        Assert.NotNull(
             createResponse.Headers.Location);
 
-        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var subscriptionId =
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
+
+        Assert.NotEqual(
+            Guid.Empty,
+            subscriptionId);
+
+        var getResponse =
+            await client.GetAsync(
+                createResponse.Headers.Location);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            getResponse.StatusCode);
 
         var subscription =
             await getResponse.Content
                 .ReadFromJsonAsync<SubscriptionResponse>();
 
         Assert.NotNull(subscription);
-        Assert.Equal(subscriptionId, subscription.Id);
-        Assert.Null(subscription.DigitalServiceId);
-        Assert.Equal("Netflix", subscription.Name);
-        Assert.Null(subscription.Category);
-        Assert.Null(subscription.CustomCategoryName);
-        Assert.Null(subscription.IconKey);
-        Assert.Null(subscription.ManagementUrl);
-        Assert.Equal(49m, subscription.Amount);
-        Assert.Equal("PLN", subscription.Currency);
-        Assert.Equal("Monthly", subscription.BillingPeriod);
+
+        Assert.Equal(
+            subscriptionId,
+            subscription.Id);
+
+        Assert.Null(
+            subscription.DigitalServiceId);
+
+        Assert.Equal(
+            "Netflix",
+            subscription.Name);
+
+        Assert.Null(
+            subscription.Category);
+
+        Assert.Null(
+            subscription.CustomCategoryName);
+
+        Assert.Null(
+            subscription.IconKey);
+
+        Assert.Null(
+            subscription.ManagementUrl);
+
+        Assert.Equal(
+            49m,
+            subscription.Amount);
+
+        Assert.Equal(
+            "PLN",
+            subscription.Currency);
+
+        Assert.Equal(
+            "Monthly",
+            subscription.BillingPeriod);
+
         Assert.Equal(
             new DateOnly(2026, 1, 1),
             subscription.StartDate);
-        Assert.Null(subscription.EndDate);
-        Assert.True(subscription.IsActive);
+
+        Assert.Null(
+            subscription.EndDate);
+
+        Assert.True(
+            subscription.IsActive);
     }
 
     [Fact]
     public async Task PostAsync_ShouldCreateSubscriptionFromAvailableDigitalService()
     {
+        var userId =
+            Guid.NewGuid();
+
+        await SeedUserAsync(
+            _factory.Services,
+            userId);
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var request = new
         {
             Name = "Personal Netflix",
@@ -178,48 +255,94 @@ public sealed class CreateSubscriptionTests
             DigitalServiceId = NetflixId
         };
 
-        var createResponse = await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            request);
+        var createResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                request);
 
         Assert.Equal(
             HttpStatusCode.Created,
             createResponse.StatusCode);
 
-        Assert.NotNull(createResponse.Headers.Location);
-
-        var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
-
-        Assert.NotEqual(Guid.Empty, subscriptionId);
-
-        var getResponse = await _client.GetAsync(
+        Assert.NotNull(
             createResponse.Headers.Location);
 
-        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var subscriptionId =
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
+
+        Assert.NotEqual(
+            Guid.Empty,
+            subscriptionId);
+
+        var getResponse =
+            await client.GetAsync(
+                createResponse.Headers.Location);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            getResponse.StatusCode);
 
         var subscription =
             await getResponse.Content
                 .ReadFromJsonAsync<SubscriptionResponse>();
 
         Assert.NotNull(subscription);
-        Assert.Equal(subscriptionId, subscription.Id);
-        Assert.Equal(NetflixId, subscription.DigitalServiceId);
-        Assert.Equal("Personal Netflix", subscription.Name);
-        Assert.Equal("Video", subscription.Category);
-        Assert.Null(subscription.CustomCategoryName);
-        Assert.Equal("netflix", subscription.IconKey);
+
+        Assert.Equal(
+            subscriptionId,
+            subscription.Id);
+
+        Assert.Equal(
+            NetflixId,
+            subscription.DigitalServiceId);
+
+        Assert.Equal(
+            "Personal Netflix",
+            subscription.Name);
+
+        Assert.Equal(
+            "Video",
+            subscription.Category);
+
+        Assert.Null(
+            subscription.CustomCategoryName);
+
+        Assert.Equal(
+            "netflix",
+            subscription.IconKey);
+
         Assert.Equal(
             "https://www.netflix.com/account",
             subscription.ManagementUrl);
-        Assert.Equal(49m, subscription.Amount);
-        Assert.Equal("PLN", subscription.Currency);
-        Assert.Equal("Monthly", subscription.BillingPeriod);
+
+        Assert.Equal(
+            49m,
+            subscription.Amount);
+
+        Assert.Equal(
+            "PLN",
+            subscription.Currency);
+
+        Assert.Equal(
+            "Monthly",
+            subscription.BillingPeriod);
     }
 
     [Fact]
     public async Task PostAsync_ShouldReturnBadRequest_WhenDigitalServiceIsNotAvailable()
     {
+        var userId =
+            Guid.NewGuid();
+
+        await SeedUserAsync(
+            _factory.Services,
+            userId);
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var request = new
         {
             Name = "Unavailable service",
@@ -232,9 +355,10 @@ public sealed class CreateSubscriptionTests
                     "99999999-9999-9999-9999-999999999999")
         };
 
-        var response = await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            request);
+        var response =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                request);
 
         await ProblemDetailsAssertions.AssertContainsAsync(
             response,
@@ -242,6 +366,31 @@ public sealed class CreateSubscriptionTests
             "Invalid request.",
             "The selected digital service is not available.",
             "/api/subscriptions");
+    }
+
+    private static async Task SeedUserAsync(
+        IServiceProvider services,
+        Guid userId)
+    {
+        await using var scope =
+            services.CreateAsyncScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<
+                    SubscriptionManagerDbContext>();
+
+        dbContext.Users.Add(
+            new ApplicationUser
+            {
+                Id = userId,
+                UserName =
+                    $"{userId}@example.com",
+                Email =
+                    $"{userId}@example.com"
+            });
+
+        await dbContext.SaveChangesAsync();
     }
 
     private sealed record SubscriptionResponse(

@@ -9,15 +9,18 @@ public sealed class CreateSubscriptionHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly IDigitalServiceRepository _digitalServiceRepository;
+    private readonly IIdentityService _identityService;
     private readonly ICurrentUser _currentUser;
 
     public CreateSubscriptionHandler(
         ISubscriptionRepository subscriptionRepository,
         IDigitalServiceRepository digitalServiceRepository,
+        IIdentityService identityService,
         ICurrentUser currentUser)
     {
         _subscriptionRepository = subscriptionRepository;
         _digitalServiceRepository = digitalServiceRepository;
+        _identityService = identityService;
         _currentUser = currentUser;
     }
 
@@ -28,6 +31,35 @@ public sealed class CreateSubscriptionHandler
         ArgumentNullException.ThrowIfNull(command);
 
         var ownerId = _currentUser.UserId;
+
+        var subscriptionPlan =
+            await _identityService.GetSubscriptionPlanAsync(
+                ownerId,
+                cancellationToken);
+
+        if (subscriptionPlan is null)
+        {
+            throw new InvalidOperationException(
+                "The current user's subscription plan could not be determined.");
+        }
+
+        var subscriptionLimit =
+            SubscriptionPlanLimits.GetSubscriptionLimit(
+                subscriptionPlan.Value);
+
+        if (subscriptionLimit is not null)
+        {
+            var activeSubscriptionCount =
+                await _subscriptionRepository.GetActiveCountAsync(
+                    ownerId,
+                    cancellationToken);
+
+            if (activeSubscriptionCount >= subscriptionLimit.Value)
+            {
+                throw new SubscriptionLimitReachedException(
+                    subscriptionLimit.Value);
+            }
+        }
 
         DigitalService? digitalService = null;
 

@@ -58,6 +58,19 @@ internal sealed class SubscriptionRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<int> GetActiveCountAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Subscriptions
+            .AsNoTracking()
+            .CountAsync(
+                subscription =>
+                    subscription.OwnerId == ownerId &&
+                    subscription.EndDate == null,
+                cancellationToken);
+    }
+
     public void Remove(
         Subscription subscription)
     {

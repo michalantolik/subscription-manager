@@ -697,7 +697,7 @@ public sealed class IdentityServiceTests
                 new DateOnly(2026, 8, 6));
 
         savingsPlanUsage.RegisterRequest(
-            SubscriptionPlanLimits.FreeDailySavingsPlanLimit);
+            SubscriptionPlanLimits.PlusDailySavingsPlanLimit);
 
         dbContext.SavingsPlanUsages.Add(
             savingsPlanUsage);

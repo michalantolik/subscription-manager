@@ -7,6 +7,7 @@ using SubscriptionManager.Api.Tests.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
+using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
 using SubscriptionManager.Infrastructure.Identity;
@@ -59,6 +60,62 @@ public sealed class CreateSavingsPlanTests
     }
 
     [Fact]
+    public async Task PostAsync_ShouldReturnForbidden_WhenPaidPlanIsRequired()
+    {
+        var userId =
+            Guid.NewGuid();
+
+        await SeedAsync(
+            _factory.Services,
+            userId,
+            SubscriptionPlan.Free);
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
+        var response =
+            await client.PostAsJsonAsync(
+                "/api/savings-plans",
+                CreateRequest(),
+                JsonOptions);
+
+        Assert.Equal(
+            HttpStatusCode.Forbidden,
+            response.StatusCode);
+
+        var problem =
+            await response.Content
+                .ReadFromJsonAsync<ProblemDetails>(
+                    JsonOptions);
+
+        Assert.NotNull(problem);
+
+        Assert.Equal(
+            StatusCodes.Status403Forbidden,
+            problem.Status);
+
+        Assert.Equal(
+            "Savings plan access required.",
+            problem.Title);
+
+        var hasCode =
+            problem.Extensions.TryGetValue(
+                "code",
+                out var codeValue);
+
+        Assert.True(hasCode);
+
+        var code =
+            Assert.IsType<JsonElement>(
+                codeValue);
+
+        Assert.Equal(
+            "savings_plan_access_required",
+            code.GetString());
+    }
+
+    [Fact]
     public async Task PostAsync_ShouldReturnCalculatedSavingsPlan()
     {
         await using var factory =
@@ -82,7 +139,8 @@ public sealed class CreateSavingsPlanTests
 
         await SeedAsync(
             factory.Services,
-            userId);
+            userId,
+            SubscriptionPlan.Plus);
 
         using var client =
             factory.CreateClient();
@@ -115,6 +173,15 @@ public sealed class CreateSavingsPlanTests
         Assert.Equal(
             100m,
             plan.CurrentMonthlyCost);
+
+        Assert.Equal(
+            SubscriptionPlan.Plus,
+            plan.SubscriptionPlan);
+
+        Assert.Equal(
+            SubscriptionPlanLimits
+                .PlusDailySavingsPlanLimit,
+            plan.DailyRequestLimit);
 
         var recommended =
             Assert.IsType<SavingsPlanScenarioDto>(
@@ -175,7 +242,8 @@ public sealed class CreateSavingsPlanTests
 
         await SeedAsync(
             factory.Services,
-            userId);
+            userId,
+            SubscriptionPlan.Plus);
 
         using var client =
             factory.CreateClient();
@@ -238,13 +306,14 @@ public sealed class CreateSavingsPlanTests
 
         await SeedAsync(
             factory.Services,
-            userId);
+            userId,
+            SubscriptionPlan.Plus);
 
         await SeedUsageAsync(
             factory.Services,
             userId,
             SubscriptionPlanLimits
-                .FreeDailySavingsPlanLimit);
+                .PlusDailySavingsPlanLimit);
 
         using var client =
             factory.CreateClient();
@@ -275,28 +344,28 @@ public sealed class CreateSavingsPlanTests
             problem.Status);
 
         Assert.Equal(
-            "Daily savings plan limit reached.",
+            "Savings plan usage limit exceeded.",
             problem.Title);
 
         Assert.Equal(
-            $"The daily savings plan limit of {SubscriptionPlanLimits.FreeDailySavingsPlanLimit} requests has been reached.",
+            $"The daily savings plan limit of {SubscriptionPlanLimits.PlusDailySavingsPlanLimit} requests has been reached.",
             problem.Detail);
 
-        var hasDailyLimit =
+        var hasLimit =
             problem.Extensions.TryGetValue(
-                "dailyLimit",
-                out var dailyLimitValue);
+                "limit",
+                out var limitValue);
 
-        Assert.True(hasDailyLimit);
+        Assert.True(hasLimit);
 
-        var dailyLimit =
+        var limit =
             Assert.IsType<JsonElement>(
-                dailyLimitValue);
+                limitValue);
 
         Assert.Equal(
             SubscriptionPlanLimits
-                .FreeDailySavingsPlanLimit,
-            dailyLimit.GetInt32());
+                .PlusDailySavingsPlanLimit,
+            limit.GetInt32());
     }
 
     private static CreateSavingsPlanCommand CreateRequest()
@@ -312,7 +381,8 @@ public sealed class CreateSavingsPlanTests
 
     private static async Task SeedAsync(
         IServiceProvider services,
-        Guid userId)
+        Guid userId,
+        SubscriptionPlan subscriptionPlan)
     {
         await using var scope =
             services.CreateAsyncScope();
@@ -333,6 +403,24 @@ public sealed class CreateSavingsPlanTests
                 BaseCurrency =
                     Currency.PLN
             });
+
+        if (subscriptionPlan != SubscriptionPlan.Free)
+        {
+            var periodStart =
+                DateTimeOffset.UtcNow.AddDays(-1);
+
+            var periodEnd =
+                DateTimeOffset.UtcNow.AddMonths(1);
+
+            dbContext.BillingSubscriptions.Add(
+                new BillingSubscription(
+                    Guid.NewGuid(),
+                    userId,
+                    subscriptionPlan,
+                    BillingInterval.Monthly,
+                    periodStart,
+                    periodEnd));
+        }
 
         dbContext.Subscriptions.AddRange(
             CreateSubscription(

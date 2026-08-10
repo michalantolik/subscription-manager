@@ -84,6 +84,18 @@ public sealed class IdentityService(
                 cancellationToken);
     }
 
+    public async Task<string?> GetEmailAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user => user.Email)
+            .SingleOrDefaultAsync(
+                cancellationToken);
+    }
+
     public async Task<SubscriptionPlan?> GetSubscriptionPlanAsync(
         Guid userId,
         CancellationToken cancellationToken = default)

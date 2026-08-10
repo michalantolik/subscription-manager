@@ -8,13 +8,11 @@ public sealed class EndSubscriptionTests
     : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
-    private readonly HttpClient _client;
 
     public EndSubscriptionTests(
         CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -28,9 +26,10 @@ public sealed class EndSubscriptionTests
             EndDate = new DateOnly(2026, 7, 21)
         };
 
-        var response = await client.PostAsJsonAsync(
-            $"/api/subscriptions/{Guid.NewGuid()}/end",
-            endRequest);
+        var response =
+            await client.PostAsJsonAsync(
+                $"/api/subscriptions/{Guid.NewGuid()}/end",
+                endRequest);
 
         Assert.Equal(
             HttpStatusCode.Unauthorized,
@@ -41,18 +40,18 @@ public sealed class EndSubscriptionTests
     public async Task PostAsync_ShouldReturnNotFound_WhenSubscriptionBelongsToAnotherUser()
     {
         var firstUserId =
-            Guid.Parse(
-                "22222222-2222-2222-2222-222222222222");
+            Guid.NewGuid();
 
         var secondUserId =
-            Guid.Parse(
-                "33333333-3333-3333-3333-333333333333");
+            Guid.NewGuid();
 
         using var firstUserClient =
-            _factory.CreateAuthenticatedClient(firstUserId);
+            _factory.CreateAuthenticatedClient(
+                firstUserId);
 
         using var secondUserClient =
-            _factory.CreateAuthenticatedClient(secondUserId);
+            _factory.CreateAuthenticatedClient(
+                secondUserId);
 
         var createResponse =
             await firstUserClient.PostAsJsonAsync(
@@ -71,7 +70,8 @@ public sealed class EndSubscriptionTests
             createResponse.StatusCode);
 
         var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
 
         Assert.NotEqual(
             Guid.Empty,
@@ -117,6 +117,13 @@ public sealed class EndSubscriptionTests
     [Fact]
     public async Task PostAsync_ShouldEndSubscription_WhenSubscriptionExists()
     {
+        var userId =
+            Guid.NewGuid();
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var createRequest = new
         {
             Name = "Netflix",
@@ -126,66 +133,91 @@ public sealed class EndSubscriptionTests
             StartDate = new DateOnly(2026, 1, 1)
         };
 
-        var createResponse = await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            createRequest);
+        var createResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                createRequest);
 
         Assert.Equal(
             HttpStatusCode.Created,
             createResponse.StatusCode);
 
         var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
 
-        Assert.NotEqual(Guid.Empty, subscriptionId);
+        Assert.NotEqual(
+            Guid.Empty,
+            subscriptionId);
 
-        var endDate = new DateOnly(2026, 7, 21);
+        var endDate =
+            new DateOnly(2026, 7, 21);
 
         var endRequest = new
         {
             EndDate = endDate
         };
 
-        var endResponse = await _client.PostAsJsonAsync(
-            $"/api/subscriptions/{subscriptionId}/end",
-            endRequest);
+        var endResponse =
+            await client.PostAsJsonAsync(
+                $"/api/subscriptions/{subscriptionId}/end",
+                endRequest);
 
         Assert.Equal(
             HttpStatusCode.NoContent,
             endResponse.StatusCode);
 
-        var getResponse = await _client.GetAsync(
-            $"/api/subscriptions/{subscriptionId}");
+        var getResponse =
+            await client.GetAsync(
+                $"/api/subscriptions/{subscriptionId}");
 
         Assert.Equal(
             HttpStatusCode.OK,
             getResponse.StatusCode);
 
-        var subscription = await getResponse.Content
-            .ReadFromJsonAsync<SubscriptionResponse>();
+        var subscription =
+            await getResponse.Content
+                .ReadFromJsonAsync<SubscriptionResponse>();
 
         Assert.NotNull(subscription);
-        Assert.Equal(subscriptionId, subscription.Id);
-        Assert.Equal(endDate, subscription.EndDate);
-        Assert.False(subscription.IsActive);
+
+        Assert.Equal(
+            subscriptionId,
+            subscription.Id);
+
+        Assert.Equal(
+            endDate,
+            subscription.EndDate);
+
+        Assert.False(
+            subscription.IsActive);
     }
 
     [Fact]
     public async Task PostAsync_ShouldReturnNotFound_WhenSubscriptionDoesNotExist()
     {
+        var userId =
+            Guid.NewGuid();
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var endRequest = new
         {
             EndDate = new DateOnly(2026, 7, 21)
         };
 
-        var subscriptionId = Guid.NewGuid();
+        var subscriptionId =
+            Guid.NewGuid();
 
         var requestPath =
             $"/api/subscriptions/{subscriptionId}/end";
 
-        var response = await _client.PostAsJsonAsync(
-            requestPath,
-            endRequest);
+        var response =
+            await client.PostAsJsonAsync(
+                requestPath,
+                endRequest);
 
         await ProblemDetailsAssertions.AssertAsync(
             response,

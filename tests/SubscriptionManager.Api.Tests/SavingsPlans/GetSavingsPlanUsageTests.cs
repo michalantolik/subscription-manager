@@ -1,15 +1,10 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
+using SubscriptionManager.Domain.Billing;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.DependencyInjection;
-using SubscriptionManager.Api.Tests.Authentication;
-using SubscriptionManager.Application.Common.Identity;
-using SubscriptionManager.Application.SavingsPlans;
-using SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
-using SubscriptionManager.Domain.Billing;
-using SubscriptionManager.Infrastructure.Identity;
-using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Api.Tests.SavingsPlans;
 
@@ -49,7 +44,7 @@ public sealed class GetSavingsPlanUsageTests
     }
 
     [Fact]
-    public async Task GetAsync_ShouldReturnCurrentUsageWithoutRegisteringRequest()
+    public async Task GetAsync_ShouldReturnZeroUsageForFreePlan()
     {
         var userId =
             Guid.NewGuid();
@@ -58,17 +53,9 @@ public sealed class GetSavingsPlanUsageTests
             _factory.Services,
             userId);
 
-        await SeedUsageAsync(
-            _factory.Services,
-            userId,
-            requestCount: 1);
-
         using var client =
-            _factory.CreateClient();
-
-        client.DefaultRequestHeaders.Add(
-            TestAuthenticationHandler.UserIdHeaderName,
-            userId.ToString());
+            _factory.CreateAuthenticatedClient(
+                userId);
 
         var firstResponse =
             await client.GetAsync(
@@ -104,39 +91,16 @@ public sealed class GetSavingsPlanUsageTests
             firstUsage.SubscriptionPlan);
 
         Assert.Equal(
-            SubscriptionPlanLimits
-                .FreeDailySavingsPlanLimit,
+            0,
             firstUsage.DailyRequestLimit);
 
         Assert.Equal(
-            SubscriptionPlanLimits
-                .FreeDailySavingsPlanLimit - 1,
+            0,
             firstUsage.RemainingRequestCount);
 
         Assert.Equal(
             firstUsage,
             secondUsage);
-
-        await using var scope =
-            _factory.Services.CreateAsyncScope();
-
-        var dbContext =
-            scope.ServiceProvider
-                .GetRequiredService<
-                    SubscriptionManagerDbContext>();
-
-        var storedUsage =
-            await dbContext.SavingsPlanUsages
-                .FindAsync(
-                    userId,
-                    DateOnly.FromDateTime(
-                        DateTime.UtcNow));
-
-        Assert.NotNull(storedUsage);
-
-        Assert.Equal(
-            1,
-            storedUsage.RequestCount);
     }
 
     private static async Task SeedUserAsync(
@@ -149,10 +113,11 @@ public sealed class GetSavingsPlanUsageTests
         var dbContext =
             scope.ServiceProvider
                 .GetRequiredService<
-                    SubscriptionManagerDbContext>();
+                    SubscriptionManager.Infrastructure.Persistence
+                        .SubscriptionManagerDbContext>();
 
         dbContext.Users.Add(
-            new ApplicationUser
+            new SubscriptionManager.Infrastructure.Identity.ApplicationUser
             {
                 Id = userId,
                 UserName =
@@ -160,40 +125,6 @@ public sealed class GetSavingsPlanUsageTests
                 Email =
                     $"{userId}@example.com"
             });
-
-        await dbContext.SaveChangesAsync();
-    }
-
-    private static async Task SeedUsageAsync(
-        IServiceProvider services,
-        Guid userId,
-        int requestCount)
-    {
-        await using var scope =
-            services.CreateAsyncScope();
-
-        var dbContext =
-            scope.ServiceProvider
-                .GetRequiredService<
-                    SubscriptionManagerDbContext>();
-
-        var usage =
-            new Domain.SavingsPlans.SavingsPlanUsage(
-                userId,
-                DateOnly.FromDateTime(
-                    DateTime.UtcNow));
-
-        for (var index = 0;
-             index < requestCount;
-             index++)
-        {
-            usage.RegisterRequest(
-                SubscriptionPlanLimits
-                    .FreeDailySavingsPlanLimit);
-        }
-
-        dbContext.SavingsPlanUsages.Add(
-            usage);
 
         await dbContext.SaveChangesAsync();
     }

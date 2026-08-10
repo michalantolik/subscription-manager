@@ -38,6 +38,15 @@ public sealed class GetSavingsPlanUsageHandler
                 "The current user's subscription plan is unavailable.");
         }
 
+        if (!SubscriptionPlanLimits.CanUseSavingsPlan(
+                subscriptionPlan.Value))
+        {
+            return new SavingsPlanUsageDto(
+                subscriptionPlan.Value,
+                0,
+                0);
+        }
+
         var dailyRequestLimit =
             SubscriptionPlanLimits.GetDailySavingsPlanLimit(
                 subscriptionPlan.Value);

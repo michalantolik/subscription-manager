@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SubscriptionManager.Application.Account.GetAccountPreferences;
 using SubscriptionManager.Application.Account.UpdateAccountPreferences;
+using SubscriptionManager.Application.Billing.CreateCheckoutSession;
 using SubscriptionManager.Application.DigitalServices.CreateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeactivateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
@@ -31,8 +32,10 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(
         this IServiceCollection services)
     {
-        services.AddSingleton<TimeProvider>(
+        services.AddSingleton(
             TimeProvider.System);
+
+        services.AddScoped<CreateCheckoutSessionHandler>();
 
         services.AddScoped<CreateDigitalServiceHandler>();
         services.AddScoped<GetDigitalServicesHandler>();

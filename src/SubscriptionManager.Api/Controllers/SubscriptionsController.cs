@@ -95,15 +95,31 @@ public sealed class SubscriptionsController : ControllerBase
         CreateSubscriptionCommand command,
         CancellationToken cancellationToken)
     {
-        var subscriptionId =
-            await _createSubscriptionHandler.HandleAsync(
-                command,
-                cancellationToken);
+        try
+        {
+            var subscriptionId =
+                await _createSubscriptionHandler.HandleAsync(
+                    command,
+                    cancellationToken);
 
-        return CreatedAtRoute(
-            GetSubscriptionByIdRouteName,
-            new { id = subscriptionId },
-            subscriptionId);
+            return CreatedAtRoute(
+                GetSubscriptionByIdRouteName,
+                new { id = subscriptionId },
+                subscriptionId);
+        }
+        catch (SubscriptionLimitReachedException exception)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Subscription limit reached.",
+                detail: exception.Message,
+                instance: HttpContext.Request.Path,
+                extensions: new Dictionary<string, object?>
+                {
+                    ["code"] = "subscription_limit_reached",
+                    ["limit"] = exception.Limit
+                });
+        }
     }
 
     [HttpPut("{id:guid}")]

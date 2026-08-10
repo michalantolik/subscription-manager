@@ -1,5 +1,7 @@
-﻿public enum BillingInterval
+﻿namespace SubscriptionManager.Domain.Billing;
+
+public enum BillingInterval
 {
-    Monthly = 0,
-    Yearly = 1
+    Monthly = 1,
+    Yearly = 2
 }

@@ -82,7 +82,7 @@ public sealed class CreateSavingsPlanHandlerTests
                 service.GetSubscriptionPlanAsync(
                     ownerId,
                     It.IsAny<CancellationToken>()))
-            .ReturnsAsync(SubscriptionPlan.Free);
+            .ReturnsAsync(SubscriptionPlan.Plus);
 
         exchangeRateService
             .Setup(service =>
@@ -103,9 +103,9 @@ public sealed class CreateSavingsPlanHandlerTests
                     ownerId,
                     It.IsAny<DateOnly>(),
                     SubscriptionPlanLimits
-                        .FreeDailySavingsPlanLimit,
+                        .PlusDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()))
-            .ReturnsAsync(2);
+            .ReturnsAsync(3);
 
         SavingsPlanAgentRequest? capturedRequest = null;
 
@@ -154,16 +154,16 @@ public sealed class CreateSavingsPlanHandlerTests
             result.CurrentMonthlyCost);
 
         Assert.Equal(
-            SubscriptionPlan.Free,
+            SubscriptionPlan.Plus,
             result.SubscriptionPlan);
 
         Assert.Equal(
             SubscriptionPlanLimits
-                .FreeDailySavingsPlanLimit,
+                .PlusDailySavingsPlanLimit,
             result.DailyRequestLimit);
 
         Assert.Equal(
-            2,
+            3,
             result.RemainingRequestCount);
 
         var recommended =
@@ -230,7 +230,7 @@ public sealed class CreateSavingsPlanHandlerTests
                     ownerId,
                     It.IsAny<DateOnly>(),
                     SubscriptionPlanLimits
-                        .FreeDailySavingsPlanLimit,
+                        .PlusDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -305,7 +305,7 @@ public sealed class CreateSavingsPlanHandlerTests
                 service.GetSubscriptionPlanAsync(
                     ownerId,
                     It.IsAny<CancellationToken>()))
-            .ReturnsAsync(SubscriptionPlan.Free);
+            .ReturnsAsync(SubscriptionPlan.Plus);
 
         savingsPlanUsageRepository
             .Setup(currentRepository =>
@@ -313,9 +313,9 @@ public sealed class CreateSavingsPlanHandlerTests
                     ownerId,
                     It.IsAny<DateOnly>(),
                     SubscriptionPlanLimits
-                        .FreeDailySavingsPlanLimit,
+                        .PlusDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()))
-            .ReturnsAsync(2);
+            .ReturnsAsync(3);
 
         savingsPlanAgent
             .Setup(agent =>
@@ -367,7 +367,7 @@ public sealed class CreateSavingsPlanHandlerTests
                     ownerId,
                     It.IsAny<DateOnly>(),
                     SubscriptionPlanLimits
-                        .FreeDailySavingsPlanLimit,
+                        .PlusDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -429,7 +429,7 @@ public sealed class CreateSavingsPlanHandlerTests
                 service.GetSubscriptionPlanAsync(
                     ownerId,
                     It.IsAny<CancellationToken>()))
-            .ReturnsAsync(SubscriptionPlan.Free);
+            .ReturnsAsync(SubscriptionPlan.Plus);
 
         savingsPlanUsageRepository
             .Setup(currentRepository =>
@@ -437,7 +437,7 @@ public sealed class CreateSavingsPlanHandlerTests
                     ownerId,
                     It.IsAny<DateOnly>(),
                     SubscriptionPlanLimits
-                        .FreeDailySavingsPlanLimit,
+                        .PlusDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()))
             .ReturnsAsync((int?)null);
 
@@ -466,13 +466,116 @@ public sealed class CreateSavingsPlanHandlerTests
 
         Assert.Equal(
             SubscriptionPlanLimits
-                .FreeDailySavingsPlanLimit,
+                .PlusDailySavingsPlanLimit,
             exception.DailyLimit);
 
         savingsPlanAgent.Verify(
             agent =>
                 agent.CreatePlanAsync(
                     It.IsAny<SavingsPlanAgentRequest>(),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRequirePaidPlanForFreeUser()
+    {
+        var ownerId =
+            Guid.NewGuid();
+
+        var subscription =
+            CreateSubscription(
+                ownerId,
+                "Netflix",
+                60m,
+                Currency.PLN,
+                BillingPeriod.Monthly,
+                DigitalServiceCategory.Video);
+
+        var repository =
+            new Mock<ISubscriptionRepository>();
+
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var exchangeRateService =
+            new Mock<IExchangeRateService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
+
+        var savingsPlanAgent =
+            new Mock<ISavingsPlanAgent>();
+
+        var savingsPlanUsageRepository =
+            new Mock<ISavingsPlanUsageRepository>();
+
+        currentUser
+            .SetupGet(user =>
+                user.UserId)
+            .Returns(ownerId);
+
+        repository
+            .Setup(currentRepository =>
+                currentRepository.GetAllAsync(
+                    ownerId,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync([subscription]);
+
+        identityService
+            .Setup(service =>
+                service.GetBaseCurrencyAsync(
+                    ownerId,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Currency.PLN);
+
+        identityService
+            .Setup(service =>
+                service.GetSubscriptionPlanAsync(
+                    ownerId,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SubscriptionPlan.Free);
+
+        var handler =
+            CreateHandler(
+                repository,
+                identityService,
+                exchangeRateService,
+                currentUser,
+                savingsPlanAgent,
+                savingsPlanUsageRepository);
+
+        var command =
+            new CreateSavingsPlanCommand(
+                SavingsPlanGoalType.MonthlySavings,
+                20m,
+                [],
+                SavingsPlanStrategy.Balanced,
+                null,
+                "en");
+
+        await Assert.ThrowsAsync<SavingsPlanAccessRequiredException>(
+            () => handler.HandleAsync(command));
+
+        savingsPlanUsageRepository.Verify(
+            currentRepository =>
+                currentRepository.TryRegisterRequestAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<DateOnly>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        savingsPlanAgent.Verify(
+            agent =>
+                agent.CreatePlanAsync(
+                    It.IsAny<SavingsPlanAgentRequest>(),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        exchangeRateService.Verify(
+            service =>
+                service.GetCurrentAsync(
                     It.IsAny<CancellationToken>()),
             Times.Never);
     }

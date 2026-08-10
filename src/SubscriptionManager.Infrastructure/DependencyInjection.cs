@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OpenAI;
+using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Common.Authentication;
 using SubscriptionManager.Application.Common.Email;
 using SubscriptionManager.Application.Common.Identity;
@@ -19,6 +20,7 @@ using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Infrastructure.Authentication;
+using SubscriptionManager.Infrastructure.Billing;
 using SubscriptionManager.Infrastructure.Email;
 using SubscriptionManager.Infrastructure.ExchangeRates;
 using SubscriptionManager.Infrastructure.Identity;
@@ -101,6 +103,12 @@ public static class DependencyInjection
                     options.ExpirationInMinutes > 0,
                 "Jwt:ExpirationInMinutes must be greater than zero.")
             .ValidateOnStart();
+
+        services
+            .AddOptions<StripeOptions>()
+            .Bind(
+                configuration.GetSection(
+                    StripeOptions.SectionName));
 
         services
             .AddOptions<EmailOptions>()
@@ -227,6 +235,10 @@ public static class DependencyInjection
         services.AddScoped<
             IIdentityService,
             IdentityService>();
+
+        services.AddScoped<
+            IPaymentProvider,
+            StripePaymentProvider>();
 
         services.AddSingleton<
             AccountEmailLinkBuilder>();

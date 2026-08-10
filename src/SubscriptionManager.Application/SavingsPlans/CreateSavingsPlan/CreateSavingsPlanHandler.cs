@@ -74,6 +74,12 @@ public sealed class CreateSavingsPlanHandler
                 "The current user's subscription plan is unavailable.");
         }
 
+        if (!SubscriptionPlanLimits.CanUseSavingsPlan(
+                subscriptionPlan.Value))
+        {
+            throw new SavingsPlanAccessRequiredException();
+        }
+
         var dailyRequestLimit =
             SubscriptionPlanLimits
                 .GetDailySavingsPlanLimit(

@@ -8,13 +8,11 @@ public sealed class GetSubscriptionsTests
     : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
-    private readonly HttpClient _client;
 
     public GetSubscriptionsTests(
         CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -23,8 +21,9 @@ public sealed class GetSubscriptionsTests
         using var client =
             _factory.CreateUnauthenticatedClient();
 
-        var response = await client.GetAsync(
-            "/api/subscriptions");
+        var response =
+            await client.GetAsync(
+                "/api/subscriptions");
 
         Assert.Equal(
             HttpStatusCode.Unauthorized,
@@ -34,13 +33,25 @@ public sealed class GetSubscriptionsTests
     [Fact]
     public async Task GetAsync_ShouldReturnEmptyCollection_WhenNoSubscriptionsExist()
     {
-        var response = await _client.GetAsync(
-            "/api/subscriptions");
+        var userId =
+            Guid.NewGuid();
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
 
-        var subscriptions = await response.Content
-            .ReadFromJsonAsync<IReadOnlyCollection<SubscriptionResponse>>();
+        var response =
+            await client.GetAsync(
+                "/api/subscriptions");
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
+        var subscriptions =
+            await response.Content
+                .ReadFromJsonAsync<
+                    IReadOnlyCollection<SubscriptionResponse>>();
 
         Assert.NotNull(subscriptions);
         Assert.Empty(subscriptions);
@@ -50,18 +61,18 @@ public sealed class GetSubscriptionsTests
     public async Task GetAsync_ShouldReturnOnlySubscriptionsOwnedByCurrentUser()
     {
         var firstUserId =
-            Guid.Parse(
-                "22222222-2222-2222-2222-222222222222");
+            Guid.NewGuid();
 
         var secondUserId =
-            Guid.Parse(
-                "33333333-3333-3333-3333-333333333333");
+            Guid.NewGuid();
 
         using var firstUserClient =
-            _factory.CreateAuthenticatedClient(firstUserId);
+            _factory.CreateAuthenticatedClient(
+                firstUserId);
 
         using var secondUserClient =
-            _factory.CreateAuthenticatedClient(secondUserId);
+            _factory.CreateAuthenticatedClient(
+                secondUserId);
 
         var createResponse =
             await firstUserClient.PostAsJsonAsync(
@@ -79,15 +90,18 @@ public sealed class GetSubscriptionsTests
             HttpStatusCode.Created,
             createResponse.StatusCode);
 
-        var response = await secondUserClient.GetAsync(
-            "/api/subscriptions");
+        var response =
+            await secondUserClient.GetAsync(
+                "/api/subscriptions");
 
         Assert.Equal(
             HttpStatusCode.OK,
             response.StatusCode);
 
-        var subscriptions = await response.Content
-            .ReadFromJsonAsync<IReadOnlyCollection<SubscriptionResponse>>();
+        var subscriptions =
+            await response.Content
+                .ReadFromJsonAsync<
+                    IReadOnlyCollection<SubscriptionResponse>>();
 
         Assert.NotNull(subscriptions);
         Assert.Empty(subscriptions);
@@ -96,58 +110,83 @@ public sealed class GetSubscriptionsTests
     [Fact]
     public async Task GetAsync_ShouldReturnSubscriptions_WhenSubscriptionsExist()
     {
-        await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            new
-            {
-                Name = "Netflix",
-                Amount = 49m,
-                Currency = "PLN",
-                BillingPeriod = BillingPeriod.Monthly,
-                StartDate = new DateOnly(2026, 1, 1)
-            });
+        var userId =
+            Guid.NewGuid();
 
-        await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            new
-            {
-                Name = "Microsoft 365",
-                Amount = 299m,
-                Currency = "PLN",
-                BillingPeriod = BillingPeriod.Yearly,
-                StartDate = new DateOnly(2026, 2, 1)
-            });
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
 
-        var response = await _client.GetAsync(
-            "/api/subscriptions");
+        var firstCreateResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                new
+                {
+                    Name = "Netflix",
+                    Amount = 49m,
+                    Currency = "PLN",
+                    BillingPeriod = BillingPeriod.Monthly,
+                    StartDate = new DateOnly(2026, 1, 1)
+                });
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.Created,
+            firstCreateResponse.StatusCode);
 
-        var subscriptions = await response.Content
-            .ReadFromJsonAsync<IReadOnlyCollection<SubscriptionResponse>>();
+        var secondCreateResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                new
+                {
+                    Name = "Microsoft 365",
+                    Amount = 299m,
+                    Currency = "PLN",
+                    BillingPeriod = BillingPeriod.Yearly,
+                    StartDate = new DateOnly(2026, 2, 1)
+                });
+
+        Assert.Equal(
+            HttpStatusCode.Created,
+            secondCreateResponse.StatusCode);
+
+        var response =
+            await client.GetAsync(
+                "/api/subscriptions");
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
+        var subscriptions =
+            await response.Content
+                .ReadFromJsonAsync<
+                    IReadOnlyCollection<SubscriptionResponse>>();
 
         Assert.NotNull(subscriptions);
-        Assert.Equal(2, subscriptions.Count);
+
+        Assert.Equal(
+            2,
+            subscriptions.Count);
 
         Assert.Contains(
             subscriptions,
-            x =>
-                x.Name == "Netflix" &&
-                x.Amount == 49m &&
-                x.Currency == "PLN" &&
-                x.BillingPeriod == "Monthly" &&
-                x.MonthlyEquivalentAmount == 49m &&
-                x.YearlyEquivalentAmount == 588m);
+            subscription =>
+                subscription.Name == "Netflix" &&
+                subscription.Amount == 49m &&
+                subscription.Currency == "PLN" &&
+                subscription.BillingPeriod == "Monthly" &&
+                subscription.MonthlyEquivalentAmount == 49m &&
+                subscription.YearlyEquivalentAmount == 588m);
 
         Assert.Contains(
             subscriptions,
-            x =>
-                x.Name == "Microsoft 365" &&
-                x.Amount == 299m &&
-                x.Currency == "PLN" &&
-                x.BillingPeriod == "Yearly" &&
-                x.MonthlyEquivalentAmount == 299m / 12m &&
-                x.YearlyEquivalentAmount == 299m);
+            subscription =>
+                subscription.Name == "Microsoft 365" &&
+                subscription.Amount == 299m &&
+                subscription.Currency == "PLN" &&
+                subscription.BillingPeriod == "Yearly" &&
+                subscription.MonthlyEquivalentAmount == 299m / 12m &&
+                subscription.YearlyEquivalentAmount == 299m);
     }
 
     private sealed record SubscriptionResponse(

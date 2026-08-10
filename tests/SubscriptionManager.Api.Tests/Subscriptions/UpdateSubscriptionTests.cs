@@ -11,13 +11,11 @@ public sealed class UpdateSubscriptionTests
         Guid.Parse("7e25bbaa-130d-4f3a-8829-67592f433c01");
 
     private readonly CustomWebApplicationFactory _factory;
-    private readonly HttpClient _client;
 
     public UpdateSubscriptionTests(
         CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -34,9 +32,10 @@ public sealed class UpdateSubscriptionTests
             BillingPeriod = BillingPeriod.Yearly
         };
 
-        var response = await client.PutAsJsonAsync(
-            $"/api/subscriptions/{Guid.NewGuid()}",
-            updateRequest);
+        var response =
+            await client.PutAsJsonAsync(
+                $"/api/subscriptions/{Guid.NewGuid()}",
+                updateRequest);
 
         Assert.Equal(
             HttpStatusCode.Unauthorized,
@@ -47,18 +46,18 @@ public sealed class UpdateSubscriptionTests
     public async Task PutAsync_ShouldReturnNotFound_WhenSubscriptionBelongsToAnotherUser()
     {
         var firstUserId =
-            Guid.Parse(
-                "22222222-2222-2222-2222-222222222222");
+            Guid.NewGuid();
 
         var secondUserId =
-            Guid.Parse(
-                "33333333-3333-3333-3333-333333333333");
+            Guid.NewGuid();
 
         using var firstUserClient =
-            _factory.CreateAuthenticatedClient(firstUserId);
+            _factory.CreateAuthenticatedClient(
+                firstUserId);
 
         using var secondUserClient =
-            _factory.CreateAuthenticatedClient(secondUserId);
+            _factory.CreateAuthenticatedClient(
+                secondUserId);
 
         var createResponse =
             await firstUserClient.PostAsJsonAsync(
@@ -77,7 +76,8 @@ public sealed class UpdateSubscriptionTests
             createResponse.StatusCode);
 
         var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
 
         Assert.NotEqual(
             Guid.Empty,
@@ -110,6 +110,13 @@ public sealed class UpdateSubscriptionTests
     [Fact]
     public async Task PutAsync_ShouldUpdateSubscription_WhenSubscriptionExists()
     {
+        var userId =
+            Guid.NewGuid();
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var createRequest = new
         {
             Name = "Netflix",
@@ -119,18 +126,22 @@ public sealed class UpdateSubscriptionTests
             StartDate = new DateOnly(2026, 1, 1)
         };
 
-        var createResponse = await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            createRequest);
+        var createResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                createRequest);
 
         Assert.Equal(
             HttpStatusCode.Created,
             createResponse.StatusCode);
 
         var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
 
-        Assert.NotEqual(Guid.Empty, subscriptionId);
+        Assert.NotEqual(
+            Guid.Empty,
+            subscriptionId);
 
         var updateRequest = new
         {
@@ -140,75 +151,121 @@ public sealed class UpdateSubscriptionTests
             BillingPeriod = BillingPeriod.Yearly
         };
 
-        var updateResponse = await _client.PutAsJsonAsync(
-            $"/api/subscriptions/{subscriptionId}",
-            updateRequest);
+        var updateResponse =
+            await client.PutAsJsonAsync(
+                $"/api/subscriptions/{subscriptionId}",
+                updateRequest);
 
         Assert.Equal(
             HttpStatusCode.NoContent,
             updateResponse.StatusCode);
 
-        var getResponse = await _client.GetAsync(
-            $"/api/subscriptions/{subscriptionId}");
+        var getResponse =
+            await client.GetAsync(
+                $"/api/subscriptions/{subscriptionId}");
 
-        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.OK,
+            getResponse.StatusCode);
 
-        var subscription = await getResponse.Content
-            .ReadFromJsonAsync<SubscriptionResponse>();
+        var subscription =
+            await getResponse.Content
+                .ReadFromJsonAsync<SubscriptionResponse>();
 
         Assert.NotNull(subscription);
-        Assert.Equal(subscriptionId, subscription.Id);
-        Assert.Equal("Spotify", subscription.Name);
-        Assert.Equal(59m, subscription.Amount);
-        Assert.Equal("EUR", subscription.Currency);
-        Assert.Equal("Yearly", subscription.BillingPeriod);
+
+        Assert.Equal(
+            subscriptionId,
+            subscription.Id);
+
+        Assert.Equal(
+            "Spotify",
+            subscription.Name);
+
+        Assert.Equal(
+            59m,
+            subscription.Amount);
+
+        Assert.Equal(
+            "EUR",
+            subscription.Currency);
+
+        Assert.Equal(
+            "Yearly",
+            subscription.BillingPeriod);
+
         Assert.Equal(
             new DateOnly(2026, 1, 1),
             subscription.StartDate);
-        Assert.Null(subscription.EndDate);
-        Assert.True(subscription.IsActive);
+
+        Assert.Null(
+            subscription.EndDate);
+
+        Assert.True(
+            subscription.IsActive);
     }
 
     [Fact]
     public async Task PutAsync_ShouldAssignDigitalService()
     {
-        var createResponse = await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            new
-            {
-                Name = "Manual subscription",
-                Amount = 49m,
-                Currency = "PLN",
-                BillingPeriod = BillingPeriod.Monthly,
-                StartDate = new DateOnly(2026, 1, 1)
-            });
+        var userId =
+            Guid.NewGuid();
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
+        var createResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                new
+                {
+                    Name = "Manual subscription",
+                    Amount = 49m,
+                    Currency = "PLN",
+                    BillingPeriod = BillingPeriod.Monthly,
+                    StartDate = new DateOnly(2026, 1, 1)
+                });
+
+        Assert.Equal(
+            HttpStatusCode.Created,
+            createResponse.StatusCode);
 
         var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
 
-        var updateResponse = await _client.PutAsJsonAsync(
-            $"/api/subscriptions/{subscriptionId}",
-            new
-            {
-                Name = "Personal Netflix",
-                Amount = 59m,
-                Currency = "PLN",
-                BillingPeriod = BillingPeriod.Monthly,
-                DigitalServiceId = NetflixId
-            });
+        Assert.NotEqual(
+            Guid.Empty,
+            subscriptionId);
+
+        var updateResponse =
+            await client.PutAsJsonAsync(
+                $"/api/subscriptions/{subscriptionId}",
+                new
+                {
+                    Name = "Personal Netflix",
+                    Amount = 59m,
+                    Currency = "PLN",
+                    BillingPeriod = BillingPeriod.Monthly,
+                    DigitalServiceId = NetflixId
+                });
 
         Assert.Equal(
             HttpStatusCode.NoContent,
             updateResponse.StatusCode);
 
-        var subscription = await _client
-            .GetFromJsonAsync<SubscriptionResponse>(
-                $"/api/subscriptions/{subscriptionId}");
+        var subscription =
+            await client
+                .GetFromJsonAsync<SubscriptionResponse>(
+                    $"/api/subscriptions/{subscriptionId}");
 
         Assert.NotNull(subscription);
+
         Assert.Equal(
             NetflixId,
             subscription.DigitalServiceId);
+
         Assert.Equal(
             "Personal Netflix",
             subscription.Name);
@@ -217,6 +274,13 @@ public sealed class UpdateSubscriptionTests
     [Fact]
     public async Task PutAsync_ShouldReturnNotFound_WhenSubscriptionDoesNotExist()
     {
+        var userId =
+            Guid.NewGuid();
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var updateRequest = new
         {
             Name = "Spotify",
@@ -225,13 +289,16 @@ public sealed class UpdateSubscriptionTests
             BillingPeriod = BillingPeriod.Yearly
         };
 
-        var subscriptionId = Guid.NewGuid();
+        var subscriptionId =
+            Guid.NewGuid();
+
         var requestPath =
             $"/api/subscriptions/{subscriptionId}";
 
-        var response = await _client.PutAsJsonAsync(
-            requestPath,
-            updateRequest);
+        var response =
+            await client.PutAsJsonAsync(
+                requestPath,
+                updateRequest);
 
         await ProblemDetailsAssertions.AssertAsync(
             response,

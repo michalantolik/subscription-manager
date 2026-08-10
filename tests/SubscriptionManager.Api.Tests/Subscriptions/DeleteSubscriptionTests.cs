@@ -8,13 +8,11 @@ public sealed class DeleteSubscriptionTests
     : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
-    private readonly HttpClient _client;
 
     public DeleteSubscriptionTests(
         CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -23,8 +21,9 @@ public sealed class DeleteSubscriptionTests
         using var client =
             _factory.CreateUnauthenticatedClient();
 
-        var response = await client.DeleteAsync(
-            $"/api/subscriptions/{Guid.NewGuid()}");
+        var response =
+            await client.DeleteAsync(
+                $"/api/subscriptions/{Guid.NewGuid()}");
 
         Assert.Equal(
             HttpStatusCode.Unauthorized,
@@ -35,18 +34,18 @@ public sealed class DeleteSubscriptionTests
     public async Task DeleteAsync_ShouldReturnNotFound_WhenSubscriptionBelongsToAnotherUser()
     {
         var firstUserId =
-            Guid.Parse(
-                "22222222-2222-2222-2222-222222222222");
+            Guid.NewGuid();
 
         var secondUserId =
-            Guid.Parse(
-                "33333333-3333-3333-3333-333333333333");
+            Guid.NewGuid();
 
         using var firstUserClient =
-            _factory.CreateAuthenticatedClient(firstUserId);
+            _factory.CreateAuthenticatedClient(
+                firstUserId);
 
         using var secondUserClient =
-            _factory.CreateAuthenticatedClient(secondUserId);
+            _factory.CreateAuthenticatedClient(
+                secondUserId);
 
         var createResponse =
             await firstUserClient.PostAsJsonAsync(
@@ -65,7 +64,8 @@ public sealed class DeleteSubscriptionTests
             createResponse.StatusCode);
 
         var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
 
         Assert.NotEqual(
             Guid.Empty,
@@ -97,6 +97,13 @@ public sealed class DeleteSubscriptionTests
     [Fact]
     public async Task DeleteAsync_ShouldDeleteSubscription_WhenSubscriptionExists()
     {
+        var userId =
+            Guid.NewGuid();
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
         var createRequest = new
         {
             Name = "Netflix",
@@ -106,31 +113,37 @@ public sealed class DeleteSubscriptionTests
             StartDate = new DateOnly(2026, 1, 1)
         };
 
-        var createResponse = await _client.PostAsJsonAsync(
-            "/api/subscriptions",
-            createRequest);
+        var createResponse =
+            await client.PostAsJsonAsync(
+                "/api/subscriptions",
+                createRequest);
 
         Assert.Equal(
             HttpStatusCode.Created,
             createResponse.StatusCode);
 
         var subscriptionId =
-            await createResponse.Content.ReadFromJsonAsync<Guid>();
+            await createResponse.Content
+                .ReadFromJsonAsync<Guid>();
 
-        Assert.NotEqual(Guid.Empty, subscriptionId);
+        Assert.NotEqual(
+            Guid.Empty,
+            subscriptionId);
 
-        var deleteResponse = await _client.DeleteAsync(
-            $"/api/subscriptions/{subscriptionId}");
+        var requestPath =
+            $"/api/subscriptions/{subscriptionId}";
+
+        var deleteResponse =
+            await client.DeleteAsync(
+                requestPath);
 
         Assert.Equal(
             HttpStatusCode.NoContent,
             deleteResponse.StatusCode);
 
-        var requestPath =
-            $"/api/subscriptions/{subscriptionId}";
-
-        var getResponse = await _client.GetAsync(
-            requestPath);
+        var getResponse =
+            await client.GetAsync(
+                requestPath);
 
         await ProblemDetailsAssertions.AssertAsync(
             getResponse,
@@ -143,13 +156,22 @@ public sealed class DeleteSubscriptionTests
     [Fact]
     public async Task DeleteAsync_ShouldReturnNotFound_WhenSubscriptionDoesNotExist()
     {
-        var subscriptionId = Guid.NewGuid();
+        var userId =
+            Guid.NewGuid();
+
+        using var client =
+            _factory.CreateAuthenticatedClient(
+                userId);
+
+        var subscriptionId =
+            Guid.NewGuid();
 
         var requestPath =
             $"/api/subscriptions/{subscriptionId}";
 
-        var response = await _client.DeleteAsync(
-            requestPath);
+        var response =
+            await client.DeleteAsync(
+                requestPath);
 
         await ProblemDetailsAssertions.AssertAsync(
             response,

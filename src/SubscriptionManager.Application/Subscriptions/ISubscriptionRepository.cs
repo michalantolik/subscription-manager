@@ -21,6 +21,10 @@ public interface ISubscriptionRepository
         Guid ownerId,
         CancellationToken cancellationToken = default);
 
+    Task<int> GetActiveCountAsync(
+        Guid ownerId,
+        CancellationToken cancellationToken = default);
+
     void Remove(
         Subscription subscription);
 

@@ -3,6 +3,7 @@ using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
+using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
 
@@ -21,11 +22,27 @@ public sealed class CreateSubscriptionHandlerTests
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
 
-        var currentUser = new Mock<ICurrentUser>();
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
 
         currentUser
             .SetupGet(x => x.UserId)
             .Returns(ownerId);
+
+        identityService
+            .Setup(x => x.GetSubscriptionPlanAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SubscriptionPlan.Free);
+
+        subscriptionRepository
+            .Setup(x => x.GetActiveCountAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         Subscription? addedSubscription = null;
 
@@ -41,6 +58,7 @@ public sealed class CreateSubscriptionHandlerTests
         var handler = new CreateSubscriptionHandler(
             subscriptionRepository.Object,
             digitalServiceRepository.Object,
+            identityService.Object,
             currentUser.Object);
 
         var result = await handler.HandleAsync(
@@ -117,11 +135,27 @@ public sealed class CreateSubscriptionHandlerTests
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
 
-        var currentUser = new Mock<ICurrentUser>();
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
 
         currentUser
             .SetupGet(x => x.UserId)
             .Returns(ownerId);
+
+        identityService
+            .Setup(x => x.GetSubscriptionPlanAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SubscriptionPlan.Free);
+
+        subscriptionRepository
+            .Setup(x => x.GetActiveCountAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         digitalServiceRepository
             .Setup(x => x.GetAvailableByIdAsync(
@@ -144,6 +178,7 @@ public sealed class CreateSubscriptionHandlerTests
         var handler = new CreateSubscriptionHandler(
             subscriptionRepository.Object,
             digitalServiceRepository.Object,
+            identityService.Object,
             currentUser.Object);
 
         var result = await handler.HandleAsync(
@@ -214,11 +249,27 @@ public sealed class CreateSubscriptionHandlerTests
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
 
-        var currentUser = new Mock<ICurrentUser>();
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
 
         currentUser
             .SetupGet(x => x.UserId)
             .Returns(ownerId);
+
+        identityService
+            .Setup(x => x.GetSubscriptionPlanAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SubscriptionPlan.Free);
+
+        subscriptionRepository
+            .Setup(x => x.GetActiveCountAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
 
         digitalServiceRepository
             .Setup(x => x.GetAvailableByIdAsync(
@@ -230,6 +281,7 @@ public sealed class CreateSubscriptionHandlerTests
         var handler = new CreateSubscriptionHandler(
             subscriptionRepository.Object,
             digitalServiceRepository.Object,
+            identityService.Object,
             currentUser.Object);
 
         var exception =
@@ -260,6 +312,141 @@ public sealed class CreateSubscriptionHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ShouldAllowFifthActiveSubscriptionForFreePlan()
+    {
+        var ownerId = Guid.NewGuid();
+
+        var subscriptionRepository =
+            new Mock<ISubscriptionRepository>();
+
+        var digitalServiceRepository =
+            new Mock<IDigitalServiceRepository>();
+
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
+
+        currentUser
+            .SetupGet(x => x.UserId)
+            .Returns(ownerId);
+
+        identityService
+            .Setup(x => x.GetSubscriptionPlanAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SubscriptionPlan.Free);
+
+        subscriptionRepository
+            .Setup(x => x.GetActiveCountAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                SubscriptionPlanLimits.FreeSubscriptionLimit - 1);
+
+        var handler = new CreateSubscriptionHandler(
+            subscriptionRepository.Object,
+            digitalServiceRepository.Object,
+            identityService.Object,
+            currentUser.Object);
+
+        var result = await handler.HandleAsync(
+            new CreateSubscriptionCommand(
+                "Netflix",
+                49m,
+                Currency.PLN,
+                BillingPeriod.Monthly,
+                new DateOnly(2026, 1, 1)));
+
+        Assert.NotEqual(Guid.Empty, result);
+
+        subscriptionRepository.Verify(
+            x => x.AddAsync(
+                It.IsAny<Subscription>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        subscriptionRepository.Verify(
+            x => x.SaveChangesAsync(
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldThrow_WhenFreePlanSubscriptionLimitIsReached()
+    {
+        var ownerId = Guid.NewGuid();
+
+        var subscriptionRepository =
+            new Mock<ISubscriptionRepository>();
+
+        var digitalServiceRepository =
+            new Mock<IDigitalServiceRepository>();
+
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
+
+        currentUser
+            .SetupGet(x => x.UserId)
+            .Returns(ownerId);
+
+        identityService
+            .Setup(x => x.GetSubscriptionPlanAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SubscriptionPlan.Free);
+
+        subscriptionRepository
+            .Setup(x => x.GetActiveCountAsync(
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                SubscriptionPlanLimits.FreeSubscriptionLimit);
+
+        var handler = new CreateSubscriptionHandler(
+            subscriptionRepository.Object,
+            digitalServiceRepository.Object,
+            identityService.Object,
+            currentUser.Object);
+
+        var exception =
+            await Assert.ThrowsAsync<SubscriptionLimitReachedException>(
+                () => handler.HandleAsync(
+                    new CreateSubscriptionCommand(
+                        "Netflix",
+                        49m,
+                        Currency.PLN,
+                        BillingPeriod.Monthly,
+                        new DateOnly(2026, 1, 1))));
+
+        Assert.Equal(
+            SubscriptionPlanLimits.FreeSubscriptionLimit,
+            exception.Limit);
+
+        digitalServiceRepository.Verify(
+            x => x.GetAvailableByIdAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        subscriptionRepository.Verify(
+            x => x.AddAsync(
+                It.IsAny<Subscription>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        subscriptionRepository.Verify(
+            x => x.SaveChangesAsync(
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_ShouldThrow_WhenCommandIsNull()
     {
         var subscriptionRepository =
@@ -268,11 +455,16 @@ public sealed class CreateSubscriptionHandlerTests
         var digitalServiceRepository =
             new Mock<IDigitalServiceRepository>();
 
-        var currentUser = new Mock<ICurrentUser>();
+        var identityService =
+            new Mock<IIdentityService>();
+
+        var currentUser =
+            new Mock<ICurrentUser>();
 
         var handler = new CreateSubscriptionHandler(
             subscriptionRepository.Object,
             digitalServiceRepository.Object,
+            identityService.Object,
             currentUser.Object);
 
         await Assert.ThrowsAsync<ArgumentNullException>(
