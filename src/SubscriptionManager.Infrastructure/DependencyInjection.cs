@@ -228,6 +228,11 @@ public static class DependencyInjection
                     options.MaximumIterationsPerRequest =
                         maximumIterations);
 
+        services.AddScoped<Lazy<IChatClient>>(
+            serviceProvider =>
+                new Lazy<IChatClient>(
+                    serviceProvider.GetRequiredService<IChatClient>));
+
         services.AddScoped<
             ISavingsPlanAgent,
             OpenAiSavingsPlanAgent>();

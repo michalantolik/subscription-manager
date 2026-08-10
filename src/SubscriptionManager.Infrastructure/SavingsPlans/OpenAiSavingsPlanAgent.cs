@@ -10,7 +10,7 @@ using SubscriptionManager.Application.SavingsPlans;
 namespace SubscriptionManager.Infrastructure.SavingsPlans;
 
 public sealed class OpenAiSavingsPlanAgent(
-    IChatClient chatClient,
+    Lazy<IChatClient> chatClient,
     IOptions<SavingsPlanAiOptions> options,
     ILogger<OpenAiSavingsPlanAgent> logger)
     : ISavingsPlanAgent
@@ -62,7 +62,7 @@ public sealed class OpenAiSavingsPlanAgent(
         try
         {
             var response =
-                await chatClient
+                await chatClient.Value
                     .GetResponseAsync<SavingsPlanAgentResult>(
                         BuildMessages(request),
                         chatOptions,

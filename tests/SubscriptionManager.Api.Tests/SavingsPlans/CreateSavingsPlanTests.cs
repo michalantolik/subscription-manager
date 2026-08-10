@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SubscriptionManager.Api.Tests.Authentication;
@@ -62,17 +63,36 @@ public sealed class CreateSavingsPlanTests
     [Fact]
     public async Task PostAsync_ShouldReturnForbidden_WhenPaidPlanIsRequired()
     {
+        await using var factory =
+            _factory.WithWebHostBuilder(
+                builder =>
+                {
+                    builder.ConfigureAppConfiguration(
+                        (_, configuration) =>
+                        {
+                            configuration.AddInMemoryCollection(
+                                new Dictionary<string, string?>
+                                {
+                                    ["SavingsPlanAi:ApiKey"] =
+                                        string.Empty
+                                });
+                        });
+                });
+
         var userId =
             Guid.NewGuid();
 
         await SeedAsync(
-            _factory.Services,
+            factory.Services,
             userId,
             SubscriptionPlan.Free);
 
         using var client =
-            _factory.CreateAuthenticatedClient(
-                userId);
+            factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            TestAuthenticationHandler.UserIdHeaderName,
+            userId.ToString());
 
         var response =
             await client.PostAsJsonAsync(
