@@ -1,9 +1,16 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SubscriptionManager.Application.Billing;
+using SubscriptionManager.Application.Billing.CancelSubscription;
+using SubscriptionManager.Application.Billing.ChangeSubscription;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
 using SubscriptionManager.Application.Billing.GetBillingOverview;
+using SubscriptionManager.Application.Billing.GetPaymentPlans;
+using SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 using SubscriptionManager.Application.Billing.ProcessWebhook;
+using SubscriptionManager.Application.Billing.ResumeSubscription;
+using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Api.Controllers;
 
@@ -12,7 +19,12 @@ namespace SubscriptionManager.Api.Controllers;
 [Authorize]
 public sealed class BillingController(
     GetBillingOverviewHandler getBillingOverviewHandler,
+    GetPaymentPlansHandler getPaymentPlansHandler,
     CreateCheckoutSessionHandler createCheckoutSessionHandler,
+    PreviewSubscriptionChangeHandler previewSubscriptionChangeHandler,
+    ChangeSubscriptionHandler changeSubscriptionHandler,
+    CancelSubscriptionHandler cancelSubscriptionHandler,
+    ResumeSubscriptionHandler resumeSubscriptionHandler,
     ProcessPaymentWebhookHandler processPaymentWebhookHandler)
     : ControllerBase
 {
@@ -20,8 +32,9 @@ public sealed class BillingController(
         "Stripe-Signature";
 
     [HttpGet]
-    public async Task<ActionResult<BillingOverviewDto>> GetBillingOverviewAsync(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<BillingOverviewDto>>
+        GetBillingOverviewAsync(
+            CancellationToken cancellationToken)
     {
         var billingOverview =
             await getBillingOverviewHandler.HandleAsync(
@@ -31,10 +44,25 @@ public sealed class BillingController(
             billingOverview);
     }
 
+    [AllowAnonymous]
+    [HttpGet("plans")]
+    public async Task<ActionResult<IReadOnlyList<PaymentPlanPrice>>>
+        GetPaymentPlansAsync(
+            CancellationToken cancellationToken)
+    {
+        var plans =
+            await getPaymentPlansHandler.HandleAsync(
+                cancellationToken);
+
+        return Ok(
+            plans);
+    }
+
     [HttpPost("checkout")]
-    public async Task<ActionResult<CreateCheckoutSessionResponse>> CreateCheckoutSessionAsync(
-        CreateCheckoutSessionRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<CreateCheckoutSessionResponse>>
+        CreateCheckoutSessionAsync(
+            CreateCheckoutSessionRequest request,
+            CancellationToken cancellationToken)
     {
         var checkoutUrl =
             await createCheckoutSessionHandler.HandleAsync(
@@ -53,6 +81,59 @@ public sealed class BillingController(
         return Ok(
             new CreateCheckoutSessionResponse(
                 checkoutUrl.ToString()));
+    }
+
+    [HttpPost("subscription/change-preview")]
+    public async Task<ActionResult<SubscriptionChangePreviewDto>>
+        PreviewSubscriptionChangeAsync(
+            PreviewSubscriptionChangeRequest request,
+            CancellationToken cancellationToken)
+    {
+        var preview =
+            await previewSubscriptionChangeHandler.HandleAsync(
+                new PreviewSubscriptionChangeCommand(
+                    request.Plan,
+                    request.BillingInterval),
+                cancellationToken);
+
+        return Ok(
+            preview);
+    }
+
+    [HttpPost("subscription/change")]
+    public async Task<IActionResult> ChangeSubscriptionAsync(
+        ChangeSubscriptionRequest request,
+        CancellationToken cancellationToken)
+    {
+        await changeSubscriptionHandler.HandleAsync(
+            new ChangeSubscriptionCommand(
+                request.Plan,
+                request.BillingInterval),
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("subscription/cancel")]
+    public async Task<IActionResult> CancelSubscriptionAsync(
+        CancellationToken cancellationToken)
+    {
+        await cancelSubscriptionHandler.HandleAsync(
+            new CancelSubscriptionCommand(),
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("subscription/resume")]
+    public async Task<IActionResult> ResumeSubscriptionAsync(
+        CancellationToken cancellationToken)
+    {
+        await resumeSubscriptionHandler.HandleAsync(
+            new ResumeSubscriptionCommand(),
+            cancellationToken);
+
+        return NoContent();
     }
 
     [AllowAnonymous]
@@ -85,10 +166,18 @@ public sealed class BillingController(
 }
 
 public sealed record CreateCheckoutSessionRequest(
-    SubscriptionManager.Domain.Billing.SubscriptionPlan Plan,
-    SubscriptionManager.Domain.Billing.BillingInterval BillingInterval,
+    SubscriptionPlan Plan,
+    BillingInterval BillingInterval,
     string SuccessUrl,
     string CancelUrl);
 
 public sealed record CreateCheckoutSessionResponse(
     string CheckoutUrl);
+
+public sealed record PreviewSubscriptionChangeRequest(
+    SubscriptionPlan Plan,
+    BillingInterval BillingInterval);
+
+public sealed record ChangeSubscriptionRequest(
+    SubscriptionPlan Plan,
+    BillingInterval BillingInterval);

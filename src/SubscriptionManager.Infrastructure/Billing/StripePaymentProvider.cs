@@ -6,13 +6,26 @@ using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Infrastructure.Billing;
 
-public sealed class StripePaymentProvider(
-    IOptions<StripeOptions> options)
+public sealed class StripePaymentProvider
     : IPaymentProvider
 {
-    private const string UserIdMetadataKey = "userId";
+    private const string UserIdMetadataKey =
+        "userId";
 
-    private readonly StripeOptions _options = options.Value;
+    private readonly StripeOptions _options;
+
+    private readonly StripePriceCatalog
+        _priceCatalog;
+
+    public StripePaymentProvider(
+        IOptions<StripeOptions> options)
+    {
+        _options = options.Value;
+
+        _priceCatalog =
+            new StripePriceCatalog(
+                options);
+    }
 
     public async Task<Uri> CreateCheckoutSessionAsync(
         Guid userId,
@@ -24,7 +37,7 @@ public sealed class StripePaymentProvider(
         CancellationToken cancellationToken = default)
     {
         var priceId =
-            GetPriceId(
+            _priceCatalog.GetPriceId(
                 plan,
                 billingInterval);
 
@@ -63,34 +76,10 @@ public sealed class StripePaymentProvider(
         var session =
             await client.V1.Checkout.Sessions.CreateAsync(
                 sessionOptions,
-                cancellationToken: cancellationToken);
+                cancellationToken:
+                    cancellationToken);
 
         return new Uri(
             session.Url);
-    }
-
-    private string GetPriceId(
-        SubscriptionPlan plan,
-        BillingInterval billingInterval)
-    {
-        return (plan, billingInterval) switch
-        {
-            (SubscriptionPlan.Plus, BillingInterval.Monthly) =>
-                _options.PlusMonthlyPriceId,
-
-            (SubscriptionPlan.Plus, BillingInterval.Yearly) =>
-                _options.PlusYearlyPriceId,
-
-            (SubscriptionPlan.Premium, BillingInterval.Monthly) =>
-                _options.PremiumMonthlyPriceId,
-
-            (SubscriptionPlan.Premium, BillingInterval.Yearly) =>
-                _options.PremiumYearlyPriceId,
-
-            _ =>
-                throw new ArgumentOutOfRangeException(
-                    nameof(plan),
-                    "The selected subscription plan and billing interval are not supported.")
-        };
     }
 }

@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using SubscriptionManager.Application.Billing.CancelSubscription;
+using SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 using SubscriptionManager.Application.Billing.ProcessWebhook;
+using SubscriptionManager.Application.Billing.ResumeSubscription;
 using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.SavingsPlans;
 
@@ -26,6 +29,33 @@ internal sealed class ApiExceptionHandler(
                     "The payment webhook could not be verified or processed.",
                 Instance = httpContext.Request.Path
             },
+
+            BillingSubscriptionChangeUnavailableException =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Subscription change is unavailable.",
+                    Detail = exception.Message,
+                    Instance = httpContext.Request.Path
+                },
+
+            BillingSubscriptionCancellationUnavailableException =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Subscription cancellation is unavailable.",
+                    Detail = exception.Message,
+                    Instance = httpContext.Request.Path
+                },
+
+            BillingSubscriptionResumeUnavailableException =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Subscription renewal cannot be resumed.",
+                    Detail = exception.Message,
+                    Instance = httpContext.Request.Path
+                },
 
             ExchangeRatesUnavailableException => new ProblemDetails
             {

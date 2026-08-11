@@ -1,4 +1,5 @@
 @using SubscriptionManager.Blazor.Features.Account
+@using SubscriptionManager.Blazor.Features.Billing
 @using SubscriptionManager.Blazor.Features.Currencies
 @using SubscriptionManager.Blazor.Features.Localization
 
@@ -60,6 +61,17 @@
                             <span>
                                 <strong>@T["Account.Preferences.Title"]</strong>
                                 <small>@T["Account.Settings.PreferencesNavigationHint"]</small>
+                            </span>
+                        </button>
+
+                        <button class="account-settings-navigation-item @GetNavigationItemClass(AccountSettingsSection.Billing)"
+                                type="button"
+                                aria-current="@GetAriaCurrent(AccountSettingsSection.Billing)"
+                                @onclick="() => SelectSection(AccountSettingsSection.Billing)">
+                            <AppIcon Name="subscriptions" />
+                            <span>
+                                <strong>@T["Account.Settings.BillingSection"]</strong>
+                                <small>@T["Account.Settings.BillingNavigationHint"]</small>
                             </span>
                         </button>
 
@@ -149,6 +161,24 @@
                                         @_preferencesError
                                     </div>
                                 }
+                            </section>
+                        }
+                        else if (_activeSection == AccountSettingsSection.Billing)
+                        {
+                            <section class="account-settings-section"
+                                     aria-labelledby="account-billing-title">
+                                <div class="account-section-heading">
+                                    <h3 id="account-billing-title">
+                                        @T["Account.Settings.BillingSection"]
+                                    </h3>
+
+                                    <p>
+                                        @T["Account.Settings.BillingSectionDescription"]
+                                    </p>
+                                </div>
+
+                                <BillingSettingsPanel User="User"
+                                                      OnPlanChanged="HandleBillingPlanChanged" />
                             </section>
                         }
                         else

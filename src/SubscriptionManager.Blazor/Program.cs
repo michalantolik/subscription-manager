@@ -5,6 +5,7 @@ using SubscriptionManager.Blazor.Components;
 using SubscriptionManager.Blazor.Configuration;
 using SubscriptionManager.Blazor.Features.Account;
 using SubscriptionManager.Blazor.Features.Authentication;
+using SubscriptionManager.Blazor.Features.Billing;
 using SubscriptionManager.Blazor.Features.DigitalServices;
 using SubscriptionManager.Blazor.Features.SavingsPlans;
 using SubscriptionManager.Blazor.Features.Subscriptions;
@@ -140,6 +141,9 @@ builder.Services.AddHttpClient<AccountApiClient>(
     ConfigureApiClient);
 
 builder.Services.AddHttpClient<AuthenticationApiClient>(
+    ConfigureApiClient);
+
+builder.Services.AddHttpClient<BillingApiClient>(
     ConfigureApiClient);
 
 builder.Services.AddHttpClient<DigitalServicesApiClient>(

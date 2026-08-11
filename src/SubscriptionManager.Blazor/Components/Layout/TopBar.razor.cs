@@ -1,8 +1,10 @@
-using Microsoft.JSInterop;
-using SubscriptionManager.Blazor.Features.Authentication;
-using SubscriptionManager.Blazor.Services;
 using System.Globalization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
+using SubscriptionManager.Blazor.Features.Billing;
+using SubscriptionManager.Blazor.Services;
 
 namespace SubscriptionManager.Blazor.Components.Layout;
 
@@ -18,19 +20,71 @@ public partial class TopBar
     private bool _accountMenuOpen;
     private bool _accountSettingsOpen;
 
+    private string? _subscriptionPlan;
+
+    [Inject]
+    private BillingApiClient BillingApiClient { get; set; } =
+        default!;
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider
+    {
+        get;
+        set;
+    } = default!;
+
     private string CurrentLanguage =>
-        CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        CultureInfo.CurrentUICulture
+            .TwoLetterISOLanguageName;
 
     private string AccountMenuChevronClass =>
         _accountMenuOpen
             ? "account-menu-chevron open"
             : "account-menu-chevron";
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        var user =
+            authenticationState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var billingOverview =
+                await BillingApiClient.GetOverviewAsync(
+                    user);
+
+            _subscriptionPlan =
+                billingOverview.Plan.ToString();
+        }
+        catch (HttpRequestException)
+        {
+            _subscriptionPlan = null;
+        }
+        catch (InvalidOperationException)
+        {
+            _subscriptionPlan = null;
+        }
+    }
+
     private void ToggleAccountMenu()
-        => _accountMenuOpen = !_accountMenuOpen;
+    {
+        _accountMenuOpen =
+            !_accountMenuOpen;
+    }
 
     private void CloseAccountMenu()
-        => _accountMenuOpen = false;
+    {
+        _accountMenuOpen = false;
+    }
 
     private void OpenAccountSettings()
     {
@@ -39,7 +93,16 @@ public partial class TopBar
     }
 
     private void CloseAccountSettings()
-        => _accountSettingsOpen = false;
+    {
+        _accountSettingsOpen = false;
+    }
+
+    private void HandleBillingPlanChanged(
+        BillingPlan plan)
+    {
+        _subscriptionPlan =
+            plan.ToString();
+    }
 
     private async Task ToggleThemeAsync()
     {
@@ -66,7 +129,8 @@ public partial class TopBar
                 Navigation.Uri);
 
         var redirectUri =
-            string.IsNullOrWhiteSpace(currentPath)
+            string.IsNullOrWhiteSpace(
+                currentPath)
                 ? "/"
                 : $"/{currentPath}";
 
@@ -79,23 +143,32 @@ public partial class TopBar
 
     private static string DisplayName(
         ClaimsPrincipal user)
-        => user.FindFirst(ClaimTypes.Email)?.Value ??
-           user.Identity?.Name ??
-           "User";
+    {
+        return user.FindFirst(
+                   ClaimTypes.Email)?.Value ??
+               user.Identity?.Name ??
+               "User";
+    }
 
-    private static string? SubscriptionPlan(
+    private string? SubscriptionPlan(
         ClaimsPrincipal user)
-        => user.FindFirst(
-            AuthenticationClaimTypes.SubscriptionPlan)?.Value;
+    {
+        _ = user;
+
+        return _subscriptionPlan;
+    }
 
     private static string Initial(
         ClaimsPrincipal user)
     {
-        var displayName = DisplayName(user);
+        var displayName =
+            DisplayName(
+                user);
 
         return displayName.Length == 0
             ? "U"
             : char.ToUpperInvariant(
-                displayName[0]).ToString();
+                    displayName[0])
+                .ToString();
     }
 }

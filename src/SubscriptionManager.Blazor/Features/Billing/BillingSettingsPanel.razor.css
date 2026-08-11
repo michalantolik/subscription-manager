@@ -1,0 +1,511 @@
+﻿.billing-settings-loading {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.billing-settings-spinner {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    border: 2px solid var(--border);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: billing-spin 0.75s linear infinite;
+}
+
+.billing-current-plan,
+.billing-plan-selection,
+.billing-change-confirmation,
+.billing-cancellation-confirmation {
+    display: grid;
+    gap: 20px;
+}
+
+.billing-current-plan-heading,
+.billing-section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+    .billing-current-plan-heading > div,
+    .billing-section-heading > div {
+        min-width: 0;
+    }
+
+    .billing-current-plan-heading h4,
+    .billing-section-heading h4,
+    .billing-change-confirmation h4,
+    .billing-cancellation-confirmation h4 {
+        margin: 10px 0 6px;
+        color: var(--text);
+        font-size: 20px;
+        line-height: 1.25;
+        letter-spacing: -0.25px;
+    }
+
+    .billing-current-plan-heading p,
+    .billing-section-heading p,
+    .billing-change-confirmation > p,
+    .billing-cancellation-confirmation > p {
+        max-width: 620px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+.billing-plan-mark,
+.billing-cancellation-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    color: var(--brand);
+    background: var(--brand-soft);
+    border: 1px solid color-mix( in srgb, var(--brand) 24%, var(--border));
+    border-radius: 15px;
+}
+
+    .billing-plan-mark ::deep .app-icon,
+    .billing-cancellation-icon ::deep .app-icon {
+        width: 22px;
+        height: 22px;
+    }
+
+.billing-details {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    overflow: hidden;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-lg);
+}
+
+    .billing-details > div {
+        min-width: 0;
+        padding: 16px;
+    }
+
+        .billing-details > div + div {
+            border-left: 1px solid var(--border);
+        }
+
+    .billing-details dt {
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 750;
+        line-height: 1.35;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .billing-details dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+.billing-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 2px 9px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.billing-status-active {
+    color: var(--brand-strong);
+    background: var(--brand-soft);
+    border-color: color-mix( in srgb, var(--brand) 26%, var(--border));
+}
+
+.billing-status-warning {
+    color: var(--orange);
+    background: color-mix( in srgb, var(--orange) 10%, var(--surface));
+    border-color: color-mix( in srgb, var(--orange) 28%, var(--border));
+}
+
+.billing-status-error {
+    color: var(--red);
+    background: var(--red-soft);
+    border-color: color-mix( in srgb, var(--red) 25%, var(--border));
+}
+
+.billing-status-neutral {
+    color: var(--muted);
+    background: var(--surface-soft);
+}
+
+.billing-free-plan-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 14px 16px;
+    color: var(--muted);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-md);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+    .billing-free-plan-note strong {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--text);
+    }
+
+    .billing-free-plan-note ::deep .app-icon {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        margin-top: 1px;
+        color: var(--brand);
+    }
+
+.ui-alert-warning {
+    color: var(--orange);
+    background: color-mix( in srgb, var(--orange) 9%, var(--surface));
+    border-color: color-mix( in srgb, var(--orange) 26%, var(--border));
+}
+
+.ui-alert {
+    display: grid;
+    gap: 3px;
+}
+
+    .ui-alert strong {
+        color: inherit;
+    }
+
+.billing-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.text-button {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius-md);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: color var(--ui-transition-fast), background var(--ui-transition-fast), border-color var(--ui-transition-fast);
+}
+
+    .text-button:hover:not(:disabled) {
+        color: var(--text);
+        background: var(--surface-hover);
+        border-color: var(--border);
+    }
+
+    .text-button:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
+    }
+
+    .text-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+    }
+
+.billing-cancel-button {
+    color: var(--red);
+}
+
+    .billing-cancel-button:hover:not(:disabled) {
+        color: var(--red);
+        background: color-mix( in srgb, var(--red) 8%, var(--surface));
+        border-color: color-mix( in srgb, var(--red) 22%, var(--border));
+    }
+
+.billing-interval-selector {
+    width: fit-content;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    padding: 4px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.billing-interval-option {
+    min-width: 120px;
+    min-height: 38px;
+    padding: 0 16px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: color var(--ui-transition-fast), background var(--ui-transition-fast), border-color var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+}
+
+    .billing-interval-option:hover:not(:disabled) {
+        color: var(--text);
+        background: var(--surface-hover);
+    }
+
+    .billing-interval-option:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
+    }
+
+    .billing-interval-option:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+    }
+
+.billing-interval-option-selected {
+    color: var(--brand-strong);
+    background: var(--surface);
+    border-color: color-mix( in srgb, var(--brand) 25%, var(--border));
+    box-shadow: 0 4px 12px color-mix( in srgb, var(--text) 7%, transparent);
+}
+
+.billing-plan-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 14px;
+}
+
+.billing-plan-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    padding: 18px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-lg);
+    box-shadow: 0 8px 24px color-mix( in srgb, var(--text) 5%, transparent);
+    transition: transform var(--ui-transition-fast), border-color var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+}
+
+    .billing-plan-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--border-strong);
+        box-shadow: 0 12px 30px color-mix( in srgb, var(--text) 8%, transparent);
+    }
+
+.billing-plan-card-current {
+    border-color: color-mix( in srgb, var(--brand) 38%, var(--border));
+    background: color-mix( in srgb, var(--brand) 4%, var(--surface));
+}
+
+.billing-plan-card-featured {
+    position: relative;
+    border-color: color-mix( in srgb, var(--brand) 45%, var(--border));
+}
+
+.billing-plan-card-heading {
+    min-height: 105px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+    .billing-plan-card-heading > div {
+        min-width: 0;
+    }
+
+.billing-plan-card h5 {
+    margin: 0 0 7px;
+    color: var(--text);
+    font-size: 18px;
+    line-height: 1.25;
+}
+
+.billing-plan-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.billing-plan-recommended {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--brand);
+    font-size: 10px;
+    font-weight: 850;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.billing-plan-price {
+    min-height: 53px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+    .billing-plan-price strong {
+        color: var(--text);
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: -0.35px;
+    }
+
+    .billing-plan-price span {
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+.billing-plan-features {
+    flex: 1 1 auto;
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+    .billing-plan-features li {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .billing-plan-features ::deep .app-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        margin-top: 1px;
+        color: var(--brand);
+    }
+
+.billing-plan-card > button {
+    width: 100%;
+    margin-top: auto;
+}
+
+.billing-cancellation-confirmation {
+    justify-items: start;
+}
+
+    .billing-cancellation-confirmation
+    .billing-cancellation-icon {
+        margin-bottom: -4px;
+    }
+
+.billing-change-confirmation
+.billing-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@keyframes billing-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 900px) {
+    .billing-plan-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .billing-plan-card-featured {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .billing-current-plan-heading,
+    .billing-section-heading {
+        align-items: flex-start;
+    }
+
+    .billing-details,
+    .billing-change-confirmation
+    .billing-details {
+        grid-template-columns: 1fr;
+    }
+
+        .billing-details > div + div {
+            border-top: 1px solid var(--border);
+            border-left: 0;
+        }
+
+    .billing-plan-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .billing-plan-card-featured {
+        grid-column: auto;
+    }
+
+    .billing-plan-card-heading {
+        min-height: 0;
+    }
+
+    .billing-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+        .billing-actions > button {
+            width: 100%;
+        }
+
+    .billing-interval-selector {
+        width: 100%;
+    }
+
+    .billing-interval-option {
+        min-width: 0;
+        padding-inline: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .billing-settings-spinner {
+        animation-duration: 1.5s;
+    }
+
+    .billing-plan-card {
+        transition: none;
+    }
+
+        .billing-plan-card:hover {
+            transform: none;
+        }
+}

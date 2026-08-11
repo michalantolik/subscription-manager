@@ -1,0 +1,3 @@
+﻿namespace SubscriptionManager.Application.Billing.CancelSubscription;
+
+public sealed record CancelSubscriptionCommand;

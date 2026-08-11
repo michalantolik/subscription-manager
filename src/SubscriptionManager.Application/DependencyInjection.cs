@@ -1,9 +1,14 @@
 using Microsoft.Extensions.DependencyInjection;
 using SubscriptionManager.Application.Account.GetAccountPreferences;
 using SubscriptionManager.Application.Account.UpdateAccountPreferences;
+using SubscriptionManager.Application.Billing.CancelSubscription;
+using SubscriptionManager.Application.Billing.ChangeSubscription;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
 using SubscriptionManager.Application.Billing.GetBillingOverview;
+using SubscriptionManager.Application.Billing.GetPaymentPlans;
+using SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 using SubscriptionManager.Application.Billing.ProcessWebhook;
+using SubscriptionManager.Application.Billing.ResumeSubscription;
 using SubscriptionManager.Application.DigitalServices.CreateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeactivateDigitalService;
 using SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
@@ -39,6 +44,11 @@ public static class DependencyInjection
 
         services.AddScoped<CreateCheckoutSessionHandler>();
         services.AddScoped<GetBillingOverviewHandler>();
+        services.AddScoped<GetPaymentPlansHandler>();
+        services.AddScoped<PreviewSubscriptionChangeHandler>();
+        services.AddScoped<ChangeSubscriptionHandler>();
+        services.AddScoped<CancelSubscriptionHandler>();
+        services.AddScoped<ResumeSubscriptionHandler>();
         services.AddScoped<ProcessPaymentWebhookHandler>();
 
         services.AddScoped<CreateDigitalServiceHandler>();

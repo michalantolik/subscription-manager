@@ -124,13 +124,10 @@ public sealed class IdentityService(
             return SubscriptionPlan.Free;
         }
 
-        if (billingSubscription.CurrentPeriodEnd
-            <= DateTimeOffset.UtcNow)
-        {
-            return SubscriptionPlan.Free;
-        }
-
-        return billingSubscription.Plan;
+        return billingSubscription.GrantsPaidAccessAt(
+            DateTimeOffset.UtcNow)
+                ? billingSubscription.Plan
+                : SubscriptionPlan.Free;
     }
 
     public async Task<bool> UpdateAccountPreferencesAsync(
@@ -344,6 +341,25 @@ public sealed class IdentityService(
                 new IdentityServiceError(
                     "UserNotFound",
                     "The user was not found.")
+            ]);
+        }
+
+        var billingSubscription =
+            await dbContext.BillingSubscriptions
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    subscription =>
+                        subscription.UserId == userId,
+                    cancellationToken);
+
+        if (billingSubscription?.PreventsAccountDeletion()
+            == true)
+        {
+            return DeleteUserResult.Failure(
+            [
+                new IdentityServiceError(
+                    "BillingSubscriptionActive",
+                    "The billing subscription must end before the account can be deleted.")
             ]);
         }
 

@@ -332,6 +332,226 @@ public sealed class BillingSubscriptionTests
             subscription.ScheduleCancellation);
     }
 
+    [Fact]
+    public void GrantsPaidAccessAt_ShouldReturnTrueForActiveSubscriptionDuringPeriod()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var date =
+            subscription.CurrentPeriodStart.AddDays(1);
+
+        var result =
+            subscription.GrantsPaidAccessAt(
+                date);
+
+        Assert.True(
+            result);
+    }
+
+    [Fact]
+    public void GrantsPaidAccessAt_ShouldReturnTrueForTrialingSubscriptionDuringPeriod()
+    {
+        var subscription =
+            CreateSubscription();
+
+        subscription.Synchronize(
+            SubscriptionPlan.Plus,
+            BillingInterval.Monthly,
+            BillingSubscriptionStatus.Trialing,
+            "price_plus_monthly",
+            subscription.CurrentPeriodStart,
+            subscription.CurrentPeriodEnd,
+            false);
+
+        var date =
+            subscription.CurrentPeriodStart.AddDays(1);
+
+        var result =
+            subscription.GrantsPaidAccessAt(
+                date);
+
+        Assert.True(
+            result);
+    }
+
+    [Theory]
+    [InlineData(BillingSubscriptionStatus.Incomplete)]
+    [InlineData(BillingSubscriptionStatus.IncompleteExpired)]
+    [InlineData(BillingSubscriptionStatus.PastDue)]
+    [InlineData(BillingSubscriptionStatus.Canceled)]
+    [InlineData(BillingSubscriptionStatus.Unpaid)]
+    [InlineData(BillingSubscriptionStatus.Paused)]
+    public void GrantsPaidAccessAt_ShouldReturnFalseForStatusWithoutAccess(
+        BillingSubscriptionStatus status)
+    {
+        var subscription =
+            CreateSubscription();
+
+        subscription.Synchronize(
+            SubscriptionPlan.Plus,
+            BillingInterval.Monthly,
+            status,
+            "price_plus_monthly",
+            subscription.CurrentPeriodStart,
+            subscription.CurrentPeriodEnd,
+            false);
+
+        var date =
+            subscription.CurrentPeriodStart.AddDays(1);
+
+        var result =
+            subscription.GrantsPaidAccessAt(
+                date);
+
+        Assert.False(
+            result);
+    }
+
+    [Fact]
+    public void GrantsPaidAccessAt_ShouldReturnFalseBeforePeriodStart()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var result =
+            subscription.GrantsPaidAccessAt(
+                subscription.CurrentPeriodStart.AddTicks(-1));
+
+        Assert.False(
+            result);
+    }
+
+    [Fact]
+    public void GrantsPaidAccessAt_ShouldReturnFalseAtPeriodEnd()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var result =
+            subscription.GrantsPaidAccessAt(
+                subscription.CurrentPeriodEnd);
+
+        Assert.False(
+            result);
+    }
+
+    [Fact]
+    public void GrantsPaidAccessAt_WhenCancellationIsScheduled_ShouldReturnTrueUntilPeriodEnd()
+    {
+        var subscription =
+            CreateSubscription();
+
+        subscription.ScheduleCancellation();
+
+        var date =
+            subscription.CurrentPeriodEnd.AddTicks(-1);
+
+        var result =
+            subscription.GrantsPaidAccessAt(
+                date);
+
+        Assert.True(
+            result);
+    }
+
+    [Fact]
+    public void GrantsPaidAccessAt_WithMissingDate_ShouldThrow()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var exception =
+            Assert.Throws<ArgumentException>(() =>
+                subscription.GrantsPaidAccessAt(
+                    default));
+
+        Assert.Equal(
+            "date",
+            exception.ParamName);
+    }
+
+    [Fact]
+    public void PreventsAccountDeletion_WithoutProviderSubscription_ShouldReturnFalse()
+    {
+        var subscription =
+            CreateSubscription();
+
+        var result =
+            subscription.PreventsAccountDeletion();
+
+        Assert.False(
+            result);
+    }
+
+    [Theory]
+    [InlineData(BillingSubscriptionStatus.Active)]
+    [InlineData(BillingSubscriptionStatus.Trialing)]
+    [InlineData(BillingSubscriptionStatus.PastDue)]
+    [InlineData(BillingSubscriptionStatus.Unpaid)]
+    [InlineData(BillingSubscriptionStatus.Paused)]
+    public void PreventsAccountDeletion_WithExistingProviderSubscription_ShouldReturnTrue(
+        BillingSubscriptionStatus status)
+    {
+        var subscription =
+            CreateLinkedSubscription();
+
+        subscription.Synchronize(
+            SubscriptionPlan.Plus,
+            BillingInterval.Monthly,
+            status,
+            "price_plus_monthly",
+            subscription.CurrentPeriodStart,
+            subscription.CurrentPeriodEnd,
+            false);
+
+        var result =
+            subscription.PreventsAccountDeletion();
+
+        Assert.True(
+            result);
+    }
+
+    [Fact]
+    public void PreventsAccountDeletion_WhenCancellationIsScheduled_ShouldReturnTrue()
+    {
+        var subscription =
+            CreateLinkedSubscription();
+
+        subscription.ScheduleCancellation();
+
+        var result =
+            subscription.PreventsAccountDeletion();
+
+        Assert.True(
+            result);
+    }
+
+    [Theory]
+    [InlineData(BillingSubscriptionStatus.Canceled)]
+    [InlineData(BillingSubscriptionStatus.IncompleteExpired)]
+    public void PreventsAccountDeletion_WhenProviderSubscriptionHasEnded_ShouldReturnFalse(
+        BillingSubscriptionStatus status)
+    {
+        var subscription =
+            CreateLinkedSubscription();
+
+        subscription.Synchronize(
+            SubscriptionPlan.Plus,
+            BillingInterval.Monthly,
+            status,
+            "price_plus_monthly",
+            subscription.CurrentPeriodStart,
+            subscription.CurrentPeriodEnd,
+            true);
+
+        var result =
+            subscription.PreventsAccountDeletion();
+
+        Assert.False(
+            result);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -455,5 +675,18 @@ public sealed class BillingSubscriptionTests
             BillingInterval.Monthly,
             periodStart,
             periodStart.AddMonths(1));
+    }
+
+    private static BillingSubscription CreateLinkedSubscription()
+    {
+        var subscription =
+            CreateSubscription();
+
+        subscription.LinkToPaymentProvider(
+            "cus_123",
+            "sub_123",
+            "price_plus_monthly");
+
+        return subscription;
     }
 }

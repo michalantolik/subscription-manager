@@ -175,6 +175,36 @@ public sealed class BillingSubscription
         CancelAtPeriodEnd = true;
     }
 
+    public bool GrantsPaidAccessAt(
+        DateTimeOffset date)
+    {
+        if (date == default)
+        {
+            throw new ArgumentException(
+                "Access check date is required.",
+                nameof(date));
+        }
+
+        return Status is
+                   BillingSubscriptionStatus.Active or
+                   BillingSubscriptionStatus.Trialing &&
+               CurrentPeriodStart <= date &&
+               date < CurrentPeriodEnd;
+    }
+
+    public bool PreventsAccountDeletion()
+    {
+        if (string.IsNullOrWhiteSpace(
+                ProviderSubscriptionId))
+        {
+            return false;
+        }
+
+        return Status is not
+            BillingSubscriptionStatus.Canceled and not
+            BillingSubscriptionStatus.IncompleteExpired;
+    }
+
     private void ApplySynchronization(
         SubscriptionPlan plan,
         BillingInterval billingInterval,

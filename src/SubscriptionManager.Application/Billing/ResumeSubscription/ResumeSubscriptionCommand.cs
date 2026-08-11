@@ -1,0 +1,3 @@
+﻿namespace SubscriptionManager.Application.Billing.ResumeSubscription;
+
+public sealed record ResumeSubscriptionCommand;

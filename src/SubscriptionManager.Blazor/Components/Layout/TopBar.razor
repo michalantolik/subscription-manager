@@ -130,7 +130,8 @@
     <AuthorizeView>
         <Authorized Context="accountSettingsAuthenticationState">
             <AccountSettingsDialog User="accountSettingsAuthenticationState.User"
-                                   OnClose="CloseAccountSettings" />
+                                   OnClose="CloseAccountSettings"
+                                   OnBillingPlanChanged="HandleBillingPlanChanged" />
         </Authorized>
     </AuthorizeView>
 }

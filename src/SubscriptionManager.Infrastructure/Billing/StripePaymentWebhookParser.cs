@@ -5,13 +5,26 @@ using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Infrastructure.Billing;
 
-public sealed class StripePaymentWebhookParser(
-    IOptions<StripeOptions> options)
+public sealed class StripePaymentWebhookParser
     : IPaymentWebhookParser
 {
-    private const string UserIdMetadataKey = "userId";
+    private const string UserIdMetadataKey =
+        "userId";
 
-    private readonly StripeOptions _options = options.Value;
+    private readonly StripeOptions _options;
+
+    private readonly StripePriceCatalog
+        _priceCatalog;
+
+    public StripePaymentWebhookParser(
+        IOptions<StripeOptions> options)
+    {
+        _options = options.Value;
+
+        _priceCatalog =
+            new StripePriceCatalog(
+                options);
+    }
 
     public PaymentSubscriptionEvent? Parse(
         string payload,
@@ -53,14 +66,17 @@ public sealed class StripePaymentWebhookParser(
             return null;
         }
 
-        if (stripeEvent.Data.Object is not Subscription subscription)
+        if (stripeEvent.Data.Object is not
+            Subscription subscription)
         {
             throw new InvalidPaymentWebhookException(
                 "The Stripe event does not contain a subscription.");
         }
 
         var subscriptionItem =
-            subscription.Items?.Data?.SingleOrDefault();
+            subscription.Items?
+                .Data?
+                .SingleOrDefault();
 
         if (subscriptionItem is null)
         {
@@ -78,9 +94,11 @@ public sealed class StripePaymentWebhookParser(
                 "The Stripe subscription does not contain a price.");
         }
 
-        var (plan, billingInterval) =
-            MapPrice(
-                priceId);
+        var (
+            plan,
+            billingInterval) =
+                MapPrice(
+                    priceId);
 
         return new PaymentSubscriptionEvent(
             stripeEvent.Id,
@@ -115,36 +133,19 @@ public sealed class StripePaymentWebhookParser(
             "customer.subscription.deleted";
     }
 
-    private (SubscriptionPlan Plan, BillingInterval BillingInterval)
-        MapPrice(
+    private (
+        SubscriptionPlan Plan,
+        BillingInterval BillingInterval) MapPrice(
             string priceId)
     {
-        if (priceId == _options.PlusMonthlyPriceId)
+        if (_priceCatalog.TryGetPlan(
+                priceId,
+                out var plan,
+                out var billingInterval))
         {
             return (
-                SubscriptionPlan.Plus,
-                BillingInterval.Monthly);
-        }
-
-        if (priceId == _options.PlusYearlyPriceId)
-        {
-            return (
-                SubscriptionPlan.Plus,
-                BillingInterval.Yearly);
-        }
-
-        if (priceId == _options.PremiumMonthlyPriceId)
-        {
-            return (
-                SubscriptionPlan.Premium,
-                BillingInterval.Monthly);
-        }
-
-        if (priceId == _options.PremiumYearlyPriceId)
-        {
-            return (
-                SubscriptionPlan.Premium,
-                BillingInterval.Yearly);
+                plan,
+                billingInterval);
         }
 
         throw new InvalidPaymentWebhookException(

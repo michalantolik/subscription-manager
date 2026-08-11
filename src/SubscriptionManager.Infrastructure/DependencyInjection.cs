@@ -246,6 +246,14 @@ public static class DependencyInjection
             IPaymentProvider,
             StripePaymentProvider>();
 
+        services.AddSingleton<
+            IPaymentPlanCatalog,
+            StripePriceCatalog>();
+
+        services.AddScoped<
+            IPaymentSubscriptionManager,
+            StripePaymentSubscriptionManager>();
+
         services.AddScoped<
             IPaymentWebhookParser,
             StripePaymentWebhookParser>();
