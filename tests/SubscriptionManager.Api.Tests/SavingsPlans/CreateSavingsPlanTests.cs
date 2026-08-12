@@ -61,21 +61,21 @@ public sealed class CreateSavingsPlanTests
     }
 
     [Fact]
-    public async Task PostAsync_ShouldReturnForbidden_WhenPaidPlanIsRequired()
+    public async Task PostAsync_ShouldReturnCalculatedSavingsPlanForFreePlan()
     {
         await using var factory =
             _factory.WithWebHostBuilder(
                 builder =>
                 {
-                    builder.ConfigureAppConfiguration(
-                        (_, configuration) =>
+                    builder.ConfigureTestServices(
+                        services =>
                         {
-                            configuration.AddInMemoryCollection(
-                                new Dictionary<string, string?>
-                                {
-                                    ["SavingsPlanAi:ApiKey"] =
-                                        string.Empty
-                                });
+                            services.RemoveAll<
+                                ISavingsPlanAgent>();
+
+                            services.AddScoped<
+                                ISavingsPlanAgent,
+                                SuccessfulSavingsPlanAgent>();
                         });
                 });
 
@@ -101,38 +101,71 @@ public sealed class CreateSavingsPlanTests
                 JsonOptions);
 
         Assert.Equal(
-            HttpStatusCode.Forbidden,
+            HttpStatusCode.OK,
             response.StatusCode);
 
-        var problem =
+        var plan =
             await response.Content
-                .ReadFromJsonAsync<ProblemDetails>(
+                .ReadFromJsonAsync<SavingsPlanDto>(
                     JsonOptions);
 
-        Assert.NotNull(problem);
+        Assert.NotNull(plan);
 
         Assert.Equal(
-            StatusCodes.Status403Forbidden,
-            problem.Status);
+            Currency.PLN,
+            plan.BaseCurrency);
 
         Assert.Equal(
-            "Savings plan access required.",
-            problem.Title);
-
-        var hasCode =
-            problem.Extensions.TryGetValue(
-                "code",
-                out var codeValue);
-
-        Assert.True(hasCode);
-
-        var code =
-            Assert.IsType<JsonElement>(
-                codeValue);
+            100m,
+            plan.CurrentMonthlyCost);
 
         Assert.Equal(
-            "savings_plan_access_required",
-            code.GetString());
+            SubscriptionPlan.Free,
+            plan.SubscriptionPlan);
+
+        Assert.Equal(
+            SubscriptionPlanLimits
+                .FreeDailySavingsPlanLimit,
+            plan.DailyRequestLimit);
+
+        Assert.Equal(
+            SubscriptionPlanLimits
+                .FreeDailySavingsPlanLimit - 1,
+            plan.RemainingRequestCount);
+
+        var recommended =
+            Assert.IsType<SavingsPlanScenarioDto>(
+                plan.Recommended);
+
+        Assert.Equal(
+            40m,
+            recommended.ProjectedMonthlyCost);
+
+        Assert.Equal(
+            60m,
+            recommended.MonthlySavings);
+
+        Assert.Equal(
+            720m,
+            recommended.YearlySavings);
+
+        Assert.True(
+            recommended.TargetReached);
+
+        var subscription =
+            Assert.Single(
+                recommended.Subscriptions);
+
+        Assert.Equal(
+            "Netflix",
+            subscription.Name);
+
+        Assert.Equal(
+            60m,
+            subscription.MonthlyCost);
+
+        Assert.Null(
+            plan.Alternative);
     }
 
     [Fact]

@@ -7,6 +7,9 @@ public sealed class SubscriptionPlanLimitsTests
 {
     [Theory]
     [InlineData(
+        SubscriptionPlan.Free,
+        SubscriptionPlanLimits.FreeDailySavingsPlanLimit)]
+    [InlineData(
         SubscriptionPlan.Plus,
         SubscriptionPlanLimits.PlusDailySavingsPlanLimit)]
     [InlineData(
@@ -25,39 +28,18 @@ public sealed class SubscriptionPlanLimitsTests
             result);
     }
 
-    [Fact]
-    public void GetDailySavingsPlanLimit_ShouldReturnZeroForFreePlan()
-    {
-        var result =
-            SubscriptionPlanLimits.GetDailySavingsPlanLimit(
-                SubscriptionPlan.Free);
-
-        Assert.Equal(
-            0,
-            result);
-    }
-
     [Theory]
-    [InlineData(
-        SubscriptionPlan.Free,
-        false)]
-    [InlineData(
-        SubscriptionPlan.Plus,
-        true)]
-    [InlineData(
-        SubscriptionPlan.Premium,
-        true)]
-    public void CanUseSavingsPlan_ShouldReturnExpectedAccess(
-        SubscriptionPlan subscriptionPlan,
-        bool expected)
+    [InlineData(SubscriptionPlan.Free)]
+    [InlineData(SubscriptionPlan.Plus)]
+    [InlineData(SubscriptionPlan.Premium)]
+    public void CanUseSavingsPlan_ShouldReturnTrueForSupportedPlan(
+        SubscriptionPlan subscriptionPlan)
     {
         var result =
             SubscriptionPlanLimits.CanUseSavingsPlan(
                 subscriptionPlan);
 
-        Assert.Equal(
-            expected,
-            result);
+        Assert.True(result);
     }
 
     [Theory]

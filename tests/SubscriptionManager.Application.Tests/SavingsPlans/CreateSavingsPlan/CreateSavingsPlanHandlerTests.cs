@@ -478,7 +478,7 @@ public sealed class CreateSavingsPlanHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldRequirePaidPlanForFreeUser()
+    public async Task HandleAsync_ShouldCreateSavingsPlanForFreeUser()
     {
         var ownerId =
             Guid.NewGuid();
@@ -536,6 +536,28 @@ public sealed class CreateSavingsPlanHandlerTests
                     It.IsAny<CancellationToken>()))
             .ReturnsAsync(SubscriptionPlan.Free);
 
+        savingsPlanUsageRepository
+            .Setup(currentRepository =>
+                currentRepository.TryRegisterRequestAsync(
+                    ownerId,
+                    It.IsAny<DateOnly>(),
+                    SubscriptionPlanLimits
+                        .FreeDailySavingsPlanLimit,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+
+        savingsPlanAgent
+            .Setup(agent =>
+                agent.CreatePlanAsync(
+                    It.IsAny<SavingsPlanAgentRequest>(),
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new SavingsPlanAgentResult(
+                    new SavingsPlanAgentScenario(
+                        [subscription.Id],
+                        "Ending Netflix reaches the selected savings target."),
+                    null));
+
         var handler =
             CreateHandler(
                 repository,
@@ -554,30 +576,65 @@ public sealed class CreateSavingsPlanHandlerTests
                 null,
                 "en");
 
-        await Assert.ThrowsAsync<SavingsPlanAccessRequiredException>(
-            () => handler.HandleAsync(command));
+        var result =
+            await handler.HandleAsync(command);
+
+        Assert.Equal(
+            SubscriptionPlan.Free,
+            result.SubscriptionPlan);
+
+        Assert.Equal(
+            SubscriptionPlanLimits
+                .FreeDailySavingsPlanLimit,
+            result.DailyRequestLimit);
+
+        Assert.Equal(
+            2,
+            result.RemainingRequestCount);
+
+        var recommended =
+            Assert.IsType<SavingsPlanScenarioDto>(
+                result.Recommended);
+
+        Assert.Equal(
+            0m,
+            recommended.ProjectedMonthlyCost);
+
+        Assert.Equal(
+            60m,
+            recommended.MonthlySavings);
+
+        Assert.Equal(
+            720m,
+            recommended.YearlySavings);
+
+        Assert.True(
+            recommended.TargetReached);
+
+        var selectedSubscription =
+            Assert.Single(
+                recommended.Subscriptions);
+
+        Assert.Equal(
+            subscription.Id,
+            selectedSubscription.Id);
 
         savingsPlanUsageRepository.Verify(
             currentRepository =>
                 currentRepository.TryRegisterRequestAsync(
-                    It.IsAny<Guid>(),
+                    ownerId,
                     It.IsAny<DateOnly>(),
-                    It.IsAny<int>(),
+                    SubscriptionPlanLimits
+                        .FreeDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
 
         savingsPlanAgent.Verify(
             agent =>
                 agent.CreatePlanAsync(
                     It.IsAny<SavingsPlanAgentRequest>(),
                     It.IsAny<CancellationToken>()),
-            Times.Never);
-
-        exchangeRateService.Verify(
-            service =>
-                service.GetCurrentAsync(
-                    It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
     }
 
     private static CreateSavingsPlanHandler CreateHandler(

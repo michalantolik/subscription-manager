@@ -9,7 +9,7 @@ namespace SubscriptionManager.Application.Tests.SavingsPlans.GetSavingsPlanUsage
 public sealed class GetSavingsPlanUsageHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ShouldReturnZeroUsageForFreePlan()
+    public async Task HandleAsync_ShouldReturnCurrentUsageForFreePlan()
     {
         var userId =
             Guid.NewGuid();
@@ -36,6 +36,16 @@ public sealed class GetSavingsPlanUsageHandlerTests
             .ReturnsAsync(
                 SubscriptionPlan.Free);
 
+        usageRepository
+            .Setup(repository =>
+                repository.GetRemainingRequestCountAsync(
+                    userId,
+                    It.IsAny<DateOnly>(),
+                    SubscriptionPlanLimits
+                        .FreeDailySavingsPlanLimit,
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+
         var handler =
             new GetSavingsPlanUsageHandler(
                 identityService.Object,
@@ -50,11 +60,12 @@ public sealed class GetSavingsPlanUsageHandlerTests
             result.SubscriptionPlan);
 
         Assert.Equal(
-            0,
+            SubscriptionPlanLimits
+                .FreeDailySavingsPlanLimit,
             result.DailyRequestLimit);
 
         Assert.Equal(
-            0,
+            2,
             result.RemainingRequestCount);
 
         identityService.Verify(
@@ -67,11 +78,12 @@ public sealed class GetSavingsPlanUsageHandlerTests
         usageRepository.Verify(
             repository =>
                 repository.GetRemainingRequestCountAsync(
-                    It.IsAny<Guid>(),
+                    userId,
                     It.IsAny<DateOnly>(),
-                    It.IsAny<int>(),
+                    SubscriptionPlanLimits
+                        .FreeDailySavingsPlanLimit,
                     It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
     }
 
     [Fact]

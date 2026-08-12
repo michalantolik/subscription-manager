@@ -6,6 +6,8 @@ public static class SubscriptionPlanLimits
 {
     public const int FreeSubscriptionLimit = 5;
 
+    public const int FreeDailySavingsPlanLimit = 3;
+
     public const int PlusDailySavingsPlanLimit = 5;
 
     public const int PremiumDailySavingsPlanLimit = 20;
@@ -37,7 +39,7 @@ public static class SubscriptionPlanLimits
         return subscriptionPlan switch
         {
             SubscriptionPlan.Free =>
-                false,
+                true,
 
             SubscriptionPlan.Plus =>
                 true,
@@ -57,14 +59,14 @@ public static class SubscriptionPlanLimits
     {
         return subscriptionPlan switch
         {
+            SubscriptionPlan.Free =>
+                FreeDailySavingsPlanLimit,
+
             SubscriptionPlan.Plus =>
                 PlusDailySavingsPlanLimit,
 
             SubscriptionPlan.Premium =>
                 PremiumDailySavingsPlanLimit,
-
-            SubscriptionPlan.Free =>
-                0,
 
             _ => throw new ArgumentOutOfRangeException(
                 nameof(subscriptionPlan),

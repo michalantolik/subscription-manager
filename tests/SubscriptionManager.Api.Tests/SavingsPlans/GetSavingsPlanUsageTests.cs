@@ -44,7 +44,7 @@ public sealed class GetSavingsPlanUsageTests
     }
 
     [Fact]
-    public async Task GetAsync_ShouldReturnZeroUsageForFreePlan()
+    public async Task GetAsync_ShouldReturnDailyUsageForFreePlan()
     {
         var userId =
             Guid.NewGuid();
@@ -91,11 +91,11 @@ public sealed class GetSavingsPlanUsageTests
             firstUsage.SubscriptionPlan);
 
         Assert.Equal(
-            0,
+            3,
             firstUsage.DailyRequestLimit);
 
         Assert.Equal(
-            0,
+            3,
             firstUsage.RemainingRequestCount);
 
         Assert.Equal(
