@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
+using SubscriptionManager.Blazor.Features.FeatureToggles;
 
 namespace SubscriptionManager.Blazor.Features.Billing;
 
@@ -9,6 +10,10 @@ public partial class BillingSettingsPanel
 {
     [Inject]
     private NavigationManager Navigation { get; set; } =
+        default!;
+
+    [Inject]
+    private IFeatureToggleService FeatureToggleService { get; set; } =
         default!;
 
     [Parameter, EditorRequired]
@@ -42,6 +47,10 @@ public partial class BillingSettingsPanel
     private string? _error;
     private string? _plansError;
     private string? _operationError;
+
+    private bool PaidPlansEnabled =>
+        FeatureToggleService.IsEnabled(
+            FeatureName.PaidPlans);
 
     private string PlanLabel =>
         GetPlanLabel(
@@ -311,6 +320,11 @@ public partial class BillingSettingsPanel
             return;
         }
 
+        if (!PaidPlansEnabled)
+        {
+            return;
+        }
+
         if (_overview.Plan == plan &&
             _overview.BillingInterval ==
             _selectedBillingInterval)
@@ -333,6 +347,11 @@ public partial class BillingSettingsPanel
     private async Task StartCheckoutAsync(
         BillingPlan plan)
     {
+        if (!PaidPlansEnabled)
+        {
+            return;
+        }
+
         _isProcessing = true;
         _operationError = null;
 
@@ -391,6 +410,11 @@ public partial class BillingSettingsPanel
     private async Task LoadChangePreviewAsync(
         BillingPlan plan)
     {
+        if (!PaidPlansEnabled)
+        {
+            return;
+        }
+
         _isProcessing = true;
         _operationError = null;
 
@@ -428,7 +452,8 @@ public partial class BillingSettingsPanel
     private async Task ConfirmChangeAsync()
     {
         if (_isProcessing ||
-            _changePreview is null)
+            _changePreview is null ||
+            !PaidPlansEnabled)
         {
             return;
         }

@@ -7,11 +7,17 @@ using SubscriptionManager.Blazor.Features.Account;
 using SubscriptionManager.Blazor.Features.Authentication;
 using SubscriptionManager.Blazor.Features.Billing;
 using SubscriptionManager.Blazor.Features.DigitalServices;
+using SubscriptionManager.Blazor.Features.FeatureToggles;
 using SubscriptionManager.Blazor.Features.SavingsPlans;
 using SubscriptionManager.Blazor.Features.Subscriptions;
 using SubscriptionManager.Blazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile(
+    "featuretoggles.json",
+    optional: true,
+    reloadOnChange: true);
 
 var applicationInsightsConnectionString =
     builder.Configuration[
@@ -66,6 +72,12 @@ builder.Services
             options.AuthenticationCookieExpirationInMinutes > 0,
         "Authentication:AuthenticationCookieExpirationInMinutes must be greater than zero.")
     .ValidateOnStart();
+
+builder.Services
+    .AddOptions<FeatureToggleOptions>()
+    .Bind(
+        builder.Configuration.GetSection(
+            FeatureToggleOptions.SectionName));
 
 builder.Services.Configure<RequestLocalizationOptions>(
     options =>
@@ -133,6 +145,10 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSingleton<Localizer>();
+builder.Services.AddSingleton<
+    IFeatureToggleService,
+    FeatureToggleService>();
+
 builder.Services.AddScoped<AppState>();
 
 builder.Services.AddHealthChecks();

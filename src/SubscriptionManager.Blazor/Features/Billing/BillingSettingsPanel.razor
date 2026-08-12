@@ -183,6 +183,20 @@ else if (_overview is not null)
                 </button>
             </div>
 
+            @if (!PaidPlansEnabled)
+            {
+                <div class="ui-alert ui-alert-warning"
+                     role="status">
+                    <strong>
+                        @T["Billing.Plans.PaidPlansUnavailableTitle"]
+                    </strong>
+
+                    <span>
+                        @T["Billing.Plans.PaidPlansUnavailableDescription"]
+                    </span>
+                </div>
+            }
+
             <div class="billing-interval-selector"
                  role="group"
                  aria-label="@T["Billing.Plans.BillingInterval"]">
@@ -379,6 +393,7 @@ else if (_overview is not null)
                         <button class="primary-button"
                                 type="button"
                                 disabled="@(
+                                    !PaidPlansEnabled ||
                                     _isProcessing ||
                                     GetPrice(BillingPlan.Plus) is null ||
                                     (_overview.Plan ==
@@ -388,17 +403,19 @@ else if (_overview is not null)
                                 @onclick="@(
                                     () => SelectPlanAsync(
                                         BillingPlan.Plus))">
-                            @if (_isProcessing)
-                            {
-                                @T["Billing.Plans.Processing"]
-                            }
-                            else if (
-                                _overview.Plan ==
-                                    BillingPlan.Plus &&
-                                _overview.BillingInterval ==
-                                    _selectedBillingInterval)
+                            @if (_overview.Plan == BillingPlan.Plus &&
+                                 _overview.BillingInterval ==
+                                     _selectedBillingInterval)
                             {
                                 @T["Billing.Plans.Current"]
+                            }
+                            else if (!PaidPlansEnabled)
+                            {
+                                @T["Billing.Plans.Unavailable"]
+                            }
+                            else if (_isProcessing)
+                            {
+                                @T["Billing.Plans.Processing"]
                             }
                             else
                             {
@@ -467,6 +484,7 @@ else if (_overview is not null)
                         <button class="primary-button"
                                 type="button"
                                 disabled="@(
+                                    !PaidPlansEnabled ||
                                     _isProcessing ||
                                     GetPrice(BillingPlan.Premium) is null ||
                                     (_overview.Plan ==
@@ -476,17 +494,19 @@ else if (_overview is not null)
                                 @onclick="@(
                                     () => SelectPlanAsync(
                                         BillingPlan.Premium))">
-                            @if (_isProcessing)
-                            {
-                                @T["Billing.Plans.Processing"]
-                            }
-                            else if (
-                                _overview.Plan ==
-                                    BillingPlan.Premium &&
-                                _overview.BillingInterval ==
-                                    _selectedBillingInterval)
+                            @if (_overview.Plan == BillingPlan.Premium &&
+                                 _overview.BillingInterval ==
+                                     _selectedBillingInterval)
                             {
                                 @T["Billing.Plans.Current"]
+                            }
+                            else if (!PaidPlansEnabled)
+                            {
+                                @T["Billing.Plans.Unavailable"]
+                            }
+                            else if (_isProcessing)
+                            {
+                                @T["Billing.Plans.Processing"]
                             }
                             else
                             {
@@ -609,7 +629,9 @@ else if (_overview is not null)
 
                 <button class="primary-button"
                         type="button"
-                        disabled="@_isProcessing"
+                        disabled="@(
+                            _isProcessing ||
+                            !PaidPlansEnabled)"
                         @onclick="ConfirmChangeAsync">
                     @(_isProcessing
                         ? T["Billing.Change.Processing"]
