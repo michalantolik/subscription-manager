@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.DigitalServices;
 
+/// <summary>
+/// Digital service data returned by digital service use cases.
+/// </summary>
 public sealed record DigitalServiceDto(
     Guid Id,
     string Key,

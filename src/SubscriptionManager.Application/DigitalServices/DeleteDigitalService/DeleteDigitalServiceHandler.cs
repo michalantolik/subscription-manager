@@ -2,6 +2,9 @@ using SubscriptionManager.Application.Common.Identity;
 
 namespace SubscriptionManager.Application.DigitalServices.DeleteDigitalService;
 
+/// <summary>
+/// Handles digital service deletion.
+/// </summary>
 public sealed class DeleteDigitalServiceHandler
 {
     private readonly IDigitalServiceRepository _digitalServiceRepository;

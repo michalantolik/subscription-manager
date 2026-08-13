@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.Subscriptions.CreateSubscription;
 
+/// <summary>
+/// Indicates that the active subscription limit has been reached.
+/// </summary>
 public sealed class SubscriptionLimitReachedException
     : Exception
 {

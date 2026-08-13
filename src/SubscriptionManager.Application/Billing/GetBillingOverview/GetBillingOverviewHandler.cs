@@ -3,6 +3,9 @@ using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Billing.GetBillingOverview;
 
+/// <summary>
+/// Handles billing subscription overview retrieval.
+/// </summary>
 public sealed class GetBillingOverviewHandler(
     IBillingSubscriptionRepository billingSubscriptionRepository,
     ICurrentUser currentUser)

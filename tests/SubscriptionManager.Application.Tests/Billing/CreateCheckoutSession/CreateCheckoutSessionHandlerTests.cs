@@ -1,6 +1,6 @@
 ﻿using Moq;
-using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
+using SubscriptionManager.Application.Billing.PaymentProvider;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Domain.Billing;
 

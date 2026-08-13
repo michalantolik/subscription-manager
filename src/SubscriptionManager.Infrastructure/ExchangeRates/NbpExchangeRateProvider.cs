@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using SubscriptionManager.Application.ExchangeRates;
+using SubscriptionManager.Application.ExchangeRates.ExternalSource;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Infrastructure.ExchangeRates;

@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Subscriptions.DeleteSubscription;
 
+/// <summary>
+/// Handles subscription deletion.
+/// </summary>
 public sealed class DeleteSubscriptionHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;

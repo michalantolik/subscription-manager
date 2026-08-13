@@ -1,8 +1,12 @@
-﻿using SubscriptionManager.Application.Common.Identity;
+﻿using SubscriptionManager.Application.Billing.PaymentProvider;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 
+/// <summary>
+/// Handles billing subscription change preview.
+/// </summary>
 public sealed class PreviewSubscriptionChangeHandler(
     ICurrentUser currentUser,
     IBillingSubscriptionRepository billingSubscriptionRepository,

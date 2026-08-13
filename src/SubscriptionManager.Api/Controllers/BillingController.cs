@@ -1,12 +1,12 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Billing.CancelSubscription;
 using SubscriptionManager.Application.Billing.ChangeSubscription;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
 using SubscriptionManager.Application.Billing.GetBillingOverview;
 using SubscriptionManager.Application.Billing.GetPaymentPlans;
+using SubscriptionManager.Application.Billing.PaymentProvider;
 using SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 using SubscriptionManager.Application.Billing.ProcessWebhook;
 using SubscriptionManager.Application.Billing.ResumeSubscription;

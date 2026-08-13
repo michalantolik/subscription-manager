@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.Common.Localization;
 
+/// <summary>
+/// Provides conversions for supported application languages.
+/// </summary>
 public static class LanguageExtensions
 {
     public static string ToLanguageCode(

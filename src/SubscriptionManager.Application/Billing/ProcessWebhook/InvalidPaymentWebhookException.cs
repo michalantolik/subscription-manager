@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.Billing.ProcessWebhook;
 
+/// <summary>
+/// Indicates that a payment webhook is invalid.
+/// </summary>
 public sealed class InvalidPaymentWebhookException
     : Exception
 {

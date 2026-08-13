@@ -3,6 +3,9 @@ using SubscriptionManager.Application.DigitalServices;
 
 namespace SubscriptionManager.Application.Subscriptions.UpdateSubscription;
 
+/// <summary>
+/// Handles subscription update.
+/// </summary>
 public sealed class UpdateSubscriptionHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;

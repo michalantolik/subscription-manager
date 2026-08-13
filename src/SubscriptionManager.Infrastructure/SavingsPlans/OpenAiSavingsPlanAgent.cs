@@ -6,6 +6,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SubscriptionManager.Application.SavingsPlans;
+using SubscriptionManager.Application.SavingsPlans.Ai;
 
 namespace SubscriptionManager.Infrastructure.SavingsPlans;
 

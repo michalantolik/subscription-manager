@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Subscriptions;
 
+/// <summary>
+/// Persistence operations for subscription use cases.
+/// </summary>
 public interface ISubscriptionRepository
 {
     Task AddAsync(

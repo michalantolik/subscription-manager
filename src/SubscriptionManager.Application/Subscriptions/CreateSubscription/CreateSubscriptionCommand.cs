@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Subscriptions.CreateSubscription;
 
+/// <summary>
+/// Request to create a subscription.
+/// </summary>
 public sealed record CreateSubscriptionCommand(
     string Name,
     decimal Amount,

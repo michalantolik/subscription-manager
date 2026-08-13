@@ -1,4 +1,5 @@
 using Moq;
+using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Application.Subscriptions;

@@ -2,6 +2,9 @@ using SubscriptionManager.Domain.DigitalServices;
 
 namespace SubscriptionManager.Application.DigitalServices;
 
+/// <summary>
+/// Persistence operations for digital service use cases.
+/// </summary>
 public interface IDigitalServiceRepository
 {
     Task AddAsync(

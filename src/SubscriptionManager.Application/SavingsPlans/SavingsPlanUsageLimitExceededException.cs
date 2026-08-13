@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.SavingsPlans;
 
+/// <summary>
+/// Indicates that the daily savings plan request limit has been reached.
+/// </summary>
 public sealed class SavingsPlanUsageLimitExceededException
     : Exception
 {

@@ -2,6 +2,9 @@ using SubscriptionManager.Application.Common.Identity;
 
 namespace SubscriptionManager.Application.DigitalServices.DeactivateDigitalService;
 
+/// <summary>
+/// Handles digital service deactivation.
+/// </summary>
 public sealed class DeactivateDigitalServiceHandler
 {
     private readonly IDigitalServiceRepository _digitalServiceRepository;

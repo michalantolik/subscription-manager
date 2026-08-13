@@ -1,7 +1,11 @@
-﻿using SubscriptionManager.Domain.Billing;
+﻿using SubscriptionManager.Application.Billing.PaymentProvider;
+using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Billing;
 
+/// <summary>
+/// Synchronizes billing subscriptions with payment provider state.
+/// </summary>
 internal static class BillingSubscriptionSynchronization
 {
     public static void Apply(

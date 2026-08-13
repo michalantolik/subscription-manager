@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.SavingsPlans;
 
+/// <summary>
+/// Persistence operations for savings plan usage.
+/// </summary>
 public interface ISavingsPlanUsageRepository
 {
     Task<int> GetRemainingRequestCountAsync(

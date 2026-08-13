@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.DigitalServices;
 
+/// <summary>
+/// Maps digital service domain models to application DTOs.
+/// </summary>
 public static class DigitalServiceMappings
 {
     public static DigitalServiceDto ToDto(

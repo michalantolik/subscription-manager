@@ -1,9 +1,13 @@
+using SubscriptionManager.Application.Account;
 using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Common.Identity;
 
+/// <summary>
+/// Provides user identity and account operations for application use cases.
+/// </summary>
 public interface IIdentityService
 {
     Task<CreateUserResult> CreateUserAsync(

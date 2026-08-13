@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Stripe;
-using SubscriptionManager.Application.Billing;
+using SubscriptionManager.Application.Billing.PaymentProvider;
 using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Infrastructure.Billing;

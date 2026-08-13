@@ -1,8 +1,12 @@
-﻿using SubscriptionManager.Application.Common.Identity;
+﻿using SubscriptionManager.Application.Billing.PaymentProvider;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Billing.CancelSubscription;
 
+/// <summary>
+/// Handles billing subscription cancellation.
+/// </summary>
 public sealed class CancelSubscriptionHandler(
     ICurrentUser currentUser,
     IBillingSubscriptionRepository billingSubscriptionRepository,

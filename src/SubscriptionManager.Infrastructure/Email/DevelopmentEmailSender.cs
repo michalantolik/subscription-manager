@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using SubscriptionManager.Application.Common.Email;
+using SubscriptionManager.Application.Authentication;
 
 namespace SubscriptionManager.Infrastructure.Email;
 

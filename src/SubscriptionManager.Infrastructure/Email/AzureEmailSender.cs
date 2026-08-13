@@ -1,7 +1,7 @@
 ﻿using Azure.Communication.Email;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SubscriptionManager.Application.Common.Email;
+using SubscriptionManager.Application.Authentication;
 
 namespace SubscriptionManager.Infrastructure.Email;
 

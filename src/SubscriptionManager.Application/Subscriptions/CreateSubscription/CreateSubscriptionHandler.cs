@@ -1,3 +1,4 @@
+using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.DigitalServices;
 using SubscriptionManager.Domain.DigitalServices;
@@ -5,6 +6,9 @@ using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Subscriptions.CreateSubscription;
 
+/// <summary>
+/// Handles subscription creation.
+/// </summary>
 public sealed class CreateSubscriptionHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;

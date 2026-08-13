@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Account.GetAccountPreferences;
 
+/// <summary>
+/// Handles user account preferences retrieval.
+/// </summary>
 public sealed class GetAccountPreferencesHandler(
     IIdentityService identityService)
 {

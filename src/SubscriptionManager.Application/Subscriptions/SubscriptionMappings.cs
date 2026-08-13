@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Subscriptions;
 
+/// <summary>
+/// Maps subscription domain models to application DTOs.
+/// </summary>
 internal static class SubscriptionMappings
 {
     public static SubscriptionDto ToDto(this Subscription subscription)

@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Billing.ProcessWebhook;
 
+/// <summary>
+/// Billing subscription event received from the payment provider.
+/// </summary>
 public sealed record PaymentSubscriptionEvent(
     string ProviderEventId,
     DateTimeOffset ProviderEventCreatedAt,

@@ -3,6 +3,9 @@ using SubscriptionManager.Domain.DigitalServices;
 
 namespace SubscriptionManager.Application.DigitalServices.CreateDigitalService;
 
+/// <summary>
+/// Handles digital service creation.
+/// </summary>
 public sealed class CreateDigitalServiceHandler
 {
     private readonly IDigitalServiceRepository _digitalServiceRepository;

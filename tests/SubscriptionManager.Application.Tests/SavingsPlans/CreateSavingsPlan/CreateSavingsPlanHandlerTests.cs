@@ -1,7 +1,9 @@
 ﻿using Moq;
+using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.SavingsPlans;
+using SubscriptionManager.Application.SavingsPlans.Ai;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
 using SubscriptionManager.Application.Subscriptions;
 using SubscriptionManager.Domain.Billing;

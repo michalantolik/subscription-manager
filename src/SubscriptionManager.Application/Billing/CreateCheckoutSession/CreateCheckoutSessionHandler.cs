@@ -1,8 +1,11 @@
-﻿using SubscriptionManager.Application.Common.Identity;
-using SubscriptionManager.Application.Identity;
+﻿using SubscriptionManager.Application.Billing.PaymentProvider;
+using SubscriptionManager.Application.Common.Identity;
 
 namespace SubscriptionManager.Application.Billing.CreateCheckoutSession;
 
+/// <summary>
+/// Handles checkout session creation for a billing subscription.
+/// </summary>
 public sealed class CreateCheckoutSessionHandler(
     ICurrentUser currentUser,
     IIdentityService identityService,

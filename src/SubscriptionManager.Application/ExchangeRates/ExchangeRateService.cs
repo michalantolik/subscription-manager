@@ -1,8 +1,12 @@
-﻿using SubscriptionManager.Domain.ExchangeRates;
+﻿using SubscriptionManager.Application.ExchangeRates.ExternalSource;
+using SubscriptionManager.Domain.ExchangeRates;
 using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.ExchangeRates;
 
+/// <summary>
+/// Provides current exchange rates using stored data and an external provider.
+/// </summary>
 public sealed class ExchangeRateService(
     IExchangeRateRepository exchangeRateRepository,
     IExchangeRateProvider exchangeRateProvider,
@@ -225,22 +229,5 @@ public sealed class ExchangeRateService(
         return new CurrentExchangeRates(
             effectiveDate,
             ratesToPln);
-    }
-}
-
-public sealed class ExchangeRatesUnavailableException
-    : Exception
-{
-    public ExchangeRatesUnavailableException(
-        string message)
-        : base(message)
-    {
-    }
-
-    public ExchangeRatesUnavailableException(
-        string message,
-        Exception innerException)
-        : base(message, innerException)
-    {
     }
 }

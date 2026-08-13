@@ -1,5 +1,10 @@
-﻿namespace SubscriptionManager.Application.Billing.GetPaymentPlans;
+﻿using SubscriptionManager.Application.Billing.PaymentProvider;
 
+namespace SubscriptionManager.Application.Billing.GetPaymentPlans;
+
+/// <summary>
+/// Handles payment plans retrieval.
+/// </summary>
 public sealed class GetPaymentPlansHandler(
     IPaymentPlanCatalog paymentPlanCatalog)
 {

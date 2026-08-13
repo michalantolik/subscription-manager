@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 
+/// <summary>
+/// Billing subscription change preview data returned by the preview use case.
+/// </summary>
 public sealed record SubscriptionChangePreviewDto(
     SubscriptionPlan CurrentPlan,
     BillingInterval CurrentBillingInterval,

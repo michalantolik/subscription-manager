@@ -1,8 +1,12 @@
-﻿using SubscriptionManager.Application.Common.Identity;
+﻿using SubscriptionManager.Application.Billing.PaymentProvider;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.Billing.ResumeSubscription;
 
+/// <summary>
+/// Handles billing subscription resumption.
+/// </summary>
 public sealed class ResumeSubscriptionHandler(
     ICurrentUser currentUser,
     IBillingSubscriptionRepository billingSubscriptionRepository,

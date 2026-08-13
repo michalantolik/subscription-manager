@@ -5,6 +5,9 @@ using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Subscriptions.GetSubscriptionCostSummary;
 
+/// <summary>
+/// Handles subscription cost summary retrieval.
+/// </summary>
 public sealed class GetSubscriptionCostSummaryHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;

@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 
+/// <summary>
+/// Indicates that a billing subscription cannot be changed.
+/// </summary>
 public sealed class BillingSubscriptionChangeUnavailableException
     : InvalidOperationException
 {

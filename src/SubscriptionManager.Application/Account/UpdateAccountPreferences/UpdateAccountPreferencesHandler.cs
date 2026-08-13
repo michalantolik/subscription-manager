@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Account.UpdateAccountPreferences;
 
+/// <summary>
+/// Handles user account preferences update.
+/// </summary>
 public sealed class UpdateAccountPreferencesHandler(
     IIdentityService identityService)
 {

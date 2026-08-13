@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using SubscriptionManager.Application.SavingsPlans;
+using SubscriptionManager.Application.SavingsPlans.Ai;
 
 namespace SubscriptionManager.Infrastructure.SavingsPlans;
 

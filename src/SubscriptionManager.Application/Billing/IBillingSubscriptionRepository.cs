@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Billing;
 
+/// <summary>
+/// Persistence operations for billing subscription use cases.
+/// </summary>
 public interface IBillingSubscriptionRepository
 {
     Task AddAsync(

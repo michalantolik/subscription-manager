@@ -2,6 +2,9 @@ using SubscriptionManager.Application.Common.Identity;
 
 namespace SubscriptionManager.Application.DigitalServices.UpdateDigitalService;
 
+/// <summary>
+/// Handles digital service update.
+/// </summary>
 public sealed class UpdateDigitalServiceHandler
 {
     private readonly IDigitalServiceRepository _digitalServiceRepository;

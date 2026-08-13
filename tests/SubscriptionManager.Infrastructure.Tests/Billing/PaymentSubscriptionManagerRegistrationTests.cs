@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SubscriptionManager.Application.Billing;
+using SubscriptionManager.Application.Billing.PaymentProvider;
 using SubscriptionManager.Infrastructure.Billing;
 
 namespace SubscriptionManager.Infrastructure.Tests.Billing;

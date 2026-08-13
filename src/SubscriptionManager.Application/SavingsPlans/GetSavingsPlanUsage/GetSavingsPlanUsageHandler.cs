@@ -1,8 +1,12 @@
-﻿using SubscriptionManager.Application.Common.Identity;
+﻿using SubscriptionManager.Application.Billing;
+using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Domain.Billing;
 
 namespace SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
 
+/// <summary>
+/// Handles savings plan usage retrieval.
+/// </summary>
 public sealed class GetSavingsPlanUsageHandler
 {
     private readonly IIdentityService _identityService;

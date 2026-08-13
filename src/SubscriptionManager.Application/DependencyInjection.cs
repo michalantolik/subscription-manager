@@ -1,6 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.Account.DeleteAccount;
 using SubscriptionManager.Application.Account.GetAccountPreferences;
 using SubscriptionManager.Application.Account.UpdateAccountPreferences;
+using SubscriptionManager.Application.Authentication.ConfirmEmail;
+using SubscriptionManager.Application.Authentication.ForgotPassword;
+using SubscriptionManager.Application.Authentication.LoginUser;
+using SubscriptionManager.Application.Authentication.RegisterUser;
+using SubscriptionManager.Application.Authentication.ResetPassword;
 using SubscriptionManager.Application.Billing.CancelSubscription;
 using SubscriptionManager.Application.Billing.ChangeSubscription;
 using SubscriptionManager.Application.Billing.CreateCheckoutSession;
@@ -16,12 +22,6 @@ using SubscriptionManager.Application.DigitalServices.GetDigitalServiceById;
 using SubscriptionManager.Application.DigitalServices.GetDigitalServices;
 using SubscriptionManager.Application.DigitalServices.UpdateDigitalService;
 using SubscriptionManager.Application.ExchangeRates;
-using SubscriptionManager.Application.Identity.ConfirmEmail;
-using SubscriptionManager.Application.Identity.DeleteUser;
-using SubscriptionManager.Application.Identity.ForgotPassword;
-using SubscriptionManager.Application.Identity.LoginUser;
-using SubscriptionManager.Application.Identity.RegisterUser;
-using SubscriptionManager.Application.Identity.ResetPassword;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
 using SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
 using SubscriptionManager.Application.Subscriptions.CreateSubscription;
@@ -34,6 +34,9 @@ using SubscriptionManager.Application.Subscriptions.UpdateSubscription;
 
 namespace SubscriptionManager.Application;
 
+/// <summary>
+/// Registers application services with the dependency injection container.
+/// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(
@@ -80,7 +83,7 @@ public static class DependencyInjection
         services.AddScoped<ResetPasswordHandler>();
         services.AddScoped<GetAccountPreferencesHandler>();
         services.AddScoped<UpdateAccountPreferencesHandler>();
-        services.AddScoped<DeleteUserHandler>();
+        services.AddScoped<DeleteAccountHandler>();
 
         return services;
     }

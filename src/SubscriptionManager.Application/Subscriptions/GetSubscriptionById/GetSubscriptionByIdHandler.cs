@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Subscriptions.GetSubscriptionById;
 
+/// <summary>
+/// Handles subscription retrieval by identifier.
+/// </summary>
 public sealed class GetSubscriptionByIdHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;

@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.Billing.ProcessWebhook;
 
+/// <summary>
+/// Handles payment webhook processing.
+/// </summary>
 public sealed class ProcessPaymentWebhookHandler(
     IPaymentWebhookParser paymentWebhookParser,
     IBillingWebhookRepository billingWebhookRepository,

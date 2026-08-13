@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.Billing.ResumeSubscription;
 
+/// <summary>
+/// Indicates that a billing subscription cannot be resumed.
+/// </summary>
 public sealed class BillingSubscriptionResumeUnavailableException
     : InvalidOperationException
 {

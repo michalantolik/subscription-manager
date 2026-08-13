@@ -2,7 +2,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.DigitalServices;

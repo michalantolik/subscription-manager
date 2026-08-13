@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Application.SavingsPlans;
 
+/// <summary>
+/// Indicates that a savings plan is unavailable.
+/// </summary>
 public sealed class SavingsPlanUnavailableException
     : Exception
 {

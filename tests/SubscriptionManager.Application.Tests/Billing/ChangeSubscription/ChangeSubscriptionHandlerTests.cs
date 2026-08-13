@@ -2,6 +2,7 @@
 using SubscriptionManager.Application.Billing;
 using SubscriptionManager.Application.Billing.ChangeSubscription;
 using SubscriptionManager.Application.Billing.GetBillingOverview;
+using SubscriptionManager.Application.Billing.PaymentProvider;
 using SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Domain.Billing;

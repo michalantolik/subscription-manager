@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
-using SubscriptionManager.Application.Identity.ConfirmEmail;
-using SubscriptionManager.Application.Identity.DeleteUser;
-using SubscriptionManager.Application.Identity.ForgotPassword;
-using SubscriptionManager.Application.Identity.LoginUser;
-using SubscriptionManager.Application.Identity.RegisterUser;
-using SubscriptionManager.Application.Identity.ResetPassword;
+using SubscriptionManager.Application.Authentication.ConfirmEmail;
+using SubscriptionManager.Application.Account.DeleteAccount;
+using SubscriptionManager.Application.Authentication.ForgotPassword;
+using SubscriptionManager.Application.Authentication.LoginUser;
+using SubscriptionManager.Application.Authentication.RegisterUser;
+using SubscriptionManager.Application.Authentication.ResetPassword;
 using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.Subscriptions;
 
@@ -22,7 +22,7 @@ public sealed class AuthController(
     LoginUserHandler loginUserHandler,
     ForgotPasswordHandler forgotPasswordHandler,
     ResetPasswordHandler resetPasswordHandler,
-    DeleteUserHandler deleteUserHandler,
+    DeleteAccountHandler deleteAccountHandler,
     ICurrentUser currentUser)
     : ControllerBase
 {
@@ -161,10 +161,10 @@ public sealed class AuthController(
     public async Task<IActionResult> DeleteAccountAsync(
         CancellationToken cancellationToken)
     {
-        var command = new DeleteUserCommand(
+        var command = new DeleteAccountCommand(
             currentUser.UserId);
 
-        var result = await deleteUserHandler.HandleAsync(
+        var result = await deleteAccountHandler.HandleAsync(
             command,
             cancellationToken);
 

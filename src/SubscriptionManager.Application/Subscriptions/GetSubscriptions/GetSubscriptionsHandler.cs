@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Subscriptions.GetSubscriptions;
 
+/// <summary>
+/// Handles subscription list retrieval.
+/// </summary>
 public sealed class GetSubscriptionsHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;

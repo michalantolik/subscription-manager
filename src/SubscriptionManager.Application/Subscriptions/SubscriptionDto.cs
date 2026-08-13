@@ -3,6 +3,9 @@ using SubscriptionManager.Domain.Subscriptions;
 
 namespace SubscriptionManager.Application.Subscriptions;
 
+/// <summary>
+/// Subscription data returned by subscription use cases.
+/// </summary>
 public sealed record SubscriptionDto(
     Guid Id,
     Guid? DigitalServiceId,

@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.Subscriptions.EndSubscription;
 
+/// <summary>
+/// Handles subscription ending.
+/// </summary>
 public sealed class EndSubscriptionHandler
 {
     private readonly ISubscriptionRepository _subscriptionRepository;

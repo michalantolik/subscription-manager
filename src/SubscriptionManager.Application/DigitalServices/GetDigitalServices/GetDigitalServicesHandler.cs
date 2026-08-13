@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Application.DigitalServices.GetDigitalServices;
 
+/// <summary>
+/// Handles digital service list retrieval.
+/// </summary>
 public sealed class GetDigitalServicesHandler
 {
     private readonly IDigitalServiceRepository _digitalServiceRepository;

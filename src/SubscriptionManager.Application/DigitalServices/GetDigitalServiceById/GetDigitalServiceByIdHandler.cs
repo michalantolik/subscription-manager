@@ -2,6 +2,9 @@ using SubscriptionManager.Application.Common.Identity;
 
 namespace SubscriptionManager.Application.DigitalServices.GetDigitalServiceById;
 
+/// <summary>
+/// Handles digital service retrieval by identifier.
+/// </summary>
 public sealed class GetDigitalServiceByIdHandler
 {
     private readonly IDigitalServiceRepository _digitalServiceRepository;
