@@ -1,10 +1,10 @@
-﻿using SubscriptionManager.Web.Features.Authentication;
-using SubscriptionManager.Web.Features.Currencies;
+﻿using SubscriptionManager.Web.Common.Currencies;
 using SubscriptionManager.Web.Features.SavingsPlans;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
+using SubscriptionManager.Web.Features.Authentication.Security;
 
 namespace SubscriptionManager.Web.Tests;
 

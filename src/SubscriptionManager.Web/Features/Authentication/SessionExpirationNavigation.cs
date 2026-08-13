@@ -2,6 +2,9 @@
 
 namespace SubscriptionManager.Web.Features.Authentication;
 
+/// <summary>
+/// Provides navigation for expired authentication sessions.
+/// </summary>
 public static class SessionExpirationNavigation
 {
     public static void RedirectToLogin(

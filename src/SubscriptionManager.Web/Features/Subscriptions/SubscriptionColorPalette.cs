@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Web.Features.Subscriptions;
 
+/// <summary>
+/// Provides colors for visually distinguishing subscriptions.
+/// </summary>
 public static class SubscriptionColorPalette
 {
     private static readonly string[] Colors =

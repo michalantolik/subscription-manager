@@ -1,4 +1,5 @@
-@inject AppState State
+@using SubscriptionManager.Web.Features.Account.Components
+@inject UiState State
 @inject Localizer T
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -26,7 +27,7 @@
         <button class="icon-button"
                 type="button"
                 @onclick="ToggleThemeAsync">
-            <AppIcon Name="@(State.Theme == AppState.LightTheme ? "moon" : "sun")" />
+            <AppIcon Name="@(State.Theme == UiState.LightTheme ? "moon" : "sun")" />
         </button>
 
         <AuthorizeView>

@@ -1,10 +1,11 @@
+using SubscriptionManager.Web.Common.Localization;
 using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using SubscriptionManager.Web.Features.Billing;
-using SubscriptionManager.Web.Services;
+using SubscriptionManager.Web.Common.State;
 
 namespace SubscriptionManager.Web.Components.Layout;
 
@@ -110,8 +111,8 @@ public partial class TopBar
 
         await JS.InvokeVoidAsync(
             "subscriptionManagerTheme.set",
-            State.Theme,
-            AppState.ThemeCookieName);
+            (object)State.Theme,
+            UiState.ThemeCookieName);
     }
 
     private void ChangeLanguage(

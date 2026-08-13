@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SubscriptionManager.Web.Features.FeatureToggles;
+using SubscriptionManager.Web.Common.FeatureToggles;
 
 namespace SubscriptionManager.Web.Tests;
 

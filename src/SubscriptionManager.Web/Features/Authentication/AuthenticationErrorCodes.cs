@@ -1,5 +1,8 @@
 namespace SubscriptionManager.Web.Features.Authentication;
 
+/// <summary>
+/// Defines and normalizes authentication error codes.
+/// </summary>
 public static class AuthenticationErrorCodes
 {
     public const string Required = "Required";

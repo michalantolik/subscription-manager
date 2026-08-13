@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
-using SubscriptionManager.Web.Features.FeatureToggles;
+using SubscriptionManager.Web.Common.FeatureToggles;
 
 namespace SubscriptionManager.Web.Tests;
 

@@ -1,10 +1,13 @@
 ﻿using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using SubscriptionManager.Web.Features.Authentication;
+using SubscriptionManager.Web.Features.Authentication.Security;
 
 namespace SubscriptionManager.Web.Features.Billing;
 
+/// <summary>
+/// Provides access to billing-related API operations.
+/// </summary>
 public sealed class BillingApiClient(
     HttpClient httpClient)
 {

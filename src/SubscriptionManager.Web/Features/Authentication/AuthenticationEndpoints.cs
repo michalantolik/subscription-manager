@@ -4,12 +4,15 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
-using SubscriptionManager.Web.Configuration;
-using SubscriptionManager.Web.Features.Currencies;
-using SubscriptionManager.Web.Features.Localization;
+using SubscriptionManager.Web.Common.Currencies;
+using SubscriptionManager.Web.Common.Localization;
+using SubscriptionManager.Web.Features.Authentication.Security;
 
 namespace SubscriptionManager.Web.Features.Authentication;
 
+/// <summary>
+/// Provides authentication endpoints for the web application.
+/// </summary>
 public static class AuthenticationEndpoints
 {
     public static IEndpointRouteBuilder MapAuthenticationEndpoints(

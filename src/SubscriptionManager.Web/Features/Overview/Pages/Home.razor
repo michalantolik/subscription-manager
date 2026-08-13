@@ -1,0 +1,316 @@
+@page "/"
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+@using SubscriptionManager.Web.Features.Subscriptions
+
+@inject SubscriptionsApiClient ApiClient
+@inject UiState State
+@inject Localizer T
+@inject NavigationManager Navigation
+
+<PageTitle>Subscription Manager — @T["Navigation.Overview"]</PageTitle>
+
+<section class="page subscriptions-page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">@T["Overview.Eyebrow"]</p>
+            <h1>@T["Overview.Title"]</h1>
+            <p>@T["Overview.Description"]</p>
+        </div>
+
+        <a class="primary-action"
+           href="/subscriptions">
+            <AppIcon Name="subscriptions" />
+            @T["Navigation.Subscriptions"]
+        </a>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="panel loading-panel">
+            @T["Status.Loading"]
+        </div>
+    }
+    else if (_error || _summary is null)
+    {
+        <div class="panel error-panel">
+            @T["Error.Load"]
+        </div>
+    }
+    else
+    {
+        <div class="subscription-metrics">
+            <article class="panel subscription-metric">
+                <span>@T["Subscriptions.Active"]</span>
+                <strong>@_summary.ActiveCount</strong>
+                <small>
+                    @T[
+                        "Subscriptions.OfAll",
+                        _summary.TotalCount]
+                </small>
+            </article>
+
+            <article class="panel subscription-metric">
+                <span>@T["Subscriptions.Monthly"]</span>
+                <strong>
+                    @Money(
+                        _summary.MonthlyCost)
+                </strong>
+                <small>
+                    @T[
+                        "Subscriptions.AverageMonthly",
+                        Money(
+                            _summary.AverageMonthlyCost)]
+                </small>
+            </article>
+
+            <article class="panel subscription-metric">
+                <span>@T["Subscriptions.Yearly"]</span>
+                <strong>
+                    @Money(
+                        _summary.YearlyCost)
+                </strong>
+                <small>
+                    @T[
+                        "Subscriptions.AverageYearly",
+                        Money(
+                            _summary.AverageYearlyCost)]
+                </small>
+            </article>
+
+            <article class="panel subscription-metric">
+                <span>@T["Subscriptions.MostExpensive"]</span>
+
+                <div class="subscription-metric-value">
+                    <strong>
+                        @Money(
+                            MostExpensive?
+                                .MonthlyCost ?? 0m)
+                    </strong>
+
+                    @if (MostExpensive is not null)
+                    {
+                        <small>@T["PerMonth"]</small>
+                    }
+                </div>
+
+                <small>
+                    @(MostExpensive?.Name ?? "—")
+                </small>
+            </article>
+        </div>
+
+        <div class="overview-analysis-grid">
+            <section class="panel cost-structure-card">
+                <div class="cost-structure-heading">
+                    <div>
+                        <h2>@T["Overview.CostStructure.Title"]</h2>
+                        <p>@T["Overview.CostStructure.Description"]</p>
+                    </div>
+
+                    <div class="cost-grouping-switch"
+                         role="group"
+                         aria-label="@T["Overview.CostStructure.Grouping"]">
+                        <button type="button"
+                                class="@(
+                                _grouping ==
+                                CostGrouping.Category
+                                    ? "active"
+                                    : null)"
+                                aria-pressed="@(
+                                _grouping ==
+                                CostGrouping.Category)"
+                                @onclick="() => SetGrouping(CostGrouping.Category)">
+                            @T["Overview.CostStructure.ByCategory"]
+                        </button>
+
+                        <button type="button"
+                                class="@(
+                                _grouping ==
+                                CostGrouping.Subscription
+                                    ? "active"
+                                    : null)"
+                                aria-pressed="@(
+                                _grouping ==
+                                CostGrouping.Subscription)"
+                                @onclick="() => SetGrouping(CostGrouping.Subscription)">
+                            @T["Overview.CostStructure.BySubscription"]
+                        </button>
+                    </div>
+                </div>
+
+                @if (_summary.ActiveCount == 0 ||
+                     _summary.MonthlyCost <= 0m)
+                {
+                    <div class="cost-structure-empty">
+                        <div class="cost-structure-empty-icon">
+                            <AppIcon Name="subscriptions" />
+                        </div>
+
+                        <strong>
+                            @T["Overview.CostStructure.Empty.Title"]
+                        </strong>
+
+                        <span>
+                            @T["Overview.CostStructure.Empty.Description"]
+                        </span>
+
+                        <a href="/subscriptions">
+                            @T["Subscriptions.Add"]
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="cost-structure-content">
+                        <div class="cost-chart-column">
+                            <div class="cost-donut">
+                                <svg viewBox="0 0 42 42"
+                                     role="img"
+                                     aria-label="@T["Overview.CostStructure.ChartLabel", Money(_summary.MonthlyCost)]">
+                                    <circle class="cost-donut-track"
+                                            cx="21"
+                                            cy="21"
+                                            r="15.9155"
+                                            pathLength="100" />
+
+                                    @foreach (var item in ChartItems)
+                                    {
+                                        <a class="@ChartSegmentClass(item)"
+                                           href="@item.TargetUrl"
+                                           @onmouseenter="() => ActivateChartItem(item)"
+                                           @onmouseleave="() => DeactivateChartItem(item)"
+                                           @onfocus="() => ActivateChartItem(item)"
+                                           @onblur="() => DeactivateChartItem(item)"
+                                           aria-label="@ChartItemLabel(item)">
+                                            <circle class="cost-donut-segment"
+                                                    cx="21"
+                                                    cy="21"
+                                                    r="15.9155"
+                                                    pathLength="100"
+                                                    stroke="@item.Color"
+                                                    stroke-dasharray="@SegmentDashArray(item)"
+                                                    stroke-dashoffset="@SegmentDashOffset(item)" />
+                                        </a>
+                                    }
+                                </svg>
+
+                                <div class="cost-donut-value">
+                                    <strong>
+                                        @Money(
+                                            _summary.MonthlyCost)
+                                    </strong>
+
+                                    <span>@T["PerMonth"]</span>
+                                </div>
+
+                                @if (ActiveChartItem is { } activeItem)
+                                {
+                                    <div class="cost-chart-tooltip"
+                                         role="tooltip"
+                                         style="@TooltipStyle(activeItem)">
+                                        <i></i>
+
+                                        <div>
+                                            <strong>@activeItem.Name</strong>
+                                            <span>
+                                                @Money(activeItem.Amount)
+                                                @T["PerMonth"]
+                                            </span>
+                                            <small>
+                                                @T[
+                                                    "Overview.CostStructure.TooltipShare",
+                                                    Percentage(activeItem.Amount)]
+                                            </small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="cost-legend"
+                             aria-label="@T["Overview.CostStructure.Legend"]">
+                            @foreach (var item in ChartItems)
+                            {
+                                <a class="@LegendItemClass(item)"
+                                   href="@item.TargetUrl"
+                                   style="@LegendItemStyle(item)"
+                                   @onmouseenter="() => ActivateChartItem(item)"
+                                   @onmouseleave="() => DeactivateChartItem(item)"
+                                   @onfocus="() => ActivateChartItem(item)"
+                                   @onblur="() => DeactivateChartItem(item)">
+                                    <span class="cost-legend-name">
+                                        <i style="@(
+                                           $"--cost-color: {item.Color}")">
+                                        </i>
+
+                                        <span>@item.Name</span>
+                                    </span>
+
+                                    <span class="cost-legend-values">
+                                        <strong>
+                                            @Money(item.Amount)
+                                        </strong>
+
+                                        <small>
+                                            @Percentage(item.Amount)
+                                        </small>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+
+            <aside class="panel overview-insights">
+                <div class="overview-insights-heading">
+                    <div class="overview-insights-icon">
+                        <AppIcon Name="info" />
+                    </div>
+
+                    <div>
+                        <h2>@T["Overview.Insights.Title"]</h2>
+                        <p>@T["Overview.Insights.Description"]</p>
+                    </div>
+                </div>
+
+                @if (_summary.ActiveCount == 0)
+                {
+                    <div class="overview-insights-empty">
+                        @T["Overview.Insights.Empty"]
+                    </div>
+                }
+                else
+                {
+                    <div class="overview-insights-list">
+                        @foreach (var insight in Insights)
+                        {
+                            <article class="overview-insight">
+                                <span class="overview-insight-marker">
+                                    <AppIcon Name="@insight.Icon" />
+                                </span>
+
+                                <div>
+                                    <strong>@insight.Title</strong>
+                                    <p>@insight.Description</p>
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                             insight.TargetUrl))
+                                    {
+                                        <a href="@insight.TargetUrl">
+                                            @T["Overview.Insights.View"]
+                                        </a>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </aside>
+        </div>
+    }
+</section>

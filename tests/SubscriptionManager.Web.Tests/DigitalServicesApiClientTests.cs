@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
-using SubscriptionManager.Web.Features.Authentication;
+using SubscriptionManager.Web.Features.Authentication.Security;
 using SubscriptionManager.Web.Features.DigitalServices;
 
 namespace SubscriptionManager.Web.Tests;

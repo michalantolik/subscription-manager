@@ -1,16 +1,18 @@
+using SubscriptionManager.Web.Common.Localization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using SubscriptionManager.Web.Components;
-using SubscriptionManager.Web.Configuration;
+using SubscriptionManager.Web.Common.Api;
 using SubscriptionManager.Web.Features.Account;
 using SubscriptionManager.Web.Features.Authentication;
 using SubscriptionManager.Web.Features.Billing;
 using SubscriptionManager.Web.Features.DigitalServices;
-using SubscriptionManager.Web.Features.FeatureToggles;
+using SubscriptionManager.Web.Common.FeatureToggles;
 using SubscriptionManager.Web.Features.SavingsPlans;
 using SubscriptionManager.Web.Features.Subscriptions;
-using SubscriptionManager.Web.Services;
+using SubscriptionManager.Web.Common.State;
+using SubscriptionManager.Web.Features.Authentication.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -121,6 +123,8 @@ builder.Services
                 authenticationOptions
                     .AuthenticationCookieExpirationInMinutes);
 
+        // Sliding expiration is disabled so the web session
+        // cannot outlive the API access token.
         options.SlidingExpiration = false;
 
         options.Events.OnValidatePrincipal = context =>
@@ -149,7 +153,7 @@ builder.Services.AddSingleton<
     IFeatureToggleService,
     FeatureToggleService>();
 
-builder.Services.AddScoped<AppState>();
+builder.Services.AddScoped<UiState>();
 
 builder.Services.AddHealthChecks();
 

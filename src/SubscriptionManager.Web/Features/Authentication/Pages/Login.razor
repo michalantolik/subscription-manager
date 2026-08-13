@@ -1,0 +1,124 @@
+@page "/login"
+@using SubscriptionManager.Web.Features.Authentication
+
+
+@attribute [AllowAnonymous]
+
+@inject Localizer T
+
+<PageTitle>
+    Subscription Manager — @T["Authentication.Login.Title"]
+</PageTitle>
+
+<section class="page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                @T["Authentication.Login.Eyebrow"]
+            </p>
+
+            <h1>
+                @T["Authentication.Login.Title"]
+            </h1>
+
+            <p>
+                @T["Authentication.Login.Description"]
+            </p>
+        </div>
+    </div>
+
+    <div class="ui-card"
+         style="max-width: 560px;">
+        <form method="post"
+              action="/authentication/login">
+            <AntiforgeryToken />
+
+            <input type="hidden"
+                   name="returnUrl"
+                   value="@GetSafeReturnUrl()" />
+
+            <div class="ui-form">
+                <div class="ui-form-section">
+                    <div class="ui-form-section-header">
+                        <h2 class="ui-form-section-title">
+                            @T["Authentication.Login.FormTitle"]
+                        </h2>
+
+                        <p class="ui-form-section-description">
+                            @T["Authentication.Login.FormDescription"]
+                        </p>
+                    </div>
+
+                    <div class="ui-form-grid ui-form-grid-single">
+                        <div class="ui-field">
+                            <div class="ui-field-heading">
+                                <label class="ui-label"
+                                       for="login-email">
+                                    @T["Field.Email"]
+                                </label>
+                            </div>
+
+                            <input id="login-email"
+                                   class="ui-control"
+                                   name="email"
+                                   type="email"
+                                   autocomplete="username"
+                                   placeholder="@T["Field.EmailPlaceholder"]"
+                                   required />
+                        </div>
+
+                        <div class="ui-field">
+                            <div class="ui-field-heading">
+                                <label class="ui-label"
+                                       for="login-password">
+                                    @T["Authentication.Password"]
+                                </label>
+                            </div>
+
+                            <input id="login-password"
+                                   class="ui-control"
+                                   name="password"
+                                   type="password"
+                                   autocomplete="current-password"
+                                   placeholder="@T["Authentication.PasswordPlaceholder"]"
+                                   required />
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Error))
+                {
+                    <div class="ui-alert ui-alert-error"
+                         role="alert">
+                        @ErrorMessage
+                    </div>
+                }
+
+                @if (Status == "account-deleted")
+                {
+                    <div class="ui-alert ui-alert-success"
+                         role="status">
+                        @T["Account.Delete.LoginConfirmation"]
+                    </div>
+                }
+
+                <div class="ui-form-actions">
+                    <a class="secondary-button"
+                       href="/register">
+                        @T["Authentication.Login.CreateAccount"]
+                    </a>
+
+                    <a class="secondary-button"
+                       href="/forgot-password">
+                        @T["Authentication.Login.ForgotPassword"]
+                    </a>
+
+                    <button class="primary-button"
+                            type="submit">
+                        @T["Authentication.Login.Submit"]
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>

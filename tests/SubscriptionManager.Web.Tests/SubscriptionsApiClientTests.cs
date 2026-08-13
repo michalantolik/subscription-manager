@@ -1,9 +1,9 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using SubscriptionManager.Web.Features.Authentication;
-using SubscriptionManager.Web.Features.Currencies;
+using SubscriptionManager.Web.Common.Currencies;
 using SubscriptionManager.Web.Features.Subscriptions;
+using SubscriptionManager.Web.Features.Authentication.Security;
 
 namespace SubscriptionManager.Web.Tests;
 

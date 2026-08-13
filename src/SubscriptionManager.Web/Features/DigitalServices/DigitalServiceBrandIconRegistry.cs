@@ -1,5 +1,8 @@
 namespace SubscriptionManager.Web.Features.DigitalServices;
 
+/// <summary>
+/// Provides the brand icon keys available for digital services.
+/// </summary>
 public static class DigitalServiceBrandIconRegistry
 {
     private static readonly HashSet<string> IconKeys =

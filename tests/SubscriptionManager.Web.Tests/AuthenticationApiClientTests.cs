@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using SubscriptionManager.Web.Features.Authentication;
-using SubscriptionManager.Web.Features.Localization;
+using SubscriptionManager.Web.Common.Localization;
 
 namespace SubscriptionManager.Web.Tests;
 

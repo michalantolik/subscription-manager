@@ -1,6 +1,6 @@
 @inherits LayoutComponentBase
 @implements IDisposable
-@inject AppState State
+@inject UiState State
 @inject Localizer T
 @inject IJSRuntime JS
 
@@ -38,7 +38,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        var storedTheme = await JS.InvokeAsync<string?>("subscriptionManagerTheme.get", AppState.ThemeCookieName);
+        var storedTheme = await JS.InvokeAsync<string?>("subscriptionManagerTheme.get", UiState.ThemeCookieName);
         if (!string.IsNullOrWhiteSpace(storedTheme)) State.SetTheme(storedTheme);
     }
 

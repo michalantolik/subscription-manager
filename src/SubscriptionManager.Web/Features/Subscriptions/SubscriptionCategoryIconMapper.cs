@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionManager.Web.Features.Subscriptions;
 
+/// <summary>
+/// Maps subscription categories to their corresponding icons.
+/// </summary>
 public static class SubscriptionCategoryIconMapper
 {
     public static string GetIcon(
