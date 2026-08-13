@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
-using SubscriptionManager.Infrastructure.Email;
+using SubscriptionManager.Infrastructure.Authentication.Email;
 
 namespace SubscriptionManager.Infrastructure.Tests.Email;
 

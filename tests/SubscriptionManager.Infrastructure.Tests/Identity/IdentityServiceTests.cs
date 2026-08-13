@@ -8,7 +8,7 @@ using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.SavingsPlans;
 using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Infrastructure.Tests.Identity;

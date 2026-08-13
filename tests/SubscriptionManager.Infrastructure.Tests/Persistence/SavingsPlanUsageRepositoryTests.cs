@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Infrastructure.Persistence;
-using SubscriptionManager.Infrastructure.Persistence.Repositories;
+using SubscriptionManager.Infrastructure.SavingsPlans;
 
 namespace SubscriptionManager.Infrastructure.Tests.Persistence;
 

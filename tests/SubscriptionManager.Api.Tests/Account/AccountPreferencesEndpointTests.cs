@@ -1,12 +1,12 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.DependencyInjection;
+using SubscriptionManager.Application.Common.Localization;
+using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Infrastructure.Common.Identity;
+using SubscriptionManager.Infrastructure.Persistence;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.DependencyInjection;
-using SubscriptionManager.Application.Common.Localization;
-using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.Identity;
-using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Api.Tests.Account;
 

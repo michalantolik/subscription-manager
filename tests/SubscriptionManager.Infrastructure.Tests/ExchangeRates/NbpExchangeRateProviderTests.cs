@@ -1,7 +1,7 @@
-﻿using System.Net;
+﻿using SubscriptionManager.Domain.Subscriptions;
+using SubscriptionManager.Infrastructure.ExchangeRates.Nbp;
+using System.Net;
 using System.Text;
-using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.ExchangeRates;
 
 namespace SubscriptionManager.Infrastructure.Tests.ExchangeRates;
 

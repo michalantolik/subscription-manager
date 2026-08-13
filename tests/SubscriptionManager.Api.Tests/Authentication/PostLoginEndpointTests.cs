@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using System.Net;
 using System.Net.Http.Json;
 

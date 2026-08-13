@@ -8,7 +8,7 @@ using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.ExchangeRates;
 using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
 using System.Net;
 using System.Net.Http.Json;

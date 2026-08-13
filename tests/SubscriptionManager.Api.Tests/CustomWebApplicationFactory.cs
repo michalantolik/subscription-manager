@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SubscriptionManager.Api.Authentication;
 using SubscriptionManager.Api.Tests.Authentication;
 using SubscriptionManager.Application.Common.Identity;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Api.Tests;

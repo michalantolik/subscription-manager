@@ -1,7 +1,7 @@
 ﻿using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.Ai;
 using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.SavingsPlans;
+using SubscriptionManager.Infrastructure.SavingsPlans.OpenAi;
 
 namespace SubscriptionManager.Infrastructure.Tests.SavingsPlans;
 

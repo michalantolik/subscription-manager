@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using SubscriptionManager.Application.Billing.ProcessWebhook;
 using SubscriptionManager.Domain.Billing;
-using SubscriptionManager.Infrastructure.Billing;
+using SubscriptionManager.Infrastructure.Billing.Stripe;
 
 namespace SubscriptionManager.Infrastructure.Tests.Billing;
 

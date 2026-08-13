@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using SubscriptionManager.Domain.Billing;
-using SubscriptionManager.Infrastructure.Billing;
+using SubscriptionManager.Infrastructure.Billing.Stripe;
 
 namespace SubscriptionManager.Infrastructure.Tests.Billing;
 

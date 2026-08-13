@@ -117,7 +117,7 @@ public sealed class GetSavingsPlanUsageTests
                         .SubscriptionManagerDbContext>();
 
         dbContext.Users.Add(
-            new SubscriptionManager.Infrastructure.Identity.ApplicationUser
+            new SubscriptionManager.Infrastructure.Common.Identity.ApplicationUser
             {
                 Id = userId,
                 UserName =

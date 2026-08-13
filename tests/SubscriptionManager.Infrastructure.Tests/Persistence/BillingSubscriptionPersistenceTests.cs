@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Domain.Billing;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
 
 namespace SubscriptionManager.Infrastructure.Tests.Persistence;

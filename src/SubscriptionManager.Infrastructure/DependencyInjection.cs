@@ -1,5 +1,3 @@
-using System.ClientModel;
-using System.Text;
 using Azure.Communication.Email;
 using Azure.Identity;
 using Microsoft.AspNetCore.Hosting;
@@ -22,17 +20,26 @@ using SubscriptionManager.Application.ExchangeRates.ExternalSource;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.Ai;
 using SubscriptionManager.Application.Subscriptions;
-using SubscriptionManager.Infrastructure.Authentication;
-using SubscriptionManager.Infrastructure.Billing;
-using SubscriptionManager.Infrastructure.Email;
+using SubscriptionManager.Infrastructure.Authentication.Email;
+using SubscriptionManager.Infrastructure.Authentication.Jwt;
+using SubscriptionManager.Infrastructure.Billing.Persistence;
+using SubscriptionManager.Infrastructure.Billing.Stripe;
+using SubscriptionManager.Infrastructure.Common.Identity;
+using SubscriptionManager.Infrastructure.DigitalServices;
 using SubscriptionManager.Infrastructure.ExchangeRates;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.ExchangeRates.Nbp;
 using SubscriptionManager.Infrastructure.Persistence;
-using SubscriptionManager.Infrastructure.Persistence.Repositories;
 using SubscriptionManager.Infrastructure.SavingsPlans;
+using SubscriptionManager.Infrastructure.SavingsPlans.OpenAi;
+using SubscriptionManager.Infrastructure.Subscriptions;
+using System.ClientModel;
+using System.Text;
 
 namespace SubscriptionManager.Infrastructure;
 
+/// <summary>
+/// Provides dependency injection configuration for the Infrastructure layer.
+/// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(

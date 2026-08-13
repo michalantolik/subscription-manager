@@ -6,7 +6,7 @@ using SubscriptionManager.Api.ExceptionHandling;
 using SubscriptionManager.Application;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Infrastructure;
-using SubscriptionManager.Infrastructure.Authentication;
+using SubscriptionManager.Infrastructure.Authentication.Jwt;
 using SubscriptionManager.Infrastructure.Persistence;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;

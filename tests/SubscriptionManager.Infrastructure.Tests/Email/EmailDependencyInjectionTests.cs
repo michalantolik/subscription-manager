@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using SubscriptionManager.Application.Authentication;
-using SubscriptionManager.Infrastructure.Email;
+using SubscriptionManager.Infrastructure.Authentication.Email;
 
 namespace SubscriptionManager.Infrastructure.Tests.Email;
 

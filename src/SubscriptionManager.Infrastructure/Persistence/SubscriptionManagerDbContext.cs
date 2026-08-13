@@ -6,11 +6,14 @@ using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.ExchangeRates;
 using SubscriptionManager.Domain.SavingsPlans;
 using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.Billing;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Billing.Persistence;
+using SubscriptionManager.Infrastructure.Common.Identity;
 
 namespace SubscriptionManager.Infrastructure.Persistence;
 
+/// <summary>
+/// Provides database access for application identity and domain data.
+/// </summary>
 public sealed class SubscriptionManagerDbContext
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {

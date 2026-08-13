@@ -1,10 +1,10 @@
-using System.Net;
-using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
+using System.Net;
+using System.Net.Http.Json;
 
 namespace SubscriptionManager.Api.Tests.Subscriptions;
 

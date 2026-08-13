@@ -2,9 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Application.Billing.ProcessWebhook;
 using SubscriptionManager.Domain.Billing;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Billing.Persistence;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
-using SubscriptionManager.Infrastructure.Persistence.Repositories;
 
 namespace SubscriptionManager.Infrastructure.Tests.Persistence;
 

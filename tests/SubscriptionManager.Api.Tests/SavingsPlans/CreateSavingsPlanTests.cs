@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SubscriptionManager.Api.Tests.Authentication;
@@ -12,7 +11,7 @@ using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
 using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.DigitalServices;
 using SubscriptionManager.Domain.Subscriptions;
-using SubscriptionManager.Infrastructure.Identity;
+using SubscriptionManager.Infrastructure.Common.Identity;
 using SubscriptionManager.Infrastructure.Persistence;
 using System.Net;
 using System.Net.Http.Json;
