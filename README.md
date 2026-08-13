@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/michalantolik/subscription-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/michalantolik/subscription-manager/actions/workflows/ci.yml)
 
-A web application for managing recurring subscriptions and digital services such as Netflix, Spotify and ChatGPT Plus.
+A web application for managing recurring subscriptions for services such as Netflix, Spotify and ChatGPT Plus.
 
 ## Features
 
@@ -23,27 +23,28 @@ A web application for managing recurring subscriptions and digital services such
 
 ## External integrations
 
-| Service    | Purpose                                          |
-|------------|--------------------------------------------------|
-| Stripe     | Subscription billing and payment processing      |
-| NBP API    | Exchange rates for subscription cost conversion  |
-| OpenAI API | Personalized savings plan generation             |
+| Service                                   | Purpose                                         |
+|-------------------------------------------|-------------------------------------------------|
+| [Stripe API](https://docs.stripe.com/api) | Subscription billing and payment processing     |
+| [NBP API](https://api.nbp.pl/)            | Exchange rates for subscription cost conversion |
+| [OpenAI API](https://openai.com/api/)     | Personalized savings plan generation            |
 
 ## Project structure
 
-The backend is organized into business areas that span the architectural layers where required.
+The solution is organized into business areas across its architectural layers.
 
-| Domain            |   | Application        |   | Infrastructure     |   | API                |
-|-------------------|---|--------------------|---|--------------------|---|--------------------|
-| `Billing`         | ↔ | `Billing`          | ↔ | `Billing`          | ↔ | `Billing`          |
-| `DigitalServices` | ↔ | `DigitalServices`  | ↔ | `DigitalServices`  | ↔ | `DigitalServices`  |
-| `SavingsPlans`    | ↔ | `SavingsPlans`     | ↔ | `SavingsPlans`     | ↔ | `SavingsPlans`     |
-| `Subscriptions`   | ↔ | `Subscriptions`    | ↔ | `Subscriptions`    | ↔ | `Subscriptions`    |
-|                   |   | `Account`          |   |                    | ↔ | `Account`          |
-|                   |   | `Authentication`   | ↔ | `Authentication`   | ↔ | `Authentication`   |
-| `ExchangeRates`   | ↔ | `ExchangeRates`    | ↔ | `ExchangeRates`    |   |                    |
+Columns show corresponding areas rather than project dependency direction.
 
-The Web project provides the Blazor web client for the API.
+| [Domain](src/SubscriptionManager.Domain/README.md) | [Application](src/SubscriptionManager.Application/README.md) | [Infrastructure](src/SubscriptionManager.Infrastructure/README.md) | [API](src/SubscriptionManager.Api/README.md) | [Web](src/SubscriptionManager.Web/README.md) |
+|----------------------------------------------------|----------------------------------------------------------------|-------------------------------------------------------------------|------------------------------------------|------------------------------------------|
+| `Billing`                                          | `Billing`                                                      | `Billing`                                                         | `Billing`                                | `Billing`                                |
+| `DigitalServices`                                  | `DigitalServices`                                              | `DigitalServices`                                                 | `DigitalServices`                        | `DigitalServices`                        |
+| `SavingsPlans`                                     | `SavingsPlans`                                                 | `SavingsPlans`                                                    | `SavingsPlans`                           | `SavingsPlans`                           |
+| `Subscriptions`                                    | `Subscriptions`                                                | `Subscriptions`                                                   | `Subscriptions`                          | `Subscriptions`                          |
+|                                                    | `Account`                                                      |                                                                   | `Account`                                | `Account`                                |
+|                                                    | `Authentication`                                               | `Authentication`                                                  | `Authentication`                         | `Authentication`                         |
+| `ExchangeRates`                                    | `ExchangeRates`                                                | `ExchangeRates`                                                   |                                          |                                          |
+|                                                    |                                                                |                                                                   |                                          | `Overview`                               |
 
 ## Status
 
