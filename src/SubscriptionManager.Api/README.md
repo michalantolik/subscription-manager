@@ -4,14 +4,14 @@ The API project exposes Subscription Manager use cases through HTTP endpoints an
 
 ## API Areas
 
-| Area            | Responsibility                                                                                     |
-|-----------------|----------------------------------------------------------------------------------------------------|
-| Account         | Exposes account preference management.                                                             |
-| Authentication  | Exposes registration, login, email confirmation, password recovery, and user identity operations.  |
-| Billing         | Exposes plan information, checkout, subscription changes, and payment webhooks.                    |
-| DigitalServices | Exposes digital service management.                                                                |
-| SavingsPlans    | Exposes savings plan generation and usage information.                                             |
-| Subscriptions   | Exposes subscription management and recurring cost summaries.                                      |
+| Area            | Responsibility                                                                                    |
+|-----------------|---------------------------------------------------------------------------------------------------|
+| Account         | Exposes account preference and account lifecycle management.                                      |
+| Authentication  | Exposes registration, login, email confirmation, password recovery, and user identity operations. |
+| Billing         | Exposes plan information, checkout, subscription changes, and payment webhooks.                   |
+| DigitalServices | Exposes digital service management.                                                               |
+| SavingsPlans    | Exposes savings plan generation and usage information.                                            |
+| Subscriptions   | Exposes subscription management and recurring cost summaries.                                     |
 
 ## Common
 

@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SubscriptionManager.Application.Account.DeleteAccount;
 using SubscriptionManager.Application.Account.GetAccountPreferences;
 using SubscriptionManager.Application.Account.UpdateAccountPreferences;
 using SubscriptionManager.Application.Common.Identity;
@@ -9,7 +10,7 @@ using SubscriptionManager.Domain.Subscriptions;
 namespace SubscriptionManager.Api.Account;
 
 /// <summary>
-/// Exposes account preference use cases through HTTP endpoints.
+/// Exposes account use cases through HTTP endpoints.
 /// </summary>
 [ApiController]
 [Authorize]
@@ -17,6 +18,7 @@ namespace SubscriptionManager.Api.Account;
 public sealed class AccountController(
     GetAccountPreferencesHandler getAccountPreferencesHandler,
     UpdateAccountPreferencesHandler updateAccountPreferencesHandler,
+    DeleteAccountHandler deleteAccountHandler,
     ICurrentUser currentUser)
     : ControllerBase
 {
@@ -63,6 +65,41 @@ public sealed class AccountController(
         }
 
         return NoContent();
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteAccountAsync(
+        CancellationToken cancellationToken)
+    {
+        var command = new DeleteAccountCommand(
+            currentUser.UserId);
+
+        var result = await deleteAccountHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return ValidationProblem(
+                CreateValidationProblemDetails(result.Errors));
+        }
+
+        return NoContent();
+    }
+
+    private static ValidationProblemDetails CreateValidationProblemDetails(
+        IReadOnlyCollection<IdentityServiceError> errors)
+    {
+        var validationErrors = errors
+            .GroupBy(error => error.Code)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(error => error.Description)
+                    .ToArray());
+
+        return new ValidationProblemDetails(
+            validationErrors);
     }
 }
 

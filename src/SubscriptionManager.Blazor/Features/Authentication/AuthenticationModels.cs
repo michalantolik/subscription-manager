@@ -277,32 +277,6 @@ public sealed class AuthenticationApiClient(
             cancellationToken);
     }
 
-    public async Task<AuthenticationOperationResult> DeleteAccountAsync(
-        ClaimsPrincipal user,
-        CancellationToken cancellationToken = default)
-    {
-        using var request = new HttpRequestMessage(
-            HttpMethod.Delete,
-            "api/auth/account");
-
-        ApiRequestAuthorization.AddBearerToken(
-            request,
-            user);
-
-        using var response = await httpClient.SendAsync(
-            request,
-            cancellationToken);
-
-        if (response.IsSuccessStatusCode)
-        {
-            return AuthenticationOperationResult.Success();
-        }
-
-        return await ReadFailureAsync(
-            response,
-            cancellationToken);
-    }
-
     private static async Task<AuthenticationOperationResult> ReadFailureAsync(
         HttpResponseMessage response,
         CancellationToken cancellationToken)

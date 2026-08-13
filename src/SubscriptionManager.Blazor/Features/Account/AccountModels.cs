@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using SubscriptionManager.Blazor.Features.Authentication;
@@ -77,5 +77,24 @@ public sealed class AccountApiClient(
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<bool> DeleteAccountAsync(
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Delete,
+            "api/account");
+
+        ApiRequestAuthorization.AddBearerToken(
+            request,
+            user);
+
+        using var response = await httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        return response.IsSuccessStatusCode;
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -397,7 +397,7 @@ public sealed class CreateSavingsPlanTests
             problem.Status);
 
         Assert.Equal(
-            "Savings plan usage limit exceeded.",
+            "Daily savings plan limit reached.",
             problem.Title);
 
         Assert.Equal(
@@ -406,7 +406,7 @@ public sealed class CreateSavingsPlanTests
 
         var hasLimit =
             problem.Extensions.TryGetValue(
-                "limit",
+                "dailyLimit",
                 out var limitValue);
 
         Assert.True(hasLimit);

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using SubscriptionManager.Application.Account.DeleteAccount;
 using SubscriptionManager.Application.Authentication.ConfirmEmail;
 using SubscriptionManager.Application.Authentication.ForgotPassword;
 using SubscriptionManager.Application.Authentication.LoginUser;
@@ -25,7 +24,6 @@ public sealed class AuthenticationController(
     LoginUserHandler loginUserHandler,
     ForgotPasswordHandler forgotPasswordHandler,
     ResetPasswordHandler resetPasswordHandler,
-    DeleteAccountHandler deleteAccountHandler,
     ICurrentUser currentUser)
     : ControllerBase
 {
@@ -157,27 +155,6 @@ public sealed class AuthenticationController(
         return Ok(
             new CurrentUserResponse(
                 currentUser.UserId));
-    }
-
-    [Authorize]
-    [HttpDelete("account")]
-    public async Task<IActionResult> DeleteAccountAsync(
-        CancellationToken cancellationToken)
-    {
-        var command = new DeleteAccountCommand(
-            currentUser.UserId);
-
-        var result = await deleteAccountHandler.HandleAsync(
-            command,
-            cancellationToken);
-
-        if (!result.Succeeded)
-        {
-            return ValidationProblem(
-                CreateValidationProblemDetails(result.Errors));
-        }
-
-        return NoContent();
     }
 
     private static ValidationProblemDetails CreateValidationProblemDetails(

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
@@ -63,19 +63,6 @@ public sealed class SavingsPlansController
                 extensions: new Dictionary<string, object?>
                 {
                     ["code"] = "savings_plan_access_required"
-                });
-        }
-        catch (SavingsPlanUsageLimitExceededException exception)
-        {
-            return Problem(
-                statusCode: StatusCodes.Status429TooManyRequests,
-                title: "Savings plan usage limit exceeded.",
-                detail: exception.Message,
-                instance: HttpContext.Request.Path,
-                extensions: new Dictionary<string, object?>
-                {
-                    ["code"] = "savings_plan_usage_limit_exceeded",
-                    ["limit"] = exception.DailyLimit
                 });
         }
     }

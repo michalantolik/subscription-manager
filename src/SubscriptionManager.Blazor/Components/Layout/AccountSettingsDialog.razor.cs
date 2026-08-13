@@ -327,13 +327,12 @@ public partial class AccountSettingsDialog
 
         try
         {
-            var result =
-                await AuthenticationApiClient
-                    .DeleteAccountAsync(
-                        User,
-                        GetCancellationToken());
+            var deleted =
+                await AccountApiClient.DeleteAccountAsync(
+                    User,
+                    GetCancellationToken());
 
-            if (!result.Succeeded)
+            if (!deleted)
             {
                 _error =
                     T["Account.Delete.Error"];

@@ -82,14 +82,14 @@ Content-Type: application/json
 
 ###
 
+### Account
+
 ### Delete account
 
-DELETE {{SubscriptionManager.Api_HostAddress}}/api/auth/account
+DELETE {{SubscriptionManager.Api_HostAddress}}/api/account
 Authorization: Bearer {{AccessToken}}
 
 ###
-
-### Account
 
 ### Get account preferences
 
