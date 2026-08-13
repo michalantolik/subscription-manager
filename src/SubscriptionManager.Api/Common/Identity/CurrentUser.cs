@@ -1,8 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using SubscriptionManager.Application.Common.Identity;
 
-namespace SubscriptionManager.Api.Authentication;
+namespace SubscriptionManager.Api.Common.Identity;
 
+/// <summary>
+/// Provides access to the current authenticated user from the HTTP context.
+/// </summary>
 public sealed class CurrentUser(
     IHttpContextAccessor httpContextAccessor)
     : ICurrentUser

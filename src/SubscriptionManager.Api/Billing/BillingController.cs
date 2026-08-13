@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Application.Billing.CancelSubscription;
 using SubscriptionManager.Application.Billing.ChangeSubscription;
@@ -11,9 +10,13 @@ using SubscriptionManager.Application.Billing.PreviewSubscriptionChange;
 using SubscriptionManager.Application.Billing.ProcessWebhook;
 using SubscriptionManager.Application.Billing.ResumeSubscription;
 using SubscriptionManager.Domain.Billing;
+using System.Text;
 
-namespace SubscriptionManager.Api.Controllers;
+namespace SubscriptionManager.Api.Billing;
 
+/// <summary>
+/// Exposes billing use cases through HTTP endpoints.
+/// </summary>
 [ApiController]
 [Route("api/billing")]
 [Authorize]
@@ -165,19 +168,31 @@ public sealed class BillingController(
     }
 }
 
+/// <summary>
+/// Checkout session data accepted by the API.
+/// </summary>
 public sealed record CreateCheckoutSessionRequest(
     SubscriptionPlan Plan,
     BillingInterval BillingInterval,
     string SuccessUrl,
     string CancelUrl);
 
+/// <summary>
+/// Checkout session data returned by the API.
+/// </summary>
 public sealed record CreateCheckoutSessionResponse(
     string CheckoutUrl);
 
+/// <summary>
+/// Subscription change preview data accepted by the API.
+/// </summary>
 public sealed record PreviewSubscriptionChangeRequest(
     SubscriptionPlan Plan,
     BillingInterval BillingInterval);
 
+/// <summary>
+/// Subscription change data accepted by the API.
+/// </summary>
 public sealed record ChangeSubscriptionRequest(
     SubscriptionPlan Plan,
     BillingInterval BillingInterval);

@@ -6,8 +6,11 @@ using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Subscriptions;
 
-namespace SubscriptionManager.Api.Controllers;
+namespace SubscriptionManager.Api.Account;
 
+/// <summary>
+/// Exposes account preference use cases through HTTP endpoints.
+/// </summary>
 [ApiController]
 [Authorize]
 [Route("api/account")]
@@ -63,10 +66,16 @@ public sealed class AccountController(
     }
 }
 
+/// <summary>
+/// Account preference data returned by the API.
+/// </summary>
 public sealed record AccountPreferencesResponse(
     Language Language,
     Currency BaseCurrency);
 
+/// <summary>
+/// Account preference data accepted by the API.
+/// </summary>
 public sealed record UpdateAccountPreferencesRequest(
     Language Language,
     Currency BaseCurrency);

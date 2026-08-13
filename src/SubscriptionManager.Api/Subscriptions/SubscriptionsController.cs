@@ -10,8 +10,11 @@ using SubscriptionManager.Application.Subscriptions.GetSubscriptions;
 using SubscriptionManager.Application.Subscriptions.UpdateSubscription;
 using SubscriptionManager.Domain.Subscriptions;
 
-namespace SubscriptionManager.Api.Controllers;
+namespace SubscriptionManager.Api.Subscriptions;
 
+/// <summary>
+/// Exposes subscription use cases through HTTP endpoints.
+/// </summary>
 [ApiController]
 [Authorize]
 [Route("api/subscriptions")]
@@ -207,6 +210,9 @@ public sealed class SubscriptionsController : ControllerBase
     }
 }
 
+/// <summary>
+/// Subscription update data accepted by the API.
+/// </summary>
 public sealed record UpdateSubscriptionRequest(
     string Name,
     decimal Amount,
@@ -214,5 +220,8 @@ public sealed record UpdateSubscriptionRequest(
     BillingPeriod BillingPeriod,
     Guid? DigitalServiceId = null);
 
+/// <summary>
+/// Subscription end data accepted by the API.
+/// </summary>
 public sealed record EndSubscriptionRequest(
     DateOnly EndDate);

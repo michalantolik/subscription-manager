@@ -9,8 +9,11 @@ using SubscriptionManager.Application.DigitalServices.GetDigitalServices;
 using SubscriptionManager.Application.DigitalServices.UpdateDigitalService;
 using SubscriptionManager.Domain.DigitalServices;
 
-namespace SubscriptionManager.Api.Controllers;
+namespace SubscriptionManager.Api.DigitalServices;
 
+/// <summary>
+/// Exposes digital service use cases through HTTP endpoints.
+/// </summary>
 [ApiController]
 [Authorize]
 [Route("api/digital-services")]
@@ -159,6 +162,9 @@ public sealed class DigitalServicesController : ControllerBase
     }
 }
 
+/// <summary>
+/// Digital service update data accepted by the API.
+/// </summary>
 public sealed record UpdateDigitalServiceRequest(
     string Key,
     string Name,

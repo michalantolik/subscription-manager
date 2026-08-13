@@ -1,22 +1,25 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using SubscriptionManager.Application.Common.Identity;
-using SubscriptionManager.Application.Common.Localization;
-using SubscriptionManager.Application.Authentication.ConfirmEmail;
 using SubscriptionManager.Application.Account.DeleteAccount;
+using SubscriptionManager.Application.Authentication.ConfirmEmail;
 using SubscriptionManager.Application.Authentication.ForgotPassword;
 using SubscriptionManager.Application.Authentication.LoginUser;
 using SubscriptionManager.Application.Authentication.RegisterUser;
 using SubscriptionManager.Application.Authentication.ResetPassword;
+using SubscriptionManager.Application.Common.Identity;
+using SubscriptionManager.Application.Common.Localization;
 using SubscriptionManager.Domain.Billing;
 using SubscriptionManager.Domain.Subscriptions;
 
-namespace SubscriptionManager.Api.Controllers;
+namespace SubscriptionManager.Api.Authentication;
 
+/// <summary>
+/// Exposes authentication and identity-related use cases through HTTP endpoints.
+/// </summary>
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(
+public sealed class AuthenticationController(
     RegisterUserHandler registerUserHandler,
     ConfirmEmailHandler confirmEmailHandler,
     LoginUserHandler loginUserHandler,
@@ -193,36 +196,60 @@ public sealed class AuthController(
     }
 }
 
+/// <summary>
+/// Registration data accepted by the API.
+/// </summary>
 public sealed record RegisterUserRequest(
     string Email,
     string Password,
     Language Language,
     Currency BaseCurrency);
 
+/// <summary>
+/// Registration data returned by the API.
+/// </summary>
 public sealed record RegisterUserResponse(
     Guid UserId);
 
+/// <summary>
+/// Email confirmation data accepted by the API.
+/// </summary>
 public sealed record ConfirmEmailRequest(
     Guid UserId,
     string ConfirmationToken);
 
+/// <summary>
+/// Login data accepted by the API.
+/// </summary>
 public sealed record LoginUserRequest(
     string Email,
     string Password);
 
+/// <summary>
+/// Authentication data returned by the API.
+/// </summary>
 public sealed record LoginUserResponse(
     string AccessToken,
     Language Language,
     SubscriptionPlan SubscriptionPlan);
 
+/// <summary>
+/// Password recovery data accepted by the API.
+/// </summary>
 public sealed record ForgotPasswordRequest(
     string Email,
     string LanguageCode);
 
+/// <summary>
+/// Password reset data accepted by the API.
+/// </summary>
 public sealed record ResetPasswordRequest(
     Guid UserId,
     string ResetToken,
     string NewPassword);
 
+/// <summary>
+/// Current user data returned by the API.
+/// </summary>
 public sealed record CurrentUserResponse(
     Guid UserId);

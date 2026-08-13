@@ -1,34 +1,12 @@
 @SubscriptionManager.Api_HostAddress = http://localhost:5159
+@AccessToken = replace-with-access-token
+@UserId = 00000000-0000-0000-0000-000000000000
+@ConfirmationToken = replace-with-confirmation-token
+@ResetToken = replace-with-reset-token
+@SubscriptionId = 00000000-0000-0000-0000-000000000000
+@DigitalServiceId = 00000000-0000-0000-0000-000000000000
 
-### Create subscription
-
-POST {{SubscriptionManager.Api_HostAddress}}/api/subscriptions
-Content-Type: application/json
-
-{
-  "name": "Netflix",
-  "amount": 49.00,
-  "currency": "PLN",
-  "billingPeriod": "Monthly",
-  "startDate": "2026-07-18"
-}
-
-###
-
-### Create invalid subscription
-
-POST {{SubscriptionManager.Api_HostAddress}}/api/subscriptions
-Content-Type: application/json
-
-{
-  "name": "",
-  "amount": 49.00,
-  "currency": "PLN",
-  "billingPeriod": "Monthly",
-  "startDate": "2026-07-18"
-}
-
-###
+### Authentication
 
 ### Register user
 
@@ -38,32 +16,348 @@ Content-Type: application/json
 {
   "email": "michal@example.com",
   "password": "Test123!",
-  "languageCode": "pl"
+  "language": "Polish",
+  "baseCurrency": "PLN"
 }
 
 ###
 
-### Register the same user again
-
-POST {{SubscriptionManager.Api_HostAddress}}/api/auth/register
-Content-Type: application/json
-
-{
-  "email": "michal@example.com",
-  "password": "Test123!",
-  "languageCode": "pl"
-}
-
-###
-
-### Confirm user email
-# Replace UserId with the value returned by the register request.
-# Replace ConfirmationToken with the token written to the API console logs.
+### Confirm email
+# Replace UserId with the value returned by registration.
+# Replace ConfirmationToken with the token written by the development email sender.
 
 POST {{SubscriptionManager.Api_HostAddress}}/api/auth/confirm-email
 Content-Type: application/json
 
 {
-  "userId": "00000000-0000-0000-0000-000000000000",
-  "confirmationToken": "replace-with-confirmation-token"
+  "userId": "{{UserId}}",
+  "confirmationToken": "{{ConfirmationToken}}"
 }
+
+###
+
+### Login
+# Copy accessToken from the response to AccessToken above.
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "michal@example.com",
+  "password": "Test123!"
+}
+
+###
+
+### Get current user
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Request password reset
+# The development email sender writes the reset link to the API console.
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "michal@example.com",
+  "languageCode": "pl"
+}
+
+###
+
+### Reset password
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/auth/reset-password
+Content-Type: application/json
+
+{
+  "userId": "{{UserId}}",
+  "resetToken": "{{ResetToken}}",
+  "newPassword": "NewTest123!"
+}
+
+###
+
+### Delete account
+
+DELETE {{SubscriptionManager.Api_HostAddress}}/api/auth/account
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Account
+
+### Get account preferences
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/account/preferences
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Update account preferences
+
+PUT {{SubscriptionManager.Api_HostAddress}}/api/account/preferences
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "language": "English",
+  "baseCurrency": "EUR"
+}
+
+###
+
+### Billing
+
+### Get payment plans
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/billing/plans
+
+###
+
+### Get billing overview
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/billing
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Create checkout session
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/billing/checkout
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "plan": "Plus",
+  "billingInterval": "Monthly",
+  "successUrl": "https://localhost:7160/account?billing=success",
+  "cancelUrl": "https://localhost:7160/account?billing=cancelled"
+}
+
+###
+
+### Preview subscription change
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/billing/subscription/change-preview
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "plan": "Premium",
+  "billingInterval": "Monthly"
+}
+
+###
+
+### Change subscription
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/billing/subscription/change
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "plan": "Premium",
+  "billingInterval": "Monthly"
+}
+
+###
+
+### Cancel subscription
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/billing/subscription/cancel
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Resume subscription
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/billing/subscription/resume
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Payment webhook
+# Use the Stripe CLI to send signed webhook events to this endpoint.
+# A manually entered payload without a valid Stripe-Signature is rejected.
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/billing/webhook
+Content-Type: application/json
+Stripe-Signature: replace-with-valid-stripe-signature
+
+{}
+
+###
+
+### Digital services
+
+### Get digital services
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/digital-services
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Get digital service by id
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/digital-services/{{DigitalServiceId}}
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Create digital service
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/digital-services
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "key": "example-service",
+  "name": "Example Service",
+  "category": "Entertainment",
+  "customCategoryName": null,
+  "iconKey": null,
+  "managementUrl": "https://example.com/account"
+}
+
+###
+
+### Update digital service
+
+PUT {{SubscriptionManager.Api_HostAddress}}/api/digital-services/{{DigitalServiceId}}
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "key": "example-service",
+  "name": "Example Service",
+  "category": "Entertainment",
+  "customCategoryName": null,
+  "iconKey": null,
+  "managementUrl": "https://example.com/account"
+}
+
+###
+
+### Deactivate digital service
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/digital-services/{{DigitalServiceId}}/deactivate
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Delete digital service
+
+DELETE {{SubscriptionManager.Api_HostAddress}}/api/digital-services/{{DigitalServiceId}}
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Savings plans
+
+### Get savings plan usage
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/savings-plans/usage
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Create savings plan
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/savings-plans
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "goalType": "MonthlySavings",
+  "targetAmount": 100.00,
+  "protectedSubscriptionIds": [],
+  "strategy": "Balanced",
+  "additionalPreference": null,
+  "languageCode": "pl"
+}
+
+###
+
+### Subscriptions
+
+### Get subscriptions
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/subscriptions
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Get subscription cost summary
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/subscriptions/cost-summary
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Get subscription by id
+
+GET {{SubscriptionManager.Api_HostAddress}}/api/subscriptions/{{SubscriptionId}}
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Create subscription
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/subscriptions
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "name": "Netflix",
+  "amount": 49.00,
+  "currency": "PLN",
+  "billingPeriod": "Monthly",
+  "startDate": "2026-08-13",
+  "digitalServiceId": null
+}
+
+###
+
+### Update subscription
+
+PUT {{SubscriptionManager.Api_HostAddress}}/api/subscriptions/{{SubscriptionId}}
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "name": "Netflix",
+  "amount": 55.00,
+  "currency": "PLN",
+  "billingPeriod": "Monthly",
+  "digitalServiceId": null
+}
+
+###
+
+### End subscription
+
+POST {{SubscriptionManager.Api_HostAddress}}/api/subscriptions/{{SubscriptionId}}/end
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "endDate": "2026-08-13"
+}
+
+###
+
+### Delete subscription
+
+DELETE {{SubscriptionManager.Api_HostAddress}}/api/subscriptions/{{SubscriptionId}}
+Authorization: Bearer {{AccessToken}}
+
+###
+
+### Health
+
+GET {{SubscriptionManager.Api_HostAddress}}/health

@@ -1,7 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using Microsoft.AspNetCore.Http;
+using SubscriptionManager.Api.Common.Identity;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using SubscriptionManager.Api.Authentication;
 
 namespace SubscriptionManager.Api.Tests.Authentication;
 

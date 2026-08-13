@@ -4,8 +4,11 @@ using SubscriptionManager.Application.SavingsPlans;
 using SubscriptionManager.Application.SavingsPlans.CreateSavingsPlan;
 using SubscriptionManager.Application.SavingsPlans.GetSavingsPlanUsage;
 
-namespace SubscriptionManager.Api.Controllers;
+namespace SubscriptionManager.Api.SavingsPlans;
 
+/// <summary>
+/// Exposes savings plan use cases through HTTP endpoints.
+/// </summary>
 [ApiController]
 [Authorize]
 [Route("api/savings-plans")]

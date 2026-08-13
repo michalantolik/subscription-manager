@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using SubscriptionManager.Api.Authentication;
+using SubscriptionManager.Api.Common.Identity;
 using SubscriptionManager.Api.Tests.Authentication;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Infrastructure.Common.Identity;

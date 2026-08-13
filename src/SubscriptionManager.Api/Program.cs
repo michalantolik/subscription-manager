@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
-using SubscriptionManager.Api.Authentication;
-using SubscriptionManager.Api.ExceptionHandling;
+using SubscriptionManager.Api.Common.ExceptionHandling;
+using SubscriptionManager.Api.Common.Identity;
 using SubscriptionManager.Application;
 using SubscriptionManager.Application.Common.Identity;
 using SubscriptionManager.Infrastructure;
@@ -15,6 +15,9 @@ using System.Threading.RateLimiting;
 
 namespace SubscriptionManager.Api;
 
+/// <summary>
+/// Configures and starts the API application host.
+/// </summary>
 public partial class Program
 {
     public static async Task Main(string[] args)

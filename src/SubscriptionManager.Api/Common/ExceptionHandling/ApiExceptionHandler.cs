@@ -7,8 +7,11 @@ using SubscriptionManager.Application.Billing.ResumeSubscription;
 using SubscriptionManager.Application.ExchangeRates;
 using SubscriptionManager.Application.SavingsPlans;
 
-namespace SubscriptionManager.Api.ExceptionHandling;
+namespace SubscriptionManager.Api.Common.ExceptionHandling;
 
+/// <summary>
+/// Maps application exceptions to HTTP problem details responses.
+/// </summary>
 internal sealed class ApiExceptionHandler(
     ILogger<ApiExceptionHandler> logger,
     IProblemDetailsService problemDetailsService)
