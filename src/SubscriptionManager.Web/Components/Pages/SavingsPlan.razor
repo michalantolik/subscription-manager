@@ -1,0 +1,1205 @@
+@page "/savings-plan"
+
+@using SubscriptionManager.Web.Features.SavingsPlans
+
+@attribute [Authorize]
+
+@inject Localizer T
+@inject NavigationManager Navigation
+@inject SavingsPlansApiClient SavingsPlansApiClient
+@inject SubscriptionsApiClient SubscriptionsApiClient
+
+<PageTitle>Subscription Manager — @T["Navigation.SavingsPlan"]</PageTitle>
+
+<section class="page savings-plan-page">
+    <div class="page-heading savings-plan-heading">
+        <div>
+            <div class="savings-plan-eyebrow">
+                <p class="eyebrow">@T["SavingsPlan.Eyebrow"]</p>
+                <span class="ui-badge ui-badge-brand">
+                    <AppIcon Name="spark" />
+                    @T["SavingsPlan.AiAssisted"]
+                </span>
+            </div>
+
+            <h1>@T["SavingsPlan.Title"]</h1>
+            <p>@T["SavingsPlan.Description"]</p>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <section class="ui-card ui-empty-state"
+                 aria-live="polite">
+            <div class="ui-empty-state-content">
+                <span class="ui-empty-state-icon">
+                    <AppIcon Name="subscriptions" />
+                </span>
+
+                <h3>@T["SavingsPlan.Loading.Title"]</h3>
+                <p>@T["SavingsPlan.Loading.Description"]</p>
+            </div>
+        </section>
+    }
+    else if (_loadError)
+    {
+        <section class="ui-card ui-empty-state"
+                 role="alert">
+            <div class="ui-empty-state-content">
+                <span class="ui-empty-state-icon">
+                    <AppIcon Name="report" />
+                </span>
+
+                <h3>@T["SavingsPlan.Error.Load"]</h3>
+
+                <button class="ui-button ui-button-primary"
+                        type="button"
+                        @onclick="LoadAsync">
+                    @T["SavingsPlan.Retry"]
+                </button>
+            </div>
+        </section>
+    }
+    else if (Subscriptions.Count == 0)
+    {
+        <section class="ui-card ui-empty-state">
+            <div class="ui-empty-state-content">
+                <span class="ui-empty-state-icon">
+                    <AppIcon Name="subscriptions" />
+                </span>
+
+                <h3>@T["SavingsPlan.Empty.Title"]</h3>
+                <p>@T["SavingsPlan.Empty.Description"]</p>
+
+                <button class="ui-button ui-button-primary"
+                        type="button"
+                        @onclick="GoToSubscriptions">
+                    @T["Navigation.Subscriptions"]
+                </button>
+            </div>
+        </section>
+    }
+    else
+    {
+        @if (_stage is not PlanStage.Results)
+        {
+            <div class="savings-overview ui-card"
+                 aria-label="@T["SavingsPlan.CurrentSummary"]">
+                <div>
+                    <span>
+                        @T["SavingsPlan.CurrentMonthlyCost"]
+                    </span>
+                    <strong>
+                        @Money(CurrentMonthlyCost)
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
+                        @T["SavingsPlan.ActiveSubscriptions"]
+                    </span>
+                    <strong>
+                        @Subscriptions.Count
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
+                        @T["SavingsPlan.BaseCurrency"]
+                    </span>
+                    <strong>
+                        @_baseCurrency
+                    </strong>
+                </div>
+            </div>
+
+            @if (HasUsageInformation)
+            {
+                <section class="savings-usage-status ui-card @(IsDailyLimitReached ? "limit-reached" : null)"
+                         aria-live="polite">
+                    <span class="savings-usage-icon">
+                        <AppIcon Name="spark" />
+                    </span>
+
+                    <div>
+                        <span class="savings-usage-label">
+                            @T["SavingsPlan.Usage.Plan"]
+                        </span>
+
+                        <strong>
+                            @T[SubscriptionPlanLabelKey]
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span class="savings-usage-label">
+                            @T["SavingsPlan.Usage.DailyLimit"]
+                        </span>
+
+                        <strong>
+                            @T[
+                                "SavingsPlan.Usage.Remaining",
+                                _remainingRequestCount,
+                                _dailyRequestLimit]
+                        </strong>
+                    </div>
+                </section>
+            }
+        }
+
+        @if (_stage is PlanStage.Analyzing)
+        {
+            <section class="savings-analysis ui-card"
+                     aria-live="polite">
+                <span class="savings-analysis-mark">
+                    <AppIcon Name="spark" />
+                </span>
+
+                <h2>@T["SavingsPlan.Analysis.Title"]</h2>
+                <p>@T["SavingsPlan.Analysis.Description"]</p>
+
+                <div class="savings-analysis-progress"
+                     aria-hidden="true">
+                    <span></span>
+                </div>
+
+                <div class="savings-analysis-steps">
+                    @foreach (var step in AnalysisSteps)
+                    {
+                        <div class="savings-analysis-step @(step.Number <= _analysisStep ? "complete" : null)">
+                            <span>
+                                @if (step.Number < _analysisStep)
+                                {
+                                    <AppIcon Name="check" />
+                                }
+                                else
+                                {
+                                    @step.Number
+                                }
+                            </span>
+
+                            <strong>
+                                @T[step.LabelKey]
+                            </strong>
+                        </div>
+                    }
+                </div>
+
+                <small>
+                    @T["SavingsPlan.Analysis.NoChanges"]
+                </small>
+            </section>
+        }
+        else if (_stage is PlanStage.Results)
+        {
+            @ResultsContent()
+        }
+        else
+        {
+            <nav class="savings-stepper"
+                 aria-label="@T["SavingsPlan.Steps.Label"]">
+                @foreach (var step in FormSteps)
+                {
+                    <button type="button"
+                            class="savings-step @(StepState(step.Stage))"
+                            disabled="@((int)step.Stage > (int)_furthestStage)"
+                            @onclick="() => GoToStage(step.Stage)">
+                        <span>
+                            @if ((int)step.Stage < (int)_stage)
+                            {
+                                <AppIcon Name="check" />
+                            }
+                            else
+                            {
+                                @step.Number
+                            }
+                        </span>
+
+                        <strong>
+                            @T[step.LabelKey]
+                        </strong>
+                    </button>
+                }
+            </nav>
+
+            <div class="savings-workspace">
+                <main class="savings-form-card ui-card">
+                    @if (_stage is PlanStage.Goal)
+                    {
+                        @GoalContent()
+                    }
+                    else if (_stage is PlanStage.Preferences)
+                    {
+                        @PreferencesContent()
+                    }
+                    else
+                    {
+                        @ReviewContent()
+                    }
+                </main>
+
+                <aside class="savings-summary ui-card">
+                    <div class="savings-card-heading">
+                        <span class="savings-heading-icon">
+                            <AppIcon Name="target" />
+                        </span>
+
+                        <div>
+                            <h2>
+                                @T["SavingsPlan.Summary.Title"]
+                            </h2>
+
+                            <p>
+                                @T["SavingsPlan.Summary.Description"]
+                            </p>
+                        </div>
+                    </div>
+
+                    <dl>
+                        <div>
+                            <dt>
+                                @T["SavingsPlan.Summary.Current"]
+                            </dt>
+                            <dd>
+                                @Money(CurrentMonthlyCost)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                @T["SavingsPlan.Summary.Goal"]
+                            </dt>
+                            <dd>
+                                @GoalSummary
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                @T["SavingsPlan.Summary.Keep"]
+                            </dt>
+                            <dd>
+                                @ProtectedSummary
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>
+                                @T["SavingsPlan.Summary.Priority"]
+                            </dt>
+                            <dd>
+                                @T[StrategyLabelKey]
+                            </dd>
+                        </div>
+
+                        @if (HasUsageInformation)
+                        {
+                            <div>
+                                <dt>
+                                    @T["SavingsPlan.Usage.Plan"]
+                                </dt>
+                                <dd>
+                                    @T[SubscriptionPlanLabelKey]
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt>
+                                    @T["SavingsPlan.Usage.RemainingLabel"]
+                                </dt>
+                                <dd>
+                                    @_remainingRequestCount /
+                                    @_dailyRequestLimit
+                                </dd>
+                            </div>
+                        }
+                    </dl>
+
+                    <div class="savings-safety-note">
+                        <AppIcon Name="check" />
+                        <p>
+                            @T["SavingsPlan.Summary.Safety"]
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        }
+    }
+</section>
+
+@if (_dialog is DialogKind.ReviewChanges &&
+     _recommendedPlan is not null)
+{
+    <div class="ui-dialog-backdrop">
+        <section class="ui-dialog ui-dialog-small"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="savings-review-dialog-title">
+            <header class="ui-dialog-header">
+                <div class="ui-dialog-heading">
+                    <span class="ui-dialog-mark">
+                        <AppIcon Name="subscriptions" />
+                    </span>
+
+                    <div>
+                        <h2 class="ui-dialog-title"
+                            id="savings-review-dialog-title">
+                            @T["SavingsPlan.Dialog.ReviewTitle"]
+                        </h2>
+
+                        <p class="ui-dialog-description">
+                            @T["SavingsPlan.Dialog.ReviewDescription"]
+                        </p>
+                    </div>
+                </div>
+
+                <button class="ui-dialog-close"
+                        type="button"
+                        @onclick="CloseDialog"
+                        title="@T["Action.Close"]">
+                    <AppIcon Name="close" />
+                </button>
+            </header>
+
+            <div class="ui-dialog-body">
+                <div class="savings-dialog-list">
+                    @foreach (var subscription in
+                        _recommendedPlan.Subscriptions)
+                    {
+                        var sourceSubscription =
+                            FindSubscription(
+                                subscription.Id);
+
+                        <div style="@(sourceSubscription is null ? null : StyleFor(sourceSubscription))">
+                            <span class="savings-service-mark">
+                                @if (sourceSubscription is not null)
+                                {
+                                    <DigitalServiceIcon
+                                        IconKey="@sourceSubscription.IconKey"
+                                        FallbackIcon="@IconFor(sourceSubscription)" />
+                                }
+                                else
+                                {
+                                    <AppIcon Name="subscriptions" />
+                                }
+                            </span>
+
+                            <span>
+                                <strong>
+                                    @subscription.Name
+                                </strong>
+
+                                <small>
+                                    @Money(subscription.MonthlyCost)
+                                    @T["PerMonth"]
+                                </small>
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <div class="savings-dialog-note">
+                    <AppIcon Name="check" />
+
+                    <p>
+                        @T["SavingsPlan.Dialog.ReviewSafety"]
+                    </p>
+                </div>
+            </div>
+
+            <footer class="ui-dialog-footer">
+                <button class="ui-button ui-button-secondary"
+                        type="button"
+                        @onclick="CloseDialog">
+                    @T["Action.Cancel"]
+                </button>
+
+                <button class="ui-button ui-button-primary"
+                        type="button"
+                        @onclick="GoToSubscriptions">
+                    @T["SavingsPlan.Dialog.GoToSubscriptions"]
+                    <AppIcon Name="chevron" />
+                </button>
+            </footer>
+        </section>
+    </div>
+}
+
+@code {
+    private RenderFragment GoalContent() =>
+        @<div class="savings-content">
+            <div class="savings-card-heading">
+                <span class="savings-heading-icon">
+                    <AppIcon Name="target" />
+                </span>
+
+                <div>
+                    <span class="savings-section-number">
+                        @T["SavingsPlan.Step", 1, 3]
+                    </span>
+
+                    <h2>
+                        @T["SavingsPlan.Goal.Title"]
+                    </h2>
+
+                    <p>
+                        @T["SavingsPlan.Goal.Description"]
+                    </p>
+                </div>
+            </div>
+
+            <div class="savings-choice-grid">
+                @GoalChoice(
+                    SavingsPlanGoalType.MonthlyBudget,
+                    "budget",
+                    "SavingsPlan.Goal.Budget.Title",
+                    "SavingsPlan.Goal.Budget.Description")
+
+                @GoalChoice(
+                    SavingsPlanGoalType.MonthlySavings,
+                    "report",
+                    "SavingsPlan.Goal.Savings.Title",
+                    "SavingsPlan.Goal.Savings.Description")
+            </div>
+
+            <label class="ui-field savings-amount-field">
+                <span class="ui-label">
+                    @(_goalKind ==
+                        SavingsPlanGoalType.MonthlyBudget
+                            ? T[
+                                "SavingsPlan.Goal.Budget.Label"]
+                            : T[
+                                "SavingsPlan.Goal.Savings.Label"])
+                </span>
+
+                <span class="savings-money-input">
+                    <input class="ui-control"
+                           type="number"
+                           min="1"
+                           step="0.01"
+                           @bind="_targetAmount"
+                           @bind:event="oninput" />
+
+                    <strong>
+                        @_baseCurrency
+                    </strong>
+                </span>
+
+                <small class="ui-help">
+                    @(_goalKind ==
+                        SavingsPlanGoalType.MonthlyBudget
+                            ? T[
+                                "SavingsPlan.Goal.Budget.Hint",
+                                Money(CurrentMonthlyCost)]
+                            : T[
+                                "SavingsPlan.Goal.Savings.Hint",
+                                Money(CurrentMonthlyCost)])
+                </small>
+            </label>
+
+            @ValidationMessage()
+
+            <div class="savings-actions">
+                <span></span>
+
+                <button class="ui-button ui-button-primary"
+                        type="button"
+                        @onclick="ContinueFromGoal">
+                    @T["Action.Next"]
+                    <AppIcon Name="chevron" />
+                </button>
+            </div>
+        </div>;
+
+    private RenderFragment PreferencesContent() =>
+        @<div class="savings-content">
+            <div class="savings-card-heading">
+                <span class="savings-heading-icon">
+                    <AppIcon Name="tune" />
+                </span>
+
+                <div>
+                    <span class="savings-section-number">
+                        @T["SavingsPlan.Step", 2, 3]
+                    </span>
+
+                    <h2>
+                        @T["SavingsPlan.Preferences.Title"]
+                    </h2>
+
+                    <p>
+                        @T["SavingsPlan.Preferences.Description"]
+                    </p>
+                </div>
+            </div>
+
+            <section class="savings-form-section">
+                <div class="savings-form-section-heading">
+                    <h3>
+                        @T["SavingsPlan.Protected.Title"]
+                    </h3>
+
+                    <p>
+                        @T["SavingsPlan.Protected.Description"]
+                    </p>
+                </div>
+
+                <div class="savings-subscription-list">
+                    @foreach (var subscription in Subscriptions)
+                    {
+                        var isProtected =
+                            _protectedSubscriptionIds.Contains(
+                                subscription.Id);
+
+                        <button class="savings-subscription-choice @(isProtected ? "selected" : null)"
+                                style="@StyleFor(subscription)"
+                                type="button"
+                                aria-pressed="@isProtected"
+                                @onclick="() => ToggleProtected(subscription.Id)">
+                            <span class="savings-service-mark">
+                                <DigitalServiceIcon
+                                    IconKey="@subscription.IconKey"
+                                    FallbackIcon="@IconFor(subscription)" />
+                            </span>
+
+                            <span class="savings-subscription-copy">
+                                <strong>
+                                    @subscription.Name
+                                </strong>
+
+                                <small>
+                                    @CategoryLabel(subscription)
+                                </small>
+                            </span>
+
+                            <span class="savings-subscription-price">
+                                <strong>
+                                    @Money(
+                                        subscription
+                                            .MonthlyEquivalentAmount,
+                                        subscription.Currency)
+                                </strong>
+
+                                <small>
+                                    @T["PerMonth"]
+                                </small>
+                            </span>
+
+                            <span class="savings-selection-mark">
+                                @if (isProtected)
+                                {
+                                    <AppIcon Name="check" />
+                                }
+                            </span>
+                        </button>
+                    }
+                </div>
+
+                <small class="savings-selection-summary">
+                    @T[
+                        "SavingsPlan.Protected.Selected",
+                        _protectedSubscriptionIds.Count,
+                        Subscriptions.Count]
+                </small>
+            </section>
+
+            <section class="savings-form-section">
+                <div class="savings-form-section-heading">
+                    <h3>
+                        @T["SavingsPlan.Strategy.Title"]
+                    </h3>
+
+                    <p>
+                        @T["SavingsPlan.Strategy.Description"]
+                    </p>
+                </div>
+
+                <div class="savings-strategy-grid">
+                    @StrategyChoice(
+                        SavingsPlanStrategy.FewerChanges,
+                        "SavingsPlan.Strategy.Fewer.Title",
+                        "SavingsPlan.Strategy.Fewer.Description")
+
+                    @StrategyChoice(
+                        SavingsPlanStrategy.Balanced,
+                        "SavingsPlan.Strategy.Balanced.Title",
+                        "SavingsPlan.Strategy.Balanced.Description")
+
+                    @StrategyChoice(
+                        SavingsPlanStrategy.MaximumSavings,
+                        "SavingsPlan.Strategy.Maximum.Title",
+                        "SavingsPlan.Strategy.Maximum.Description")
+                </div>
+            </section>
+
+            <section class="savings-form-section">
+                <label class="ui-field">
+                    <span class="ui-label">
+                        @T["SavingsPlan.Additional.Title"]
+                    </span>
+
+                    <textarea class="ui-control savings-textarea"
+                              maxlength="300"
+                              placeholder="@T["SavingsPlan.Additional.Placeholder"]"
+                              @bind="_additionalPreference">
+                    </textarea>
+
+                    <small class="ui-help">
+                        @T["SavingsPlan.Additional.Hint"]
+                    </small>
+                </label>
+            </section>
+
+            @ValidationMessage()
+
+            <div class="savings-actions">
+                <button class="ui-button ui-button-secondary"
+                        type="button"
+                        @onclick="BackToGoal">
+                    <AppIcon Name="chevron-left" />
+                    @T["Action.Back"]
+                </button>
+
+                <button class="ui-button ui-button-primary"
+                        type="button"
+                        @onclick="ContinueFromPreferences">
+                    @T["Action.Next"]
+                    <AppIcon Name="chevron" />
+                </button>
+            </div>
+        </div>;
+
+    private RenderFragment ReviewContent() =>
+        @<div class="savings-content">
+            <div class="savings-card-heading">
+                <span class="savings-heading-icon">
+                    <AppIcon Name="check" />
+                </span>
+
+                <div>
+                    <span class="savings-section-number">
+                        @T["SavingsPlan.Step", 3, 3]
+                    </span>
+
+                    <h2>
+                        @T["SavingsPlan.Review.Title"]
+                    </h2>
+
+                    <p>
+                        @T["SavingsPlan.Review.Description"]
+                    </p>
+                </div>
+            </div>
+
+            <div class="savings-review-list">
+                <section>
+                    <div>
+                        <span>
+                            @T["SavingsPlan.Review.Goal"]
+                        </span>
+
+                        <strong>
+                            @GoalSummary
+                        </strong>
+
+                        <small>
+                            @T[
+                                "SavingsPlan.Review.RequiredSavings",
+                                Money(RequiredSavings)]
+                        </small>
+                    </div>
+
+                    <button type="button"
+                            @onclick="BackToGoal">
+                        @T["Action.Edit"]
+                    </button>
+                </section>
+
+                <section>
+                    <div>
+                        <span>
+                            @T["SavingsPlan.Review.Protected"]
+                        </span>
+
+                        @if (_protectedSubscriptionIds.Count == 0)
+                        {
+                            <strong>
+                                @T["SavingsPlan.Summary.None"]
+                            </strong>
+                        }
+                        else
+                        {
+                            <div class="savings-review-tags">
+                                @foreach (var subscription in
+                                    ProtectedSubscriptions)
+                                {
+                                    <span>
+                                        @subscription.Name
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <button type="button"
+                            @onclick="BackToPreferences">
+                        @T["Action.Edit"]
+                    </button>
+                </section>
+
+                <section>
+                    <div>
+                        <span>
+                            @T["SavingsPlan.Review.Priority"]
+                        </span>
+
+                        <strong>
+                            @T[StrategyLabelKey]
+                        </strong>
+                    </div>
+
+                    <button type="button"
+                            @onclick="BackToPreferences">
+                        @T["Action.Edit"]
+                    </button>
+                </section>
+
+                <section>
+                    <div>
+                        <span>
+                            @T["SavingsPlan.Review.Additional"]
+                        </span>
+
+                        <strong class="savings-review-instruction">
+                            @(string.IsNullOrWhiteSpace(
+                                _additionalPreference)
+                                    ? T[
+                                        "SavingsPlan.Review.NoAdditional"]
+                                    : _additionalPreference)
+                        </strong>
+                    </div>
+
+                    <button type="button"
+                            @onclick="BackToPreferences">
+                        @T["Action.Edit"]
+                    </button>
+                </section>
+            </div>
+
+            @if (HasUsageInformation)
+            {
+                <div class="savings-usage-status compact @(IsDailyLimitReached ? "limit-reached" : null)">
+                    <span class="savings-usage-icon">
+                        <AppIcon Name="spark" />
+                    </span>
+
+                    <div>
+                        <span class="savings-usage-label">
+                            @T["SavingsPlan.Usage.Plan"]
+                        </span>
+
+                        <strong>
+                            @T[SubscriptionPlanLabelKey]
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span class="savings-usage-label">
+                            @T["SavingsPlan.Usage.RemainingLabel"]
+                        </span>
+
+                        <strong>
+                            @T[
+                                "SavingsPlan.Usage.Remaining",
+                                _remainingRequestCount,
+                                _dailyRequestLimit]
+                        </strong>
+                    </div>
+                </div>
+            }
+
+            <div class="savings-review-notice">
+                <AppIcon Name="spark" />
+
+                <div>
+                    <strong>
+                        @T["SavingsPlan.Review.NoticeTitle"]
+                    </strong>
+
+                    <p>
+                        @T[
+                            "SavingsPlan.Review.NoticeDescription"]
+                    </p>
+                </div>
+            </div>
+
+            @ValidationMessage()
+
+            <div class="savings-actions">
+                <button class="ui-button ui-button-secondary"
+                        type="button"
+                        @onclick="BackToPreferences">
+                    <AppIcon Name="chevron-left" />
+                    @T["Action.Back"]
+                </button>
+
+                <button class="ui-button ui-button-primary"
+                        type="button"
+                        disabled="@IsDailyLimitReached"
+                        @onclick="CreatePlanAsync">
+                    <AppIcon Name="spark" />
+
+                    @(IsDailyLimitReached
+                        ? T["SavingsPlan.Usage.LimitReached"]
+                        : T["SavingsPlan.Create"])
+                </button>
+            </div>
+        </div>;
+
+    private RenderFragment ResultsContent() =>
+        @<div class="savings-results-content">
+            <div class="savings-results-heading">
+                <div>
+                    <span class="savings-result-mark">
+                        <AppIcon Name="check" />
+                    </span>
+
+                    <div>
+                        <div class="savings-plan-eyebrow">
+                            <p class="eyebrow">
+                                @T["SavingsPlan.Results.Eyebrow"]
+                            </p>
+
+                            <span class="ui-badge ui-badge-brand">
+                                <AppIcon Name="spark" />
+                                @T["SavingsPlan.AiAssisted"]
+                            </span>
+
+                            @if (HasUsageInformation)
+                            {
+                                <span class="savings-result-account-status">
+                                    <span class="ui-badge">
+                                        @T[SubscriptionPlanLabelKey]
+                                    </span>
+
+                                    <span class="ui-badge @(IsDailyLimitReached ? "ui-badge-danger" : null)">
+                                        @T[
+                                            "SavingsPlan.Usage.Remaining",
+                                            _remainingRequestCount,
+                                            _dailyRequestLimit]
+                                    </span>
+                                </span>
+                            }
+                        </div>
+
+                        <h1>
+                            @T["SavingsPlan.Results.Title"]
+                        </h1>
+
+                        <p>
+                            @ResultsDescription
+                        </p>
+                    </div>
+                </div>
+
+                <button class="ui-button ui-button-secondary"
+                        type="button"
+                        @onclick="StartOver">
+                    @T["SavingsPlan.Results.StartOver"]
+                </button>
+            </div>
+
+            @if (_recommendedPlan is null)
+            {
+                <section class="ui-card ui-empty-state">
+                    <div class="ui-empty-state-content">
+                        <span class="ui-empty-state-icon">
+                            <AppIcon Name="target" />
+                        </span>
+
+                        <h3>
+                            @T[
+                                "SavingsPlan.Results.UnavailableTitle"]
+                        </h3>
+
+                        <p>
+                            @T[
+                                "SavingsPlan.Results.UnavailableDescription"]
+                        </p>
+
+                        <button class="ui-button ui-button-primary"
+                                type="button"
+                                @onclick="BackToPreferencesFromResults">
+                            @T[
+                                "SavingsPlan.Results.AdjustPreferences"]
+                        </button>
+                    </div>
+                </section>
+            }
+            else
+            {
+                <div class="savings-result-metrics">
+                    @ResultMetric(
+                        "SavingsPlan.Results.Current",
+                        CurrentMonthlyCost)
+
+                    @ResultMetric(
+                        "SavingsPlan.Results.Projected",
+                        _recommendedPlan.ProjectedMonthlyCost)
+
+                    @ResultMetric(
+                        "SavingsPlan.Results.MonthlySavings",
+                        _recommendedPlan.MonthlySavings)
+
+                    @ResultMetric(
+                        "SavingsPlan.Results.YearlySavings",
+                        _recommendedPlan.YearlySavings)
+                </div>
+
+                <div class="savings-plans-grid">
+                    @PlanCard(
+                        _recommendedPlan,
+                        true)
+
+                    @if (_alternativePlan is not null)
+                    {
+                        @PlanCard(
+                            _alternativePlan,
+                            false)
+                    }
+                </div>
+
+                <div class="savings-limitations ui-card">
+                    <span>
+                        <AppIcon Name="report" />
+                    </span>
+
+                    <div>
+                        <strong>
+                            @T[
+                                "SavingsPlan.Results.LimitationsTitle"]
+                        </strong>
+
+                        <p>
+                            @T[
+                                "SavingsPlan.Results.LimitationsDescription"]
+                        </p>
+                    </div>
+                </div>
+
+                <div class="savings-result-actions">
+                    <button class="ui-button ui-button-secondary"
+                            type="button"
+                            @onclick="BackToPreferencesFromResults">
+                        @T[
+                            "SavingsPlan.Results.AdjustPreferences"]
+                    </button>
+
+                    <button class="ui-button ui-button-primary"
+                            type="button"
+                            @onclick="ReviewChanges">
+                        @T[
+                            "SavingsPlan.Results.ReviewChanges"]
+
+                        <AppIcon Name="chevron" />
+                    </button>
+                </div>
+            }
+        </div>;
+
+    private RenderFragment GoalChoice(
+        SavingsPlanGoalType kind,
+        string icon,
+        string titleKey,
+        string descriptionKey) =>
+        @<button type="button"
+                 class="savings-choice-card goal-@GoalTone(kind) @(_goalKind == kind ? "selected" : null)"
+                 aria-pressed="@(_goalKind == kind)"
+                 @onclick="() => SelectGoal(kind)">
+            <span class="savings-choice-icon">
+                <AppIcon Name="@icon" />
+            </span>
+
+            <span>
+                <strong>
+                    @T[titleKey]
+                </strong>
+
+                <small>
+                    @T[descriptionKey]
+                </small>
+            </span>
+
+            <span class="savings-radio-mark">
+                @if (_goalKind == kind)
+                {
+                    <i></i>
+                }
+            </span>
+        </button>;
+
+    private RenderFragment StrategyChoice(
+        SavingsPlanStrategy strategy,
+        string titleKey,
+        string descriptionKey) =>
+        @<button type="button"
+                 class="savings-strategy-card strategy-@StrategyTone(strategy) @(_strategy == strategy ? "selected" : null)"
+                 aria-pressed="@(_strategy == strategy)"
+                 @onclick="() => _strategy = strategy">
+            <span class="savings-radio-mark">
+                @if (_strategy == strategy)
+                {
+                    <i></i>
+                }
+            </span>
+
+            <strong>
+                @T[titleKey]
+            </strong>
+
+            <small>
+                @T[descriptionKey]
+            </small>
+        </button>;
+
+    private RenderFragment ValidationMessage() =>
+        @<div class="savings-validation-container">
+            @if (!string.IsNullOrWhiteSpace(
+                _validationMessage))
+            {
+                <div class="savings-validation"
+                     role="alert">
+                    <AppIcon Name="report" />
+                    <span>
+                        @_validationMessage
+                    </span>
+                </div>
+            }
+        </div>;
+
+    private RenderFragment ResultMetric(
+        string labelKey,
+        decimal value) =>
+        @<article class="ui-card savings-result-metric">
+            <span>
+                @T[labelKey]
+            </span>
+
+            <strong>
+                @Money(value)
+            </strong>
+
+            <small>
+                @T["SavingsPlan.Results.PerMonth"]
+            </small>
+        </article>;
+
+    private RenderFragment PlanCard(
+        SavingsPlanScenarioResponse plan,
+        bool recommended) =>
+        @<article class="ui-card savings-plan-card @(recommended ? "recommended" : null)">
+            <header>
+                <div>
+                    <span class="ui-badge @(recommended ? "ui-badge-brand" : null)">
+                        @(recommended
+                            ? T[
+                                "SavingsPlan.Results.Recommended"]
+                            : T[
+                                "SavingsPlan.Results.Alternative"])
+                    </span>
+
+                    <h2>
+                        @(recommended
+                            ? T[
+                                "SavingsPlan.Results.RecommendedTitle"]
+                            : T[
+                                "SavingsPlan.Results.AlternativeTitle"])
+                    </h2>
+                </div>
+
+                <span class="savings-target-status @(plan.TargetReached ? "reached" : null)">
+                    <AppIcon Name="@(plan.TargetReached ? "check" : "target")" />
+
+                    @(plan.TargetReached
+                        ? T[
+                            "SavingsPlan.Results.TargetReached"]
+                        : T[
+                            "SavingsPlan.Results.TargetClose"])
+                </span>
+            </header>
+
+            <p>
+                @plan.Explanation
+            </p>
+
+            <div class="savings-plan-subscriptions">
+                @foreach (var subscription in
+                    plan.Subscriptions)
+                {
+                    var sourceSubscription =
+                        FindSubscription(
+                            subscription.Id);
+
+                    <div class="savings-plan-subscription"
+                         style="@(sourceSubscription is null ? null : StyleFor(sourceSubscription))">
+                        <span class="savings-service-mark">
+                            @if (sourceSubscription is not null)
+                            {
+                                <DigitalServiceIcon
+                                    IconKey="@sourceSubscription.IconKey"
+                                    FallbackIcon="@IconFor(sourceSubscription)" />
+                            }
+                            else
+                            {
+                                <AppIcon Name="subscriptions" />
+                            }
+                        </span>
+
+                        <span>
+                            <strong>
+                                @subscription.Name
+                            </strong>
+
+                            <small>
+                                @CategoryLabel(
+                                    subscription.Category)
+                            </small>
+                        </span>
+
+                        <b>
+                            @Money(subscription.MonthlyCost)
+                        </b>
+                    </div>
+                }
+            </div>
+
+            <dl>
+                <div>
+                    <dt>
+                        @T["SavingsPlan.Results.Changes"]
+                    </dt>
+                    <dd>
+                        @plan.Subscriptions.Count
+                    </dd>
+                </div>
+
+                <div>
+                    <dt>
+                        @T["SavingsPlan.Results.AfterChanges"]
+                    </dt>
+                    <dd>
+                        @Money(plan.ProjectedMonthlyCost)
+                    </dd>
+                </div>
+
+                <div>
+                    <dt>
+                        @T["SavingsPlan.Results.Saved"]
+                    </dt>
+                    <dd>
+                        @Money(plan.MonthlySavings)
+                    </dd>
+                </div>
+            </dl>
+        </article>;
+}

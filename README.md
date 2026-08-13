@@ -43,7 +43,7 @@ The backend is organized into business areas that span the architectural layers 
 |                   |   | `Authentication`   | ↔ | `Authentication`   | ↔ | `Authentication`   |
 | `ExchangeRates`   | ↔ | `ExchangeRates`    | ↔ | `ExchangeRates`    |   |                    |
 
-The Blazor project provides the web client for the API.
+The Web project provides the Blazor web client for the API.
 
 ## Status
 
