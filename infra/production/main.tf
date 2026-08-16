@@ -22,7 +22,7 @@ resource "azurerm_federated_identity_credential" "github_production" {
   ]
 
   issuer  = "https://token.actions.githubusercontent.com"
-  subject = "repo:michalantolik/subscription-manager:environment:production"
+  subject = "repo:michalantolik@30344910/subscription-manager@1304476763:environment:production"
 }
 
 resource "azurerm_service_plan" "production" {
@@ -54,9 +54,9 @@ resource "azurerm_linux_web_app" "api" {
   app_settings = {
     "ApplicationInsights__ConnectionString"  = azurerm_application_insights.production.connection_string
     "ConnectionStrings__SubscriptionManager" = "Server=tcp:${azurerm_mssql_server.production.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.production.name};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;"
-    "Email__ApplicationBaseUrl"               = local.web_url
-    "AzureEmail__Endpoint"                    = "https://${azurerm_communication_service.production.hostname}"
-    "AzureEmail__SenderAddress"               = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
+    "Email__ApplicationBaseUrl"              = local.web_url
+    "AzureEmail__Endpoint"                   = "https://${azurerm_communication_service.production.hostname}"
+    "AzureEmail__SenderAddress"              = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
   }
 
   site_config {
@@ -84,7 +84,7 @@ resource "azurerm_linux_web_app" "web" {
 
   app_settings = {
     "ApplicationInsights__ConnectionString" = azurerm_application_insights.production.connection_string
-    "Api__BaseUrl"                           = local.api_url
+    "Api__BaseUrl"                          = local.api_url
   }
 
   site_config {
