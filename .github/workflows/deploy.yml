@@ -50,11 +50,11 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Verify database access
+      - name: Apply database migrations
         env:
           ConnectionStrings__SubscriptionManager: "Server=tcp:sql-subscription-manager-prod.database.windows.net,1433;Database=sqldb-subscription-manager-prod;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;"
         run: >
-          dotnet ef migrations list
+          dotnet ef database update
           --project src/SubscriptionManager.Infrastructure/SubscriptionManager.Infrastructure.csproj
           --startup-project src/SubscriptionManager.Api/SubscriptionManager.Api.csproj
           --configuration Release
