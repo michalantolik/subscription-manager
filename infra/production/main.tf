@@ -5,6 +5,26 @@ resource "azurerm_resource_group" "production" {
   tags = local.tags
 }
 
+resource "azurerm_user_assigned_identity" "deployment" {
+  name                = "id-${local.project}-deploy-${local.environment}"
+  resource_group_name = azurerm_resource_group.production.name
+  location            = azurerm_resource_group.production.location
+
+  tags = local.tags
+}
+
+resource "azurerm_federated_identity_credential" "github_production" {
+  name                      = "github-production"
+  user_assigned_identity_id = azurerm_user_assigned_identity.deployment.id
+
+  audience = [
+    "api://AzureADTokenExchange"
+  ]
+
+  issuer  = "https://token.actions.githubusercontent.com"
+  subject = "repo:michalantolik/subscription-manager:environment:production"
+}
+
 resource "azurerm_service_plan" "production" {
   name                = "asp-${local.project}-${local.environment}"
   resource_group_name = azurerm_resource_group.production.name
@@ -34,9 +54,9 @@ resource "azurerm_linux_web_app" "api" {
   app_settings = {
     "ApplicationInsights__ConnectionString"  = azurerm_application_insights.production.connection_string
     "ConnectionStrings__SubscriptionManager" = "Server=tcp:${azurerm_mssql_server.production.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.production.name};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;"
-    "Email__ApplicationBaseUrl"              = local.web_url
-    "AzureEmail__Endpoint"                   = "https://${azurerm_communication_service.production.hostname}"
-    "AzureEmail__SenderAddress"              = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
+    "Email__ApplicationBaseUrl"               = local.web_url
+    "AzureEmail__Endpoint"                    = "https://${azurerm_communication_service.production.hostname}"
+    "AzureEmail__SenderAddress"               = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
   }
 
   site_config {
@@ -64,7 +84,7 @@ resource "azurerm_linux_web_app" "web" {
 
   app_settings = {
     "ApplicationInsights__ConnectionString" = azurerm_application_insights.production.connection_string
-    "Api__BaseUrl"                          = local.api_url
+    "Api__BaseUrl"                           = local.api_url
   }
 
   site_config {
