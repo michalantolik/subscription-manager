@@ -65,3 +65,9 @@ jobs:
         with:
           app-name: app-subscription-manager-api-prod
           package: artifacts/api
+
+      - name: Deploy Web
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-subscription-manager-web-prod
+          package: artifacts/web
