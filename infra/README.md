@@ -2,91 +2,44 @@
 
 Subscription Manager is deployed to Microsoft Azure using Terraform.
 
-## Environment
+## Azure resources
 
-The project uses a single Azure environment:
+| Resource                           | Purpose                                      |
+|------------------------------------|----------------------------------------------|
+| Resource Group                     | Groups the application resources             |
+| Linux App Service Plan             | Hosts the API and Web applications           |
+| API App Service                    | Hosts the ASP.NET Core API                   |
+| Web App Service                    | Hosts the Blazor web application             |
+| Azure SQL Server                   | Hosts the application database               |
+| Azure SQL Database                 | Stores application data                      |
+| Log Analytics Workspace            | Stores application telemetry                 |
+| Application Insights               | Provides application monitoring              |
+| Azure Communication Services Email | Sends application emails                     |
 
-- Production
+- Environment: Production
+- Region: West Europe
 
-Local development remains the development environment.
+## Terraform
 
-## Region
+Terraform is used to define and manage the Azure infrastructure.
 
-Azure resources are deployed to:
+| Configuration             | Value                |
+|---------------------------|----------------------|
+| Main infrastructure state | Azure Storage        |
+| Authentication            | Microsoft Entra ID   |
+| Shared Key                | Disabled             |
+| Bootstrap state           | Local                |
 
-- West Europe
-
-## Azure Resources
-
-The production environment consists of:
-
-- Resource Group
-- Linux App Service Plan
-- API App Service
-- Web App Service
-- Azure SQL Server
-- Azure SQL Database
-- Log Analytics Workspace
-- Application Insights
-- Azure Communication Services Email
-
-## Application Hosting
-
-The API and Web applications run as separate Azure App Services on the same Linux App Service Plan.
-
-The Web application communicates with the API over HTTPS.
-
-## Database
-
-The application uses Azure SQL Database.
-
-This matches the existing EF Core SQL Server persistence implementation.
-
-## Monitoring
-
-Application Insights is used for application telemetry.
-
-Application Insights is connected to a Log Analytics Workspace.
-
-## Email
-
-Azure Communication Services Email is used to send application emails.
-
-The email service is dedicated to Subscription Manager and is managed as part of its Azure infrastructure.
+The `bootstrap` configuration creates the Resource Group, Storage Account and private Blob Container required for the main infrastructure remote state.
 
 ## Configuration
 
-Environment-specific application settings are supplied through the Azure App Service configuration.
+Environment-specific settings are supplied through Azure App Service configuration.
 
-Sensitive values are not committed to source control.
-
-Examples include:
+Sensitive values are not committed to source control, including:
 
 - database connection string
 - JWT signing key
 - OpenAI API key
 - Stripe secret key
 - Stripe webhook secret
-
-## Terraform
-
-Terraform is used to define and manage the Azure infrastructure.
-
-Terraform state is stored remotely in Azure Storage.
-
-The infrastructure follows the standard Terraform workflow:
-
-1. `terraform init`
-2. `terraform plan`
-3. `terraform apply`
-
-## Scope
-
-The initial infrastructure intentionally avoids services that are not currently required by the application, including:
-
-- Azure Kubernetes Service
-- Azure Container Registry
-- Azure API Management
-- Azure Virtual Network
-- Private Endpoints
-- Azure Key Vault

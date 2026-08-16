@@ -20,6 +20,7 @@ A web application for managing recurring subscriptions for services such as Netf
 - Blazor Server
 - Entity Framework Core
 - SQL Server
+- [Terraform](infra/README.md)
 
 ## External integrations
 
