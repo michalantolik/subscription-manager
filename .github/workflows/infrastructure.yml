@@ -1,0 +1,58 @@
+name: Infrastructure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+      ARM_USE_AZUREAD: true
+      TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_sql_admin_login: ${{ vars.SQL_ADMIN_LOGIN }}
+      TF_VAR_sql_admin_object_id: ${{ vars.SQL_ADMIN_OBJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+
+      - name: Terraform init
+        working-directory: infra/production
+        run: >
+          terraform init
+          -backend-config="resource_group_name=rg-subscription-manager-tfstate"
+          -backend-config="storage_account_name=stsubmanagertfstate01"
+          -backend-config="container_name=tfstate"
+          -backend-config="key=production.tfstate"
+
+      - name: Terraform format
+        working-directory: infra/production
+        run: terraform fmt -check
+
+      - name: Terraform validate
+        working-directory: infra/production
+        run: terraform validate
+
+      - name: Terraform plan
+        working-directory: infra/production
+        run: terraform plan -out=production.tfplan
