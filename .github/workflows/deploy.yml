@@ -57,4 +57,5 @@ jobs:
           dotnet ef migrations list
           --project src/SubscriptionManager.Infrastructure/SubscriptionManager.Infrastructure.csproj
           --startup-project src/SubscriptionManager.Api/SubscriptionManager.Api.csproj
+          --configuration Release
           --no-build
