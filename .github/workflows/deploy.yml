@@ -1,0 +1,60 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore SubscriptionManager.slnx
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Publish API
+        run: >
+          dotnet publish
+          src/SubscriptionManager.Api/SubscriptionManager.Api.csproj
+          --configuration Release
+          --no-restore
+          --output artifacts/api
+
+      - name: Publish Web
+        run: >
+          dotnet publish
+          src/SubscriptionManager.Web/SubscriptionManager.Web.csproj
+          --configuration Release
+          --no-restore
+          --output artifacts/web
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify database access
+        env:
+          ConnectionStrings__SubscriptionManager: "Server=tcp:sql-subscription-manager-prod.database.windows.net,1433;Database=sqldb-subscription-manager-prod;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;"
+        run: >
+          dotnet ef migrations list
+          --project src/SubscriptionManager.Infrastructure/SubscriptionManager.Infrastructure.csproj
+          --startup-project src/SubscriptionManager.Api/SubscriptionManager.Api.csproj
+          --no-build
