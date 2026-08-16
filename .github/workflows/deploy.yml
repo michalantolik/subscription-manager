@@ -59,3 +59,9 @@ jobs:
           --startup-project src/SubscriptionManager.Api/SubscriptionManager.Api.csproj
           --configuration Release
           --no-build
+
+      - name: Deploy API
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-subscription-manager-api-prod
+          package: artifacts/api
