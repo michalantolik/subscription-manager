@@ -3500,7 +3500,6 @@ h1[tabindex="-1"]:focus {
     flex-basis: 20px;
 }
 
-/* Subscription list layout after removing the duplicated category summary. */
 .subscriptions-layout {
     display: block;
     width: min(100%, 1120px);
