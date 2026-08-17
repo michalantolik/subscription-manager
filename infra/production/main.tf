@@ -63,6 +63,10 @@ resource "azurerm_linux_web_app" "api" {
     "SavingsPlanAi__ApiKey"                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=openai-api-key)"
     "Stripe__SecretKey"                      = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=stripe-secret-key)"
     "Stripe__WebhookSecret"                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=stripe-webhook-secret)"
+    "Stripe__PlusMonthlyPriceId"             = "price_1U2rHdLYk3lf8hK1KQLZpccb"
+    "Stripe__PlusYearlyPriceId"              = "price_1U2ri9LYk3lf8hK1nrUdCgn7"
+    "Stripe__PremiumMonthlyPriceId"          = "price_1U2rOYLYk3lf8hK1iYJHMqbJ"
+    "Stripe__PremiumYearlyPriceId"           = "price_1U2rkxLYk3lf8hK14t933zCF"
   }
 
   logs {
