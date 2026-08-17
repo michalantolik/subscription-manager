@@ -56,7 +56,7 @@ resource "azurerm_linux_web_app" "api" {
   app_settings = {
     "ApplicationInsights__ConnectionString"  = azurerm_application_insights.production.connection_string
     "ConnectionStrings__SubscriptionManager" = "Server=tcp:${azurerm_mssql_server.production.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.production.name};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;"
-    "Email__ApplicationBaseUrl"              = local.web_url
+    "Email__ApplicationBaseUrl"              = local.public_web_url
     "AzureEmail__Endpoint"                   = "https://${azurerm_communication_service.production.hostname}"
     "AzureEmail__SenderAddress"              = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
     "Jwt__SigningKey"                        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=jwt-signing-key)"
