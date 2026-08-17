@@ -1,4 +1,4 @@
-/* Flow55 UI Kit — design tokens.
+/* UI Kit design tokens.
    Component styles consume only these tokens and the application theme colors
    from app.css. Keep the canonical spacing scale at 8 / 12 / 16 / 24 / 32. */
 .app-shell {
@@ -37,22 +37,4 @@
     --ui-dialog-footer-shadow: 0 -12px 28px -24px color-mix(in srgb, #000 78%, transparent);
     --ui-transition-fast: 150ms ease;
     --ui-transition: 200ms ease;
-
-    /* Compatibility aliases for the previous Design System 1.0 names. */
-    --ds-space-1: var(--ui-space-1);
-    --ds-space-2: var(--ui-space-2);
-    --ds-space-3: var(--ui-space-3);
-    --ds-space-4: var(--ui-space-4);
-    --ds-space-5: var(--ui-space-5);
-    --ds-space-6: var(--ui-space-6);
-    --ds-space-7: var(--ui-space-7);
-    --ds-radius-sm: var(--ui-radius-sm);
-    --ds-radius-md: var(--ui-radius-md);
-    --ds-radius-lg: var(--ui-radius-lg);
-    --ds-radius-xl: var(--ui-radius-xl);
-    --ds-control-height: var(--ui-control-height);
-    --ds-control-bg: var(--ui-control-bg);
-    --ds-focus-ring: var(--ui-focus-ring);
-    --ds-danger-focus-ring: var(--ui-danger-focus-ring);
-    --ds-transition: var(--ui-transition-fast);
 }

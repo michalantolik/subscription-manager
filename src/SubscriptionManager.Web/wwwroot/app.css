@@ -1933,7 +1933,7 @@ h1[tabindex="-1"]:focus {
     }
 }
 
-/* Subscriptions — Flow55 UI Kit adoption. Feature-specific sizing only. */
+/* Subscription-specific action sizing. */
 .subscription-actions .ui-button.icon-action,
 .subscription-collection-actions .ui-button.collection-actions-trigger {
     width: 36px;
@@ -2644,7 +2644,7 @@ h1[tabindex="-1"]:focus {
     }
 }
 
-/* Flow55-aligned subscription workspace and two-step catalog */
+/* Subscription workspace and two-step catalog. */
 .subscriptions-header p {
     max-width: 760px;
 }
