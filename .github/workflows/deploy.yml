@@ -91,6 +91,12 @@ jobs:
           --configuration Release
           --no-build
 
+      - name: Seed database
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          ConnectionStrings__SubscriptionManager: "Server=tcp:sql-subscription-manager-prod.database.windows.net,1433;Database=sqldb-subscription-manager-prod;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;"
+        run: dotnet artifacts/api/SubscriptionManager.Api.dll --seed
+
       - name: Deploy API
         uses: azure/webapps-deploy@v3
         with:

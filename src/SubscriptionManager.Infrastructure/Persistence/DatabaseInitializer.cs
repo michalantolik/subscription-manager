@@ -4,12 +4,26 @@ using SubscriptionManager.Infrastructure.DigitalServices;
 
 namespace SubscriptionManager.Infrastructure.Persistence;
 
+/// <summary>
+/// Provides database migration and seed operations.
+/// </summary>
 public static class DatabaseInitializer
 {
     /// <summary>
-    /// Initializes the application database and seed data in an idempotent manner.
+    /// Migrates the database and seeds required data in an idempotent manner.
     /// </summary>
     public static async Task InitializeDatabaseAsync(
+        this IServiceProvider serviceProvider,
+        CancellationToken cancellationToken = default)
+    {
+        await serviceProvider.MigrateDatabaseAsync(cancellationToken);
+        await serviceProvider.SeedDatabaseAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Applies pending database migrations.
+    /// </summary>
+    public static async Task MigrateDatabaseAsync(
         this IServiceProvider serviceProvider,
         CancellationToken cancellationToken = default)
     {
@@ -26,6 +40,19 @@ public static class DatabaseInitializer
         {
             await dbContext.Database.EnsureCreatedAsync(cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Seeds required application data in an idempotent manner.
+    /// </summary>
+    public static async Task SeedDatabaseAsync(
+        this IServiceProvider serviceProvider,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scope = serviceProvider.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<SubscriptionManagerDbContext>();
 
         await DigitalServiceSeed.SeedAsync(
             dbContext,

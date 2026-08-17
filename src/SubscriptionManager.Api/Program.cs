@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SubscriptionManager.Api.Common.ExceptionHandling;
 using SubscriptionManager.Api.Common.Identity;
@@ -23,6 +24,31 @@ public partial class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        if (args.Contains(
+                "--seed",
+                StringComparer.OrdinalIgnoreCase))
+        {
+            var connectionString =
+                builder.Configuration.GetConnectionString(
+                    "SubscriptionManager");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "Connection string 'SubscriptionManager' is missing.");
+            }
+
+            builder.Services.AddDbContext<SubscriptionManagerDbContext>(
+                options =>
+                    options.UseSqlServer(
+                        connectionString));
+
+            var seedApp = builder.Build();
+
+            await seedApp.Services.SeedDatabaseAsync();
+            return;
+        }
 
         var applicationInsightsConnectionString =
             builder.Configuration[
