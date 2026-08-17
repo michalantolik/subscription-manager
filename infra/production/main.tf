@@ -1,3 +1,5 @@
+data "azurerm_client_config" "current" {}
+
 resource "azurerm_resource_group" "production" {
   name     = local.resource_group_name
   location = var.location
@@ -57,6 +59,23 @@ resource "azurerm_linux_web_app" "api" {
     "Email__ApplicationBaseUrl"              = local.web_url
     "AzureEmail__Endpoint"                   = "https://${azurerm_communication_service.production.hostname}"
     "AzureEmail__SenderAddress"              = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
+    "Jwt__SigningKey"                        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=jwt-signing-key)"
+  }
+
+  logs {
+    application_logs {
+      file_system_level = "Information"
+    }
+
+    http_logs {
+      file_system {
+        retention_in_days = 3
+        retention_in_mb   = 100
+      }
+    }
+
+    detailed_error_messages = false
+    failed_request_tracing  = false
   }
 
   site_config {
@@ -130,6 +149,28 @@ resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
 
   start_ip_address = "0.0.0.0"
   end_ip_address   = "0.0.0.0"
+}
+
+resource "azurerm_key_vault" "production" {
+  name                = "kv-submanager-prod"
+  resource_group_name = azurerm_resource_group.production.name
+  location            = azurerm_resource_group.production.location
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+
+  sku_name = "standard"
+
+  rbac_authorization_enabled = true
+
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = false
+
+  tags = local.tags
+}
+
+resource "azurerm_role_assignment" "api_key_vault_secrets" {
+  scope                = azurerm_key_vault.production.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_linux_web_app.api.identity[0].principal_id
 }
 
 resource "azurerm_log_analytics_workspace" "production" {
