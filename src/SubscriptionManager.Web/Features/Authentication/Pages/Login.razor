@@ -1,7 +1,6 @@
 @page "/login"
 @using SubscriptionManager.Web.Features.Authentication
 
-
 @attribute [AllowAnonymous]
 
 @inject Localizer T
@@ -27,8 +26,7 @@
         </div>
     </div>
 
-    <div class="ui-card"
-         style="max-width: 560px;">
+    <div class="ui-card login-card">
         <form method="post"
               action="/authentication/login">
             <AntiforgeryToken />
@@ -82,6 +80,11 @@
                                    autocomplete="current-password"
                                    placeholder="@T["Authentication.PasswordPlaceholder"]"
                                    required />
+
+                            <a class="ui-link ui-link-info login-forgot-password"
+                               href="/forgot-password">
+                                @T["Authentication.Login.ForgotPassword"]
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -102,16 +105,17 @@
                     </div>
                 }
 
-                <div class="ui-form-actions">
-                    <a class="secondary-button"
-                       href="/register">
-                        @T["Authentication.Login.CreateAccount"]
-                    </a>
+                <div class="ui-form-actions login-actions">
+                    <div class="login-account-prompt">
+                        <span>
+                            @T["Authentication.Login.NoAccount"]
+                        </span>
 
-                    <a class="secondary-button"
-                       href="/forgot-password">
-                        @T["Authentication.Login.ForgotPassword"]
-                    </a>
+                        <a class="ui-link"
+                           href="/register">
+                            @T["Authentication.Login.CreateAccount"]
+                        </a>
+                    </div>
 
                     <button class="primary-button"
                             type="submit">

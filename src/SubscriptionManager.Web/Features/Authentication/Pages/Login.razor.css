@@ -1,0 +1,37 @@
+.login-card {
+    max-width: 560px;
+}
+
+.login-forgot-password {
+    align-self: flex-start;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.login-actions {
+    align-items: center;
+    justify-content: space-between;
+    margin-top: calc(var(--ui-space-5) * -0.5);
+}
+
+.login-account-prompt {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ui-space-2);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+    .login-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .login-account-prompt {
+        justify-content: center;
+        white-space: normal;
+    }
+}

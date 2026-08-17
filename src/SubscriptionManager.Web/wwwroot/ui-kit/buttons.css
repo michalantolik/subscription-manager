@@ -16,18 +16,104 @@
     transition: transform var(--ui-transition-fast), background var(--ui-transition-fast), border-color var(--ui-transition-fast), box-shadow var(--ui-transition-fast), color var(--ui-transition-fast), opacity var(--ui-transition-fast);
 }
 
-.ui-button:hover:not(:disabled), .primary-button:hover:not(:disabled), .secondary-button:hover:not(:disabled), .danger-button:hover:not(:disabled) { transform: translateY(-1px); }
-.ui-button:focus-visible, .primary-button:focus-visible, .secondary-button:focus-visible, .danger-button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
-.ui-button:disabled, .primary-button:disabled, .secondary-button:disabled, .danger-button:disabled { cursor: not-allowed; opacity: .55; transform: none; }
+    .ui-button:hover:not(:disabled), .primary-button:hover:not(:disabled), .secondary-button:hover:not(:disabled), .danger-button:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
 
-.ui-button-primary, .primary-button { color: #fff; border-color: var(--brand); background: linear-gradient(135deg, var(--brand), var(--brand-strong)); box-shadow: 0 8px 22px color-mix(in srgb, var(--brand) 24%, transparent); }
-.ui-button-secondary, .secondary-button { color: var(--text); border-color: var(--border); background: var(--surface); }
-.ui-button-secondary:hover:not(:disabled), .secondary-button:hover:not(:disabled) { background: var(--surface-hover); border-color: var(--border-strong); }
-.ui-button-danger, .danger-button { color: #fff; border-color: var(--red); background: linear-gradient(135deg, var(--red), color-mix(in srgb, var(--red) 78%, #8b1f2a)); }
-.ui-button-ghost { color: var(--muted); background: transparent; border-color: transparent; }
-.ui-button-ghost:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); border-color: var(--border); }
+    .ui-button:focus-visible, .primary-button:focus-visible, .secondary-button:focus-visible, .danger-button:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
+    }
 
-.ui-button-icon { width: 42px; min-width: 42px; padding: 0; }
-.ui-button-sm { min-height: var(--ui-control-height-sm); padding-inline: 12px; border-radius: 10px; font-size: 12px; }
-.ui-button-lg { min-height: var(--ui-control-height-lg); padding-inline: 20px; }
-.ui-button .app-icon, .primary-button .app-icon, .secondary-button .app-icon, .danger-button .app-icon { width: 18px; height: 18px; }
+    .ui-button:disabled, .primary-button:disabled, .secondary-button:disabled, .danger-button:disabled {
+        cursor: not-allowed;
+        opacity: .55;
+        transform: none;
+    }
+
+.ui-button-primary, .primary-button {
+    color: #fff;
+    border-color: var(--brand);
+    background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--brand) 24%, transparent);
+}
+
+.ui-button-secondary, .secondary-button {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface);
+}
+
+    .ui-button-secondary:hover:not(:disabled), .secondary-button:hover:not(:disabled) {
+        background: var(--surface-hover);
+        border-color: var(--border-strong);
+    }
+
+.ui-button-danger, .danger-button {
+    color: #fff;
+    border-color: var(--red);
+    background: linear-gradient(135deg, var(--red), color-mix(in srgb, var(--red) 78%, #8b1f2a));
+}
+
+.ui-button-ghost {
+    color: var(--muted);
+    background: transparent;
+    border-color: transparent;
+}
+
+    .ui-button-ghost:hover:not(:disabled) {
+        color: var(--text);
+        background: var(--surface-hover);
+        border-color: var(--border);
+    }
+
+.ui-button-icon {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+}
+
+.ui-button-sm {
+    min-height: var(--ui-control-height-sm);
+    padding-inline: 12px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.ui-button-lg {
+    min-height: var(--ui-control-height-lg);
+    padding-inline: 20px;
+}
+
+.ui-button .app-icon, .primary-button .app-icon, .secondary-button .app-icon, .danger-button .app-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.ui-link {
+    color: var(--brand-strong);
+    font-weight: 700;
+    text-decoration: none;
+    transition: color var(--ui-transition-fast);
+}
+
+    .ui-link:hover {
+        color: var(--brand);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+
+    .ui-link:focus-visible {
+        outline: none;
+        border-radius: var(--ui-radius-sm);
+        box-shadow: var(--ui-focus-ring);
+    }
+
+.ui-link-info {
+    color: var(--blue);
+    font-weight: 500;
+}
+
+    .ui-link-info:hover {
+        color: color-mix(in srgb, var(--blue) 78%, var(--text));
+    }
