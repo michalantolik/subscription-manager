@@ -50,6 +50,37 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Sync secrets to Key Vault
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        run: |
+          az keyvault secret set \
+            --vault-name kv-submanager-prod \
+            --name jwt-signing-key \
+            --value "$JWT_SIGNING_KEY" \
+            --output none
+
+          az keyvault secret set \
+            --vault-name kv-submanager-prod \
+            --name openai-api-key \
+            --value "$OPENAI_API_KEY" \
+            --output none
+
+          az keyvault secret set \
+            --vault-name kv-submanager-prod \
+            --name stripe-secret-key \
+            --value "$STRIPE_SECRET_KEY" \
+            --output none
+
+          az keyvault secret set \
+            --vault-name kv-submanager-prod \
+            --name stripe-webhook-secret \
+            --value "$STRIPE_WEBHOOK_SECRET" \
+            --output none
+
       - name: Apply database migrations
         env:
           ConnectionStrings__SubscriptionManager: "Server=tcp:sql-subscription-manager-prod.database.windows.net,1433;Database=sqldb-subscription-manager-prod;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;"

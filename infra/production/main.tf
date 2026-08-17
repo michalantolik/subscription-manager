@@ -60,6 +60,9 @@ resource "azurerm_linux_web_app" "api" {
     "AzureEmail__Endpoint"                   = "https://${azurerm_communication_service.production.hostname}"
     "AzureEmail__SenderAddress"              = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
     "Jwt__SigningKey"                        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=jwt-signing-key)"
+    "SavingsPlanAi__ApiKey"                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=openai-api-key)"
+    "Stripe__SecretKey"                      = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=stripe-secret-key)"
+    "Stripe__WebhookSecret"                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=stripe-webhook-secret)"
   }
 
   logs {
@@ -171,6 +174,12 @@ resource "azurerm_role_assignment" "api_key_vault_secrets" {
   scope                = azurerm_key_vault.production.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_linux_web_app.api.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "deployment_key_vault_secrets" {
+  scope                = azurerm_key_vault.production.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = azurerm_user_assigned_identity.deployment.principal_id
 }
 
 resource "azurerm_log_analytics_workspace" "production" {
