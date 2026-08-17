@@ -13,6 +13,7 @@ A web application for managing recurring subscriptions for services such as Netf
 - Track recurring monthly and yearly costs
 - Generate personalized savings plans
 - Manage Free, Plus and Premium billing plans
+- Available in Polish, English and German
 
 ## Technologies
 
@@ -22,7 +23,8 @@ A web application for managing recurring subscriptions for services such as Netf
 - Entity Framework Core
 - SQL Server
 - Azure
-- [Terraform](infra/README.md)
+- Terraform
+- xUnit
 
 ## External integrations
 
@@ -36,15 +38,14 @@ A web application for managing recurring subscriptions for services such as Netf
 
 ```text
 Web --HTTP--> API
-               |
-               v
-          Application
-               |
-               v
-             Domain
-               ^
-               |
-        Infrastructure
+
+API -------------> Application
+API -------------> Infrastructure
+
+Infrastructure --> Application
+Infrastructure --> Domain
+
+Application -----> Domain
 ```
 
 ## Project structure
