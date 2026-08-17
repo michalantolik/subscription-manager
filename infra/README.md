@@ -4,42 +4,59 @@ Subscription Manager is deployed to Microsoft Azure using Terraform.
 
 ## Azure resources
 
-| Resource                           | Purpose                                      |
-|------------------------------------|----------------------------------------------|
-| Resource Group                     | Groups the application resources             |
-| Linux App Service Plan             | Hosts the API and Web applications           |
-| API App Service                    | Hosts the ASP.NET Core API                   |
-| Web App Service                    | Hosts the Blazor web application             |
-| Azure SQL Server                   | Hosts the application database               |
-| Azure SQL Database                 | Stores application data                      |
-| Log Analytics Workspace            | Stores application telemetry                 |
-| Application Insights               | Provides application monitoring              |
-| Azure Communication Services Email | Sends application emails                     |
+The infrastructure consists of the following Azure resources:
 
-- Environment: Production
-- Region: West Europe
+```text id="s39c82"
+Resource Group
+│
+├── Linux App Service Plan ───────────────► Hosts the API and Web applications
+│   ├── API App Service ──────────────────► Hosts the ASP.NET Core API
+│   └── Web App Service ──────────────────► Hosts the Blazor web application
+│
+├── Azure SQL Server ─────────────────────► Hosts the application database
+│   └── Azure SQL Database ───────────────► Stores application data
+│
+├── Azure Key Vault ──────────────────────► Stores application secrets
+├── Azure Communication Services Email ───► Sends application emails
+├── Application Insights ─────────────────► Provides application monitoring
+└── Log Analytics Workspace ──────────────► Stores application telemetry
+```
+
+**Environment:** Production · **Region:** West Europe
 
 ## Terraform
 
-Terraform is used to define and manage the Azure infrastructure.
+Terraform manages the Azure infrastructure using a bootstrap configuration and remote state.
 
-| Configuration             | Value                |
-|---------------------------|----------------------|
-| Main infrastructure state | Azure Storage        |
-| Authentication            | Microsoft Entra ID   |
-| Shared Key                | Disabled             |
-| Bootstrap state           | Local                |
-
-The `bootstrap` configuration creates the Resource Group, Storage Account and private Blob Container required for the main infrastructure remote state.
+```text id="9z9c93"
+bootstrap
+   │
+   └──► Resource Group + Storage Account + Blob Container
+                              │
+                              ▼
+                    Main Terraform state
+                              │
+                              ▼
+                       Azure resources
+```
 
 ## Configuration
 
-Environment-specific settings are supplied through Azure App Service configuration.
+Application settings are configured through Azure App Service.
 
-Sensitive values are not committed to source control, including:
+### Runtime configuration
 
-- database connection string
-- JWT signing key
-- OpenAI API key
-- Stripe secret key
-- Stripe webhook secret
+Production secrets are stored in Azure Key Vault. Non-sensitive settings are configured through Terraform.
+
+```text id="rrb7m7"
+GitHub Environment Secrets ──► Deploy workflow ──► Azure Key Vault      ──► API
+Terraform configuration    ──────────────────────► App Service settings ──► API
+```
+
+### Deployment configuration
+
+GitHub Environment Variables are used by GitHub Actions for Azure authentication and SQL identity.
+
+```text id="ad5vcw"
+GitHub Environment Variables ──► GitHub Actions ──► Azure authentication and SQL identity
+```
