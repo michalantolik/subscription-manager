@@ -132,12 +132,15 @@ internal static class AccountEmailTemplates
         string fallbackText,
         string securityText)
     {
+        var brandIconUrl = BuildBrandIconUrl(actionLink);
+
         var encodedLanguage = WebUtility.HtmlEncode(language);
         var encodedEyebrow = WebUtility.HtmlEncode(eyebrow);
         var encodedTitle = WebUtility.HtmlEncode(title);
         var encodedDescription = WebUtility.HtmlEncode(description);
         var encodedActionText = WebUtility.HtmlEncode(actionText);
         var encodedActionLink = WebUtility.HtmlEncode(actionLink);
+        var encodedBrandIconUrl = WebUtility.HtmlEncode(brandIconUrl);
         var encodedFallbackText = WebUtility.HtmlEncode(fallbackText);
         var encodedSecurityText = WebUtility.HtmlEncode(securityText);
 
@@ -158,8 +161,12 @@ internal static class AccountEmailTemplates
                                     <td style="padding:0 0 16px 0;">
                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                                             <tr>
-                                                <td style="width:36px;height:36px;border-radius:10px;background:#e7f5ea;text-align:center;vertical-align:middle;color:#2f8d4b;font-size:18px;font-weight:700;">
-                                                    S
+                                                <td width="40" height="40" style="width:40px;height:40px;line-height:0;">
+                                                    <img src="{{encodedBrandIconUrl}}"
+                                                         width="40"
+                                                         height="40"
+                                                         alt=""
+                                                         style="display:block;width:40px;height:40px;border:0;outline:none;text-decoration:none;">
                                                 </td>
                                                 <td style="padding-left:10px;font-size:15px;font-weight:700;line-height:18px;color:#17211b;">
                                                     Subscription<br>
@@ -226,6 +233,20 @@ internal static class AccountEmailTemplates
             </body>
             </html>
             """;
+    }
+
+    private static string BuildBrandIconUrl(
+        string actionLink)
+    {
+        var actionUri =
+            new Uri(
+                actionLink,
+                UriKind.Absolute);
+
+        return new Uri(
+            actionUri,
+            "/images/branding/app-icon-brand.png")
+            .AbsoluteUri;
     }
 
     private static string Normalize(string? languageCode)

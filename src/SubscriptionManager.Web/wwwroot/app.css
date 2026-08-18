@@ -125,18 +125,8 @@ h1[tabindex="-1"]:focus {
     width: 38px;
     height: 38px;
     flex: 0 0 38px;
-    display: grid;
-    place-items: center;
-    border: 1px solid color-mix(in srgb, var(--brand) 26%, var(--border));
-    border-radius: 11px;
-    color: var(--brand-strong);
-    background: var(--brand-soft);
+    display: block;
 }
-
-    .brand-mark .app-icon {
-        width: 20px;
-        height: 20px;
-    }
 
 .brand-copy {
     min-width: 0;

@@ -7,9 +7,10 @@
 <div class="app-shell theme-@State.Theme @(State.IsSidebarCollapsed ? "sidebar-collapsed" : null) @(State.IsMobileMenuOpen ? "mobile-menu-open" : null)">
     <aside class="sidebar">
         <div class="brand" aria-label="Subscription Manager">
-            <span class="brand-mark" aria-hidden="true">
-                <AppIcon Name="subscriptions" />
-            </span>
+            <img class="brand-mark"
+                 src="@Assets["images/branding/app-icon-brand.svg"]"
+                 alt=""
+                 aria-hidden="true" />
             <span class="brand-copy">
                 <span>Subscription</span>
                 <strong>Manager</strong>
