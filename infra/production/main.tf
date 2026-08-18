@@ -58,7 +58,7 @@ resource "azurerm_linux_web_app" "api" {
     "ConnectionStrings__SubscriptionManager" = "Server=tcp:${azurerm_mssql_server.production.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.production.name};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;"
     "Email__ApplicationBaseUrl"              = local.public_web_url
     "AzureEmail__Endpoint"                   = "https://${azurerm_communication_service.production.hostname}"
-    "AzureEmail__SenderAddress"              = "donotreply@${azurerm_email_communication_service_domain.production.mail_from_sender_domain}"
+    "AzureEmail__SenderAddress"              = "donotreply@submanager.dev"
     "Jwt__SigningKey"                        = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=jwt-signing-key)"
     "SavingsPlanAi__ApiKey"                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=openai-api-key)"
     "Stripe__SecretKey"                      = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.production.name};SecretName=stripe-secret-key)"
@@ -233,9 +233,23 @@ resource "azurerm_email_communication_service_domain" "production" {
   tags = local.tags
 }
 
+resource "azurerm_email_communication_service_domain" "custom" {
+  name             = "submanager.dev"
+  email_service_id = azurerm_email_communication_service.production.id
+
+  domain_management = "CustomerManaged"
+
+  tags = local.tags
+}
+
 resource "azurerm_communication_service_email_domain_association" "production" {
   communication_service_id = azurerm_communication_service.production.id
   email_service_domain_id  = azurerm_email_communication_service_domain.production.id
+}
+
+resource "azurerm_communication_service_email_domain_association" "custom" {
+  communication_service_id = azurerm_communication_service.production.id
+  email_service_domain_id  = azurerm_email_communication_service_domain.custom.id
 }
 
 resource "azurerm_role_assignment" "api_communication_service" {

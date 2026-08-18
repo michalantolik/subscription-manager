@@ -74,7 +74,8 @@ public sealed class AzureEmailSender(
                 recipient,
                 new EmailContent(content.Subject)
                 {
-                    PlainText = content.TextBody
+                    PlainText = content.TextBody,
+                    Html = content.HtmlBody
                 });
 
         try
