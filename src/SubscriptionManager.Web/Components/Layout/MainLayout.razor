@@ -1,48 +1,93 @@
 @inherits LayoutComponentBase
 @implements IDisposable
+
 @inject UiState State
 @inject Localizer T
 @inject IJSRuntime JS
 
 <div class="app-shell theme-@State.Theme @(State.IsSidebarCollapsed ? "sidebar-collapsed" : null) @(State.IsMobileMenuOpen ? "mobile-menu-open" : null)">
     <aside class="sidebar">
-        <div class="brand" aria-label="Subscription Manager">
+        <div class="brand"
+             aria-label="Subscription Manager">
             <img class="brand-mark"
                  src="@Assets["images/branding/app-icon-brand.svg"]"
                  alt=""
                  aria-hidden="true" />
+
             <span class="brand-copy">
-                <span>Subscription</span>
-                <strong>Manager</strong>
+                <span>
+                    Subscription
+                </span>
+
+                <strong>
+                    Manager
+                </strong>
             </span>
         </div>
+
         <NavMenu />
     </aside>
 
-    <button class="mobile-overlay" aria-label="Close menu" @onclick="State.CloseMobileMenu"></button>
+    <button class="mobile-overlay"
+            aria-label="Close menu"
+            @onclick="State.CloseMobileMenu">
+    </button>
 
     <div class="app-stage">
         <TopBar />
-        <main class="main-content">@Body</main>
+
+        <main class="main-content">
+            @Body
+        </main>
+
+        <AppFooter />
     </div>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
+<div id="blazor-error-ui"
+     data-nosnippet>
     An unexpected error occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+
+    <a href="."
+       class="reload">
+        Reload
+    </a>
+
+    <span class="dismiss">
+        🗙
+    </span>
 </div>
 
 @code {
-    protected override void OnInitialized() => State.Changed += OnStateChanged;
+    protected override void OnInitialized()
+    {
+        State.Changed += OnStateChanged;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender) return;
-        var storedTheme = await JS.InvokeAsync<string?>("subscriptionManagerTheme.get", UiState.ThemeCookieName);
-        if (!string.IsNullOrWhiteSpace(storedTheme)) State.SetTheme(storedTheme);
+        if (!firstRender)
+        {
+            return;
+        }
+
+        var storedTheme = await JS.InvokeAsync<string?>(
+            "subscriptionManagerTheme.get",
+            UiState.ThemeCookieName);
+
+        if (!string.IsNullOrWhiteSpace(storedTheme))
+        {
+            State.SetTheme(storedTheme);
+        }
     }
 
-    private void OnStateChanged() => InvokeAsync(StateHasChanged);
-    public void Dispose() => State.Changed -= OnStateChanged;
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.Changed -= OnStateChanged;
+    }
 }

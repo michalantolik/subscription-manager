@@ -1,0 +1,19 @@
+﻿@inject Localizer T
+
+<footer class="app-footer">
+    <div class="app-footer-content">
+        <span>
+            © @DateTime.UtcNow.Year Subscription Manager
+        </span>
+
+        <span class="app-footer-separator"
+              aria-hidden="true">
+            ·
+        </span>
+
+        <a class="app-footer-author"
+           href="/about">
+            @T["About.CreatedBy"] Michał Antolik
+        </a>
+    </div>
+</footer>

@@ -1,0 +1,125 @@
+﻿@page "/about"
+
+@attribute [AllowAnonymous]
+
+@inject Localizer T
+
+<PageTitle>
+    Subscription Manager — @T["About.Title"]
+</PageTitle>
+
+<section class="page about-page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                @T["About.Eyebrow"]
+            </p>
+
+            <h1>
+                @T["About.Title"]
+            </h1>
+
+            <p>
+                @T["About.Description"]
+            </p>
+        </div>
+    </div>
+
+    <article class="ui-card about-card">
+        <section class="about-section"
+                 aria-labelledby="about-creator-title">
+            <h2 id="about-creator-title"
+                class="about-section-title">
+                @T["About.Sections.Creator"]
+            </h2>
+
+            <div class="about-content">
+                <p>
+                    @T["About.Author.BeforeName"] <strong>Michał Antolik</strong>@T["About.Author.AfterName"]
+                </p>
+
+                <p>
+                    @T["About.Focus"]
+                </p>
+            </div>
+        </section>
+
+        <hr class="about-divider" />
+
+        <section class="about-section"
+                 aria-labelledby="about-application-title">
+            <h2 id="about-application-title"
+                class="about-section-title">
+                @T["About.Sections.Application"]
+            </h2>
+
+            <div class="about-content">
+                <p>
+                    <strong>Subscription Manager</strong> @T["About.Application.Purpose"]
+                </p>
+
+                <p>
+                    @T["About.Application.Savings"]
+                </p>
+            </div>
+        </section>
+
+        <hr class="about-divider" />
+
+        <section class="about-section"
+                 aria-labelledby="about-integrations-title">
+            <h2 id="about-integrations-title"
+                class="about-section-title">
+                @T["About.Sections.Integrations"]
+            </h2>
+
+            <div class="about-content about-integrations">
+                <p>
+                    <strong>Stripe API</strong>
+                    @T["About.Integrations.Stripe"]
+                </p>
+
+                <p>
+                    <strong>NBP API</strong>
+                    @T["About.Integrations.Nbp"]
+                </p>
+
+                <p>
+                    <strong>OpenAI API</strong>
+                    @T["About.Integrations.OpenAi"]
+                </p>
+            </div>
+        </section>
+
+        <hr class="about-divider" />
+
+        <nav class="about-links"
+             aria-label="@T["About.Links.Label"]">
+            <a class="ui-link"
+               href="https://github.com/michalantolik"
+               target="_blank"
+               rel="noopener noreferrer">
+                @T["About.Links.GitHub"]
+            </a>
+
+            <a class="ui-link"
+               href="https://github.com/michalantolik/subscription-manager"
+               target="_blank"
+               rel="noopener noreferrer">
+                @T["About.Links.SourceCode"]
+            </a>
+
+            <a class="ui-link"
+               href="https://www.linkedin.com/in/michalantolik/"
+               target="_blank"
+               rel="noopener noreferrer">
+                LinkedIn
+            </a>
+
+            <a class="ui-link"
+               href="mailto:michal.antolik@gmail.com">
+                @T["About.Links.Email"]
+            </a>
+        </nav>
+    </article>
+</section>
