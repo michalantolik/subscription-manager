@@ -56,6 +56,9 @@ h1[tabindex="-1"]:focus {
     --brand: #42a65f;
     --brand-strong: #2f8d4b;
     --brand-soft: #e9f6ed;
+    --button-primary-bg: #2f8248;
+    --button-primary-hover: #286f3e;
+    --button-primary-shadow: 0 6px 16px color-mix(in srgb, #2f8248 14%, transparent);
     --blue: #4c8df6;
     --blue-soft: #eaf2ff;
     --red: #e25d63;
@@ -85,6 +88,9 @@ h1[tabindex="-1"]:focus {
         --brand: #55ca79;
         --brand-strong: #72df92;
         --brand-soft: #173727;
+        --button-primary-bg: #327f49;
+        --button-primary-hover: #35864d;
+        --button-primary-shadow: 0 6px 16px color-mix(in srgb, #327f49 14%, transparent);
         --blue: #63a0ff;
         --blue-soft: #18314d;
         --red: #ff7279;
@@ -2144,13 +2150,25 @@ h1[tabindex="-1"]:focus {
 }
 
 .primary-action {
-    background: var(--brand);
+    background: var(--button-primary-bg);
     color: #fff;
-    box-shadow: 0 8px 22px color-mix(in srgb, var(--brand) 26%, transparent);
+    box-shadow: var(--button-primary-shadow);
+    transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
 }
 
-    .primary-action:hover {
-        background: var(--brand-strong);
+    .primary-action:hover:not(:disabled) {
+        background: var(--button-primary-hover);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--button-primary-hover) 22%, transparent);
+        transform: translateY(-1px);
+    }
+
+    .primary-action:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .primary-action:focus-visible {
+        outline: none;
+        box-shadow: var(--ui-focus-ring);
     }
 
     .primary-action .app-icon {

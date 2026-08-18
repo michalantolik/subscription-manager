@@ -33,10 +33,20 @@
 
 .ui-button-primary, .primary-button {
     color: #fff;
-    border-color: var(--brand);
-    background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-    box-shadow: 0 8px 22px color-mix(in srgb, var(--brand) 24%, transparent);
+    border-color: var(--button-primary-bg);
+    background: var(--button-primary-bg);
+    box-shadow: var(--button-primary-shadow);
 }
+
+    .ui-button-primary:hover:not(:disabled), .primary-button:hover:not(:disabled) {
+        border-color: var(--button-primary-hover);
+        background: var(--button-primary-hover);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--button-primary-hover) 22%, transparent);
+    }
+
+    .ui-button-primary:active:not(:disabled), .primary-button:active:not(:disabled) {
+        transform: translateY(0);
+    }
 
 .ui-button-secondary, .secondary-button {
     color: var(--text);
