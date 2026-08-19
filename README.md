@@ -12,19 +12,30 @@ A web application for managing recurring subscriptions for services such as Netf
 - Manage predefined and custom digital services
 - Track recurring monthly and yearly costs
 - Generate personalized savings plans
-- Manage Free, Plus and Premium billing plans
+- Choose between Free, Plus and Premium plans
 - Available in Polish, English and German
 
 ## Technologies
 
-- .NET 10
-- ASP.NET Core Web API
-- Blazor Server
-- Entity Framework Core
-- SQL Server
-- Azure
-- Terraform
-- xUnit
+```text
+.NET 10
+│
+├── Web ─────────────► Blazor Server
+├── API ─────────────► ASP.NET Core Web API
+├── Persistence ─────► Entity Framework Core ──► SQL Server
+├── Infrastructure ──► Terraform ──► Azure
+└── Tests ───────────► xUnit
+```
+
+## Architecture
+
+```text
+Web ──HTTP──► API
+                │
+                ├──► Application ──► Domain
+                │
+                └──► Infrastructure ──► Application + Domain
+```
 
 ## External integrations
 
@@ -33,20 +44,6 @@ A web application for managing recurring subscriptions for services such as Netf
 | [Stripe API](https://docs.stripe.com/api) | Subscription billing and payment processing     |
 | [NBP API](https://api.nbp.pl/)            | Exchange rates for subscription cost conversion |
 | [OpenAI API](https://openai.com/api/)     | Personalized savings plan generation            |
-
-## Architecture
-
-```text
-Web --HTTP--> API
-
-API -------------> Application
-API -------------> Infrastructure
-
-Infrastructure --> Application
-Infrastructure --> Domain
-
-Application -----> Domain
-```
 
 ## Project structure
 
