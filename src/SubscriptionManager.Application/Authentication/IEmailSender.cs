@@ -1,7 +1,7 @@
 ﻿namespace SubscriptionManager.Application.Authentication;
 
 /// <summary>
-/// Sends authentication-related emails to application users.
+/// Sends account-related emails to application users.
 /// </summary>
 public interface IEmailSender
 {
@@ -16,6 +16,16 @@ public interface IEmailSender
         string email,
         Guid userId,
         string resetToken,
+        string languageCode,
+        CancellationToken cancellationToken = default);
+
+    Task SendPasswordChangedAsync(
+        string email,
+        string languageCode,
+        CancellationToken cancellationToken = default);
+
+    Task SendAccountDeletedAsync(
+        string email,
         string languageCode,
         CancellationToken cancellationToken = default);
 }

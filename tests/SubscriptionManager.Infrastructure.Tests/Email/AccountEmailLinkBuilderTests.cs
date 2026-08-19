@@ -9,6 +9,41 @@ public sealed class AccountEmailLinkBuilderTests
         "https://subscription-manager.example.com";
 
     [Fact]
+    public void BuildApplicationBaseUrl_ShouldReturnConfiguredUrl()
+    {
+        var builder = CreateBuilder();
+
+        var result =
+            builder.BuildApplicationBaseUrl();
+
+        Assert.Equal(
+            ApplicationBaseUrl,
+            result);
+    }
+
+    [Fact]
+    public void BuildApplicationBaseUrl_ShouldRemoveTrailingSlash()
+    {
+        var options =
+            Options.Create(
+                new EmailOptions
+                {
+                    ApplicationBaseUrl =
+                        $"{ApplicationBaseUrl}/"
+                });
+
+        var builder =
+            new AccountEmailLinkBuilder(options);
+
+        var result =
+            builder.BuildApplicationBaseUrl();
+
+        Assert.Equal(
+            ApplicationBaseUrl,
+            result);
+    }
+
+    [Fact]
     public void BuildEmailConfirmationLink_ShouldBuildExpectedLink()
     {
         var builder = CreateBuilder();

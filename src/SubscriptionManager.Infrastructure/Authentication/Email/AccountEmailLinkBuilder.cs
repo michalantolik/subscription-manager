@@ -11,6 +11,11 @@ public sealed class AccountEmailLinkBuilder(
 {
     private readonly EmailOptions _options = options.Value;
 
+    public string BuildApplicationBaseUrl()
+    {
+        return _options.ApplicationBaseUrl.TrimEnd('/');
+    }
+
     public string BuildEmailConfirmationLink(
         Guid userId,
         string confirmationToken)
@@ -37,7 +42,7 @@ public sealed class AccountEmailLinkBuilder(
         string token)
     {
         var baseUrl =
-            _options.ApplicationBaseUrl.TrimEnd('/');
+            BuildApplicationBaseUrl();
 
         var url = $"{baseUrl}{path}";
 

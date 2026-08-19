@@ -63,6 +63,44 @@ public sealed class AzureEmailSender(
             cancellationToken);
     }
 
+    public async Task SendPasswordChangedAsync(
+        string email,
+        string languageCode,
+        CancellationToken cancellationToken = default)
+    {
+        var applicationBaseUrl =
+            linkBuilder.BuildApplicationBaseUrl();
+
+        var content =
+            AccountEmailTemplates.PasswordChanged(
+                languageCode,
+                applicationBaseUrl);
+
+        await SendAsync(
+            email,
+            content,
+            cancellationToken);
+    }
+
+    public async Task SendAccountDeletedAsync(
+        string email,
+        string languageCode,
+        CancellationToken cancellationToken = default)
+    {
+        var applicationBaseUrl =
+            linkBuilder.BuildApplicationBaseUrl();
+
+        var content =
+            AccountEmailTemplates.AccountDeleted(
+                languageCode,
+                applicationBaseUrl);
+
+        await SendAsync(
+            email,
+            content,
+            cancellationToken);
+    }
+
     private async Task SendAsync(
         string recipient,
         AccountEmailContent content,

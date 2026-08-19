@@ -61,11 +61,69 @@ public sealed class DevelopmentEmailSender(
         return Task.CompletedTask;
     }
 
+    public Task SendPasswordChangedAsync(
+        string email,
+        string languageCode,
+        CancellationToken cancellationToken = default)
+    {
+        var applicationBaseUrl =
+            linkBuilder.BuildApplicationBaseUrl();
+
+        var content =
+            AccountEmailTemplates.PasswordChanged(
+                languageCode,
+                applicationBaseUrl);
+
+        LogDevelopmentEmail(
+            email,
+            content);
+
+        return Task.CompletedTask;
+    }
+
+    public Task SendAccountDeletedAsync(
+        string email,
+        string languageCode,
+        CancellationToken cancellationToken = default)
+    {
+        var applicationBaseUrl =
+            linkBuilder.BuildApplicationBaseUrl();
+
+        var content =
+            AccountEmailTemplates.AccountDeleted(
+                languageCode,
+                applicationBaseUrl);
+
+        LogDevelopmentEmail(
+            email,
+            content);
+
+        return Task.CompletedTask;
+    }
+
     private void LogDevelopmentEmail(
         string email,
         AccountEmailContent content,
-        string actionLink)
+        string? actionLink = null)
     {
+        if (string.IsNullOrWhiteSpace(actionLink))
+        {
+            logger.LogInformation(
+                """
+                Development email generated. No external message was sent.
+
+                Recipient: {Recipient}
+                Subject: {Subject}
+
+                {TextBody}
+                """,
+                email,
+                content.Subject,
+                content.TextBody);
+
+            return;
+        }
+
         logger.LogInformation(
             """
             Development email generated. No external message was sent.
