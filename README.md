@@ -4,7 +4,7 @@
 [![Deploy](https://github.com/michalantolik/subscription-manager/actions/workflows/deploy.yml/badge.svg)](https://github.com/michalantolik/subscription-manager/actions/workflows/deploy.yml)
 [![Infrastructure](https://github.com/michalantolik/subscription-manager/actions/workflows/infrastructure.yml/badge.svg)](https://github.com/michalantolik/subscription-manager/actions/workflows/infrastructure.yml)
 
-A web application for managing recurring subscriptions for services such as Netflix, Spotify and ChatGPT Plus.
+A web application for managing recurring subscriptions and tracking their costs.
 
 ## Features
 
