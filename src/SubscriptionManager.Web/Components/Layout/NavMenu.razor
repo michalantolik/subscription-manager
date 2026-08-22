@@ -3,44 +3,76 @@
 
 <nav class="side-nav"
      aria-label="Main navigation">
-    <NavLink href="/"
-             Match="NavLinkMatch.All"
-             class="nav-item"
-             @onclick="State.CloseMobileMenu">
-        <span class="nav-icon">
-            <AppIcon Name="home" />
-        </span>
+    <AuthorizeView>
+        <Authorized>
+            <NavLink href="/"
+                     Match="NavLinkMatch.All"
+                     class="nav-item"
+                     @onclick="State.CloseMobileMenu">
+                <span class="nav-icon">
+                    <AppIcon Name="home" />
+                </span>
 
-        <span class="nav-label">
-            @T["Navigation.Overview"]
-        </span>
-    </NavLink>
+                <span class="nav-label">
+                    @T["Navigation.Overview"]
+                </span>
+            </NavLink>
 
-    <NavLink href="/subscriptions"
-             Match="NavLinkMatch.Prefix"
-             class="nav-item"
-             @onclick="State.CloseMobileMenu">
-        <span class="nav-icon">
-            <AppIcon Name="subscriptions" />
-        </span>
+            <NavLink href="/subscriptions"
+                     Match="NavLinkMatch.Prefix"
+                     class="nav-item"
+                     @onclick="State.CloseMobileMenu">
+                <span class="nav-icon">
+                    <AppIcon Name="subscriptions" />
+                </span>
 
-        <span class="nav-label">
-            @T["Navigation.Subscriptions"]
-        </span>
-    </NavLink>
+                <span class="nav-label">
+                    @T["Navigation.Subscriptions"]
+                </span>
+            </NavLink>
 
-    <NavLink href="/savings-plan"
-             Match="NavLinkMatch.Prefix"
-             class="nav-item"
-             @onclick="State.CloseMobileMenu">
-        <span class="nav-icon">
-            <AppIcon Name="target" />
-        </span>
+            <NavLink href="/savings-plan"
+                     Match="NavLinkMatch.Prefix"
+                     class="nav-item"
+                     @onclick="State.CloseMobileMenu">
+                <span class="nav-icon">
+                    <AppIcon Name="target" />
+                </span>
 
-        <span class="nav-label">
-            @T["Navigation.SavingsPlan"]
-        </span>
-    </NavLink>
+                <span class="nav-label">
+                    @T["Navigation.SavingsPlan"]
+                </span>
+            </NavLink>
+        </Authorized>
+
+        <NotAuthorized>
+            <NavLink href="/login"
+                     Match="NavLinkMatch.All"
+                     class="nav-item"
+                     @onclick="State.CloseMobileMenu">
+                <span class="nav-icon">
+                    <AppIcon Name="home" />
+                </span>
+
+                <span class="nav-label">
+                    @T["Navigation.Login"]
+                </span>
+            </NavLink>
+
+            <NavLink href="/about"
+                     Match="NavLinkMatch.All"
+                     class="nav-item"
+                     @onclick="State.CloseMobileMenu">
+                <span class="nav-icon">
+                    <AppIcon Name="info" />
+                </span>
+
+                <span class="nav-label">
+                    @T["Navigation.About"]
+                </span>
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
 </nav>
 
 <button class="sidebar-collapse"
