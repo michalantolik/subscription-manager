@@ -29,6 +29,12 @@
     white-space: nowrap;
 }
 
+@media (orientation: portrait) and (min-width: 981px) {
+    .page {
+        max-width: 760px;
+    }
+}
+
 @media (max-width: 520px) {
     .login-actions {
         align-items: stretch;
