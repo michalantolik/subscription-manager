@@ -15,6 +15,10 @@ A web application for managing recurring subscriptions and tracking their costs.
 - Choose between Free, Plus and Premium plans
 - Available in Polish, English and German
 
+## Screenshot
+
+[![Subscription cost overview](docs/images/dashboard.png)](docs/images/dashboard.png)
+
 ## Technologies
 
 ```text
