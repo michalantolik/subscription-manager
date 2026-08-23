@@ -14,7 +14,7 @@ A web application for managing recurring subscriptions and tracking their costs.
 - Manage predefined and custom digital services
 - Track recurring monthly and yearly costs
 - Generate personalized savings plans
-- Choose between Free, Plus and Premium plans
+- Compare Free, Plus and Premium plans
 - Available in Polish, English and German
 
 ## Screenshot
@@ -50,6 +50,29 @@ Web ──HTTP──► API
 | [Stripe API](https://docs.stripe.com/api) | Subscription billing and payment processing     |
 | [NBP API](https://api.nbp.pl/)            | Exchange rates for subscription cost conversion |
 | [OpenAI API](https://openai.com/api/)     | Personalized savings plan generation            |
+
+## Running locally
+
+### Requirements
+
+- .NET 10 SDK
+- Visual Studio 2026 with the ASP.NET and web development workload
+- SQL Server Express LocalDB
+
+### Setup
+
+1. Clone the repository and open `SubscriptionManager.slnx`.
+2. Select the `Web + API` launch profile and run the solution.
+
+The API applies database migrations and seeds the digital service catalog on first startup.<br>
+After registration, use the confirmation link written to the API output.
+
+No API keys are required for the core application features.<br>
+To enable savings plan generation, configure an OpenAI API key:
+
+```powershell
+dotnet user-secrets set "SavingsPlanAi:ApiKey" "<api-key>" --project src/SubscriptionManager.Api
+```
 
 ## Project structure
 
