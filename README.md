@@ -6,6 +6,8 @@
 
 A web application for managing recurring subscriptions and tracking their costs.
 
+**Live application:** [submanager.dev](https://submanager.dev)
+
 ## Features
 
 - Create, edit and delete subscriptions
