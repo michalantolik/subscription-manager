@@ -6,7 +6,7 @@ using SubscriptionManager.Web.Features.Subscriptions;
 
 namespace SubscriptionManager.Web.Features.Overview.Pages;
 
-public partial class Home
+public partial class Overview
 {
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask

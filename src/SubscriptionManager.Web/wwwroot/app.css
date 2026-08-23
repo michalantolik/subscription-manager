@@ -124,8 +124,19 @@ h1[tabindex="-1"]:focus {
     align-items: center;
     gap: 11px;
     padding: 0 8px;
+    border-radius: 10px;
     white-space: nowrap;
+    transition: background .18s ease;
 }
+
+    .brand:hover {
+        background: var(--surface-hover);
+    }
+
+    .brand:focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+    }
 
 .brand-mark {
     width: 38px;

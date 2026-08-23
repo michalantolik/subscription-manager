@@ -14,7 +14,6 @@ public partial class Login
     [SupplyParameterFromQuery(Name = "status")]
     private string? Status { get; set; }
 
-
     private string ErrorMessage => Error switch
     {
         AuthenticationErrorCodes.Required =>
@@ -43,7 +42,7 @@ public partial class Login
                 "//",
                 StringComparison.Ordinal))
         {
-            return "/";
+            return "/overview";
         }
 
         return ReturnUrl;

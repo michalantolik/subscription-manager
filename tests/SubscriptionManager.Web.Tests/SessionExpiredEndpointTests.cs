@@ -35,7 +35,7 @@ public sealed class SessionExpiredEndpointTests
     }
 
     [Fact]
-    public async Task SessionExpired_UsesRootWhenReturnUrlIsMissing()
+    public async Task SessionExpired_UsesOverviewWhenReturnUrlIsMissing()
     {
         using var client = CreateClient();
 
@@ -49,7 +49,7 @@ public sealed class SessionExpiredEndpointTests
         Assert.Equal(
             "/login" +
             "?error=SessionExpired" +
-            "&returnUrl=%2F",
+            "&returnUrl=%2Foverview",
             response.Headers.Location?.OriginalString);
     }
 
@@ -74,7 +74,7 @@ public sealed class SessionExpiredEndpointTests
         Assert.Equal(
             "/login" +
             "?error=SessionExpired" +
-            "&returnUrl=%2F",
+            "&returnUrl=%2Foverview",
             response.Headers.Location?.OriginalString);
     }
 

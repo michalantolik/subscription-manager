@@ -1,0 +1,26 @@
+﻿@page "/"
+
+@using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [AllowAnonymous]
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        var destination =
+            authenticationState.User.Identity?.IsAuthenticated == true
+                ? "/overview"
+                : "/about";
+
+        Navigation.NavigateTo(
+            destination,
+            replace: true);
+    }
+}

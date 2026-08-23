@@ -7,8 +7,9 @@
 
 <div class="app-shell theme-@State.Theme @(State.IsSidebarCollapsed ? "sidebar-collapsed" : null) @(State.IsMobileMenuOpen ? "mobile-menu-open" : null)">
     <aside class="sidebar">
-        <div class="brand"
-             aria-label="Subscription Manager">
+        <a class="brand"
+           href="/"
+           aria-label="Subscription Manager — home">
             <img class="brand-mark"
                  src="@Assets["images/branding/app-icon-brand.svg"]"
                  alt=""
@@ -23,7 +24,7 @@
                     Manager
                 </strong>
             </span>
-        </div>
+        </a>
 
         <NavMenu />
     </aside>

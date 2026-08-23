@@ -343,7 +343,7 @@ public static class AuthenticationEndpoints
                 "//",
                 StringComparison.Ordinal))
         {
-            return "/";
+            return "/overview";
         }
 
         return returnUrl;
