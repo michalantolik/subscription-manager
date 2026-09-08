@@ -1,4 +1,4 @@
-﻿# Subscription Manager
+# Subscription Manager
 
 [![CI](https://github.com/michalantolik/subscription-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/michalantolik/subscription-manager/actions/workflows/ci.yml)
 [![Deploy](https://github.com/michalantolik/subscription-manager/actions/workflows/deploy.yml/badge.svg)](https://github.com/michalantolik/subscription-manager/actions/workflows/deploy.yml)
@@ -73,6 +73,18 @@ To enable savings plan generation, configure an OpenAI API key:
 ```powershell
 dotnet user-secrets set "SavingsPlanAi:ApiKey" "<api-key>" --project src/SubscriptionManager.Api
 ```
+
+## Documentation
+
+| Document | Purpose |
+|---|---|
+| [Architecture](docs/architecture.md) | Project boundaries and dependency direction |
+| [Engineering decisions](docs/decisions.md) | Durable architectural and operating decisions |
+| [Testing](docs/testing.md) | Testing priorities and repository validation |
+| [Measurement](docs/measurement.md) | Aggregate product and technical measurement rules |
+| [Measurement snapshots](docs/measurement-snapshots.md) | Weekly historical measurement contract |
+| [Engineering learnings](docs/learnings.md) | Reusable lessons from implementation and operations |
+| [Roadmap](docs/roadmap.md) | Current repository-quality follow-up work |
 
 ## Repository archive
 
