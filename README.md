@@ -1,4 +1,4 @@
-# Subscription Manager
+﻿# Subscription Manager
 
 [![CI](https://github.com/michalantolik/subscription-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/michalantolik/subscription-manager/actions/workflows/ci.yml)
 [![Deploy](https://github.com/michalantolik/subscription-manager/actions/workflows/deploy.yml/badge.svg)](https://github.com/michalantolik/subscription-manager/actions/workflows/deploy.yml)
@@ -73,6 +73,20 @@ To enable savings plan generation, configure an OpenAI API key:
 ```powershell
 dotnet user-secrets set "SavingsPlanAi:ApiKey" "<api-key>" --project src/SubscriptionManager.Api
 ```
+
+## Repository archive
+
+To create a clean ZIP archive of the repository while preserving the complete Git history, run:
+
+```powershell
+.\scripts\archive-repository.cmd
+```
+
+Before archiving, the script fetches the configured upstream and checks whether the current branch is up to date. If the working tree is clean and the branch is only behind its upstream, it performs a safe fast-forward-only pull. It never pushes, stashes, merges or rebases automatically. If local changes exist, the pull is skipped and those changes are preserved in the archive.
+
+The archive is created one directory above the repository and uses the repository name, for example `subscription-manager.zip`. An existing archive with the same name is replaced. The script stages a temporary copy, excludes local build and test artifacts, preserves `.git`, verifies the resulting archive and otherwise leaves the working tree unchanged.
+
+The archive contains the complete Git history and may include sensitive historical or local data. Keep it private.
 
 ## Project structure
 
